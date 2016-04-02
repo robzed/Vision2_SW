@@ -294,24 +294,14 @@ void SerialInOutTest(bool button)
     }
 }
 
-/*
- * This is the main program for the IO_Processor, which in the case of 
- * Vision2 is a dsPIC30F4011. 
- * 
- * The IO_Processor is responsible for communicating with the IO and doing
- * real-time control. In this case 'real-time' certainly means responding to
- * all events under 1 ms, but also probably under 10ms. Events above 100ms
- * can be handled by the Controller processor, which in the case of Vision2 is
- * a Raspberry Pi model A. Timings between these two is to be decided.
- */
-int main(int argc, char** argv)
-{
-    ConfigureOscillator();
-    InitPorts();
-    InitPeripherals();
+#define HARDWARE_TEST 1
 
-    while(1)
-    {
+/*
+ * Function for testing hardware
+ */
+#if HARDWARE_TEST
+void test_main()
+{
         FlashAllLEDS(5);
         LED_Test();     // A = step led, B = next test
 
@@ -335,6 +325,31 @@ int main(int argc, char** argv)
         SerialInOutTest(SelectButtonA_Grey);
 
         Tests_Finished();
+}
+#endif
+
+/*
+ * This is the main program for the IO_Processor, which in the case of 
+ * Vision2 is a dsPIC30F4011. 
+ * 
+ * The IO_Processor is responsible for communicating with the IO and doing
+ * real-time control. In this case 'real-time' certainly means responding to
+ * all events under 1 ms, but also probably under 10ms. Events above 100ms
+ * can be handled by the Controller processor, which in the case of Vision2 is
+ * a Raspberry Pi model A+. Timings between these two is to be decided.
+ */
+int main(int argc, char** argv)
+{
+    ConfigureOscillator();
+    InitPorts();
+    InitPeripherals();
+
+    while(1)
+    {
+#if HARDWARE_TEST
+        test_main();
+#else
+#endif
     }
     //return (EXIT_SUCCESS);
 }

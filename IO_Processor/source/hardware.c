@@ -3,6 +3,8 @@
  * Author: rob
  *
  * Created on 27 June 2014, 21:29
+ * 
+ * Init routines like Ratty2 V-r100.c by Barry Grub 30/12/2009
  */
 
 #include "hardware.h"

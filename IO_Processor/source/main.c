@@ -294,15 +294,11 @@ void SerialInOutTest(bool button)
     }
 }
 
-#define HARDWARE_TEST 1
-
 /*
  * Function for testing hardware
  */
-#if HARDWARE_TEST
 void test_main()
-{
-        FlashAllLEDS(5);
+{       
         LED_Test();     // A = step led, B = next test
 
         FlashAllLEDS(1);
@@ -326,7 +322,6 @@ void test_main()
 
         Tests_Finished();
 }
-#endif
 
 /*
  * This is the main program for the IO_Processor, which in the case of 
@@ -344,12 +339,15 @@ int main(int argc, char** argv)
     InitPorts();
     InitPeripherals();
 
+    FlashAllLEDS(5);
+
+    if(button_pressed(SelectButtonA_Grey))
+    {
+       test_main();
+    }
+
     while(1)
     {
-#if HARDWARE_TEST
-        test_main();
-#else
-#endif
     }
     //return (EXIT_SUCCESS);
 }

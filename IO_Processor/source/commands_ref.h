@@ -29,17 +29,48 @@ extern "C" {
 
 typedef unsigned char cmd_t;
 
+// -----------------------------------------------------------------------
 //
 // Incoming commands (RPi -> dsPIC) 
 //
+// top nibbles
+#define CMD_TYPE_LED_OFF        0x0        // bottom 4 bits = LED 1-9
+#define CMD_TYPE_LED_ON         0x1        // bottom 4 bits = LED 1-9
+#define CMD_TYPE_ALL_LEDS       0x2        // extra byte (leds 1-8, led 9-bit 0 of cmd byte)
+// 0x30 unused (ASCII range)
+// 0x40 unused (ASCII range)
+#define DISABLE_SERIAL          0x5        // Start of “Uncompressing Linux…”
+#define DISABLE_SERIAL2         0x6        // Start of “Uncompressing Linux…”
+// 0x70 unused (ASCII range)
+#define CMD_TYPE_POLL           0x8        // bottom 4 bytes ignored / reflected(?) (To be confirmed)
+#define CMD_TYPE_REQUEST_STATE  0x9        // nnnn=0 all state (in the following order)
+                                            //nnnn=1 LED state
+                                            //nnnn=2 movement state
+                                            //nnnn=3 IR state
+                                            //nnnn=4 battery voltage
+                                            //nnnn=5 IR levels
+                                            //nnnn=6 move_count
+                                            //nnnn=7 reset type
+// 0xA0 unused
+// 0xB0 unused
+#define CMD_TYPE_MOVE_COMMANDS  0xC 
+// 0xD0 unused
+// 0xE0 unused
+#define CMD_TYPE_SYS_REQUESTS   0xF
 
 
-#define CMD_ASCII_UNLOCK '+'            // +++ is unlock
-#define CMD_BINARY_UNLOCK1 0xFE         // unlock sequence is 1231. How to ensure not in sequence? Send poll command first. 
-#define CMD_BINARY_UNLOCK2 0xFC
-#define CMD_BINARY_UNLOCK3 0xF8
+//
+// individual commands
+//
+#define CMD_POLL            0x80
 
-  
+//#define CMD_ASCII_UNLOCK    '+'            // +++ is unlock
+#define CMD_BINARY_UNLOCK1  0xFE         // unlock sequence is 1231. How to ensure not in sequence? Send poll command first. 
+#define CMD_BINARY_UNLOCK2  0xFC
+#define CMD_BINARY_UNLOCK3  0xF8
+
+
+// -----------------------------------------------------------------------
 //
 // Outgoing events (dsPIC -> RPi)
 //
@@ -58,6 +89,10 @@ typedef unsigned char cmd_t;
 #define EV_UNLOCK_FROM_UNLOCK   0xC1
 #define EV_LOCK_BY_TIMER        0xC2
 #define EV_LOCK_BY_COMMAND      0xC3
+
+#define EV_POLL_REPLY           0x80
+
+#define EV_FAIL_INVALID_COMMAND 0xE2
 
 
 #ifdef	__cplusplus

@@ -56,7 +56,7 @@ void InitPeripherals()
 }
 
 
-void LedOn(int led)
+void LedSwitch(int led, int state)
 {
     //irled_90 = off;      // hack test
     //irled_45 = off;      // hack test

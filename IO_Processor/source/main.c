@@ -21,7 +21,7 @@ void LED_Test(void)
     while(1)
     {
         AllLedsOff();
-        LedOn(led);
+        LedSwitch(led, on);
         if(Grey_A_ButtonPressed())
         {
             led ++;
@@ -50,7 +50,7 @@ void Tests_Finished()
     while(1)
     {
         AllLedsOff();
-        LedOn(led);
+        LedSwitch(led, on);
 
         led += dir;
         if(led > 6 || led < 1)
@@ -359,9 +359,10 @@ static cmd_t stored_reset_type = EV_UNKNOWN_RESET;
 
 #define COMMANDS_LOCKED 0
 #define COMMANDS_BINARY 1
-#define COMMANDS_ASCII 2
+//#define COMMANDS_ASCII 2
 static char command_mode = COMMANDS_LOCKED;
 
+/*
 char hex_out_table[] = { '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'A', 'B', 'C', 'D', 'E', 'F' };
 
 void send_event_ascii(cmd_t c)
@@ -384,6 +385,8 @@ void change_send_event()
         send_event = serial_write_uint8;
     }
 }
+*/
+#define send_event serial_write_uint8
 
 /*
  * This is the main program for the IO_Processor, which in the case of 
@@ -400,9 +403,19 @@ int main(int argc, char** argv)
     ConfigureOscillator();
     InitPorts();
     InitPeripherals();
+    
+    command_mode = COMMANDS_LOCKED;
     stored_reset_type = resetSource();
-            
-    FlashAllLEDS(5);
+    send_event(stored_reset_type);
+    
+    if(stored_reset_type == EV_POWER_ON_RESET)
+    {
+        FlashAllLEDS(5);
+    }
+    else
+    {
+        FlashAllLEDS(2);
+    }
 
     if(button_pressed(SelectButtonA_Grey))
     {
@@ -412,6 +425,7 @@ int main(int argc, char** argv)
     while(1)
     {
         cmd_t cmd;
+        int i;
         
         if(command_mode == COMMANDS_LOCKED)
         {
@@ -422,9 +436,9 @@ int main(int argc, char** argv)
                 if(serial_get_byte() != CMD_BINARY_UNLOCK3) { break; }
                 if(serial_get_byte() != CMD_BINARY_UNLOCK1) { break; }
                 command_mode = COMMANDS_BINARY;
-                change_send_event();
-                send_event(EV_UNLOCK_FROM_LOCK);
-            }
+                //change_send_event();
+                //send_event(EV_UNLOCK_FROM_LOCK);
+            }/*
             else if(cmd == CMD_ASCII_UNLOCK)
             {
                 if(serial_get_byte() != CMD_ASCII_UNLOCK) { break; }
@@ -432,22 +446,53 @@ int main(int argc, char** argv)
                 command_mode = COMMANDS_ASCII;
                 change_send_event();
                 send_event(EV_UNLOCK_FROM_LOCK);
-            }
+            }*/
             // ignore others
         }
         else
         {
-            while(1)
+            while(command_mode)
             {
                 cmd = serial_get_byte();
-                if(command_mode == COMMANDS_ASCII)
+                //if(command_mode == COMMANDS_ASCII)
+                //{
+                //    
+                //}
+                cmd_t low_nibble = cmd&0x0F;
+                switch(cmd >> 4)
                 {
-                    
-                }
-                switch(cmd)
-                {
+                    case CMD_TYPE_LED_OFF:
+                        LedSwitch(low_nibble, off);
+                        break;
+                    case CMD_TYPE_LED_ON:
+                        LedSwitch(low_nibble, on);
+                        break;
+                    case CMD_TYPE_ALL_LEDS:
+                        LedSwitch(9, low_nibble&0x01);
+                        cmd = serial_get_byte();
+                        for(i = 1; i < 9; i++)
+                        {
+                            LedSwitch(i, cmd&0x01);
+                            cmd >>= 1;
+                        }
+                        break;
+                    case DISABLE_SERIAL:
+                        send_event(EV_LOCK_BY_COMMAND);
+                        break;
+                    case DISABLE_SERIAL2:
+                        send_event(EV_LOCK_BY_COMMAND);
+                        break;                    
+                    case CMD_TYPE_POLL:
+                        send_event(EV_POLL_REPLY + low_nibble);
+                        break;
+                    case CMD_TYPE_REQUEST_STATE:
+                        break;
+                    case CMD_TYPE_MOVE_COMMANDS:
+                        break;
+                    case CMD_TYPE_SYS_REQUESTS: 
+                        break;
                     default:
-                        //send_event();
+                        send_event(EV_FAIL_INVALID_COMMAND);
                         break;
                 }
             }

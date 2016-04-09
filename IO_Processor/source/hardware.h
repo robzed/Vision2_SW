@@ -31,7 +31,7 @@ void ConfigureOscillator(void);
 void InitPorts();
 void InitPeripherals();
 void AllLedsOff(void);
-void LedOn(int led);
+void LedSwitch(int led, int state);
 void delay_ms(unsigned int ms_count);
 unsigned int adc_read(unsigned int chan);
 

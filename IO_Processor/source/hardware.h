@@ -55,6 +55,14 @@ bool serial_byte_waiting();
 int serial_get_byte();
 int serial_get_char();
 
+// Power on reset registers
+#define POR             (RCONbits.POR == 1)
+#define BOR             (RCONbits.BOR == 1)
+#define WDTO            (RCONbits.WDTO == 1)
+#define SWR             (RCONbits.SWR == 1)
+#define EXTR            (RCONbits.EXTR == 1)
+#define IOPUWR          (RCONbits.IOPUWR == 1)
+
 
 #endif	/* HARDWARE_H */
 

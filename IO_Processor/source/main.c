@@ -12,6 +12,7 @@
 //#include <stdlib.h>
 
 #include "hardware.h"
+#include "commands_ref.h"
 
 void LED_Test(void)
 {
@@ -294,6 +295,36 @@ void SerialInOutTest(bool button)
     }
 }
 
+cmd_t resetSource(void)
+{
+    if (EXTR)
+    {
+        return EV_EXTERNAL_RESET;
+    }
+    if (POR)
+    {
+        return EV_POWER_ON_RESET;
+    }
+    if (BOR)
+    {
+        return EV_BROWN_OUT_RESET;
+    }
+    if (WDTO)
+    {
+        return EV_WATCHDOG_RESET;
+    }
+    if (SWR)
+    {
+        return EV_SOFTWARE_RESET;
+    }
+    if (IOPUWR)
+    {
+        return EV_EXCEPTION_RESET;
+    }
+    return EV_UNKNOWN_RESET;
+}
+
+
 /*
  * Function for testing hardware
  */
@@ -323,6 +354,37 @@ void test_main()
         Tests_Finished();
 }
 
+
+static cmd_t stored_reset_type = EV_UNKNOWN_RESET;
+
+#define COMMANDS_LOCKED 0
+#define COMMANDS_BINARY 1
+#define COMMANDS_ASCII 2
+static char command_mode = COMMANDS_LOCKED;
+
+char hex_out_table[] = { '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'A', 'B', 'C', 'D', 'E', 'F' };
+
+void send_event_ascii(cmd_t c)
+{
+    serial_write_char(hex_out_table[c>>4]);
+    serial_write_char(hex_out_table[c & 0x0F]);
+    serial_write_char(' ');
+}
+
+void (*send_event)(cmd_t c) = serial_write_uint8;
+
+void change_send_event()
+{
+    if(command_mode == COMMANDS_ASCII)
+    {
+        send_event = send_event_ascii;
+    }
+    else
+    {
+        send_event = serial_write_uint8;
+    }
+}
+
 /*
  * This is the main program for the IO_Processor, which in the case of 
  * Vision2 is a dsPIC30F4011. 
@@ -338,17 +400,59 @@ int main(int argc, char** argv)
     ConfigureOscillator();
     InitPorts();
     InitPeripherals();
-
+    stored_reset_type = resetSource();
+            
     FlashAllLEDS(5);
 
     if(button_pressed(SelectButtonA_Grey))
     {
        test_main();
     }
-
+    
     while(1)
     {
+        cmd_t cmd;
+        
+        if(command_mode == COMMANDS_LOCKED)
+        {
+            cmd_t cmd = serial_get_byte();
+            if(cmd == CMD_BINARY_UNLOCK1)
+            {
+                if(serial_get_byte() != CMD_BINARY_UNLOCK2) { break; }
+                if(serial_get_byte() != CMD_BINARY_UNLOCK3) { break; }
+                if(serial_get_byte() != CMD_BINARY_UNLOCK1) { break; }
+                command_mode = COMMANDS_BINARY;
+                change_send_event();
+                send_event(EV_UNLOCK_FROM_LOCK);
+            }
+            else if(cmd == CMD_ASCII_UNLOCK)
+            {
+                if(serial_get_byte() != CMD_ASCII_UNLOCK) { break; }
+                if(serial_get_byte() != CMD_ASCII_UNLOCK) { break; }
+                command_mode = COMMANDS_ASCII;
+                change_send_event();
+                send_event(EV_UNLOCK_FROM_LOCK);
+            }
+            // ignore others
+        }
+        else
+        {
+            while(1)
+            {
+                cmd = serial_get_byte();
+                if(command_mode == COMMANDS_ASCII)
+                {
+                    
+                }
+                switch(cmd)
+                {
+                    default:
+                        //send_event();
+                        break;
+                }
+            }
+        }
     }
-    //return (EXIT_SUCCESS);
+    return 0;
 }
 

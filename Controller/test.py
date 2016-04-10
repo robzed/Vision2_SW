@@ -136,12 +136,13 @@ command_handlers = {
     0xE2: EV_FAIL_INVALID_COMMAND,
 }
 
-def event_processor():
-    cmd = ord(port_read(1))
+def event_processor(port):
+    cmd = port.read(1)
     if len(cmd) == 0:
         # no packet in timeout...
-        pass
-    elif cmd in command_handlers:
+        return
+    cmd = ord(cmd)
+    if cmd in command_handlers:
         command_handlers[cmd](port, cmd)
     else:
         print("Unknown event", hex(s), "ignoring")
@@ -155,28 +156,28 @@ def main():
     s = port.read(bytes_waiting)
     print(":".join("{:02x}".format(ord(c)) for c in s))
 
-    send_unlock_command()
+    send_unlock_command(port)
     for i in range(3):
-        event_processor()
+        event_processor(port)
 
-    send_poll_command()
+    send_poll_command(port)
     for i in range(3):
-        event_processor()
+        event_processor(port)
 
     send_switch_led_command(port, 1, True)
     for i in range(3):
-        event_processor()
+        event_processor(port)
 
     move_forward(port, 347)
     for i in range(3):
-        event_processor()
+        event_processor(port)
 
     send_switch_led_command(port, 3, True)
     for i in range(3):
-        event_processor()
+        event_processor(port)
 
     while True:
-        event_processor()
+        event_processor(port)
     
 main()
 

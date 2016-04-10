@@ -386,14 +386,6 @@ void change_send_event()
 /* 
  * Movement control:
  * 
- * 	en_mot=mot_on;		//energise motors
- * 	en_mot=mot_off;		//turn motors off at this stage
- * 
- * 	turnl();
- *  turnr();
- *  fwd();
- *  rev();      -- don't use?
- * 
  *  dist_to_test and dist_test_flag
  * 
  * 	old_left_wall=0;
@@ -406,6 +398,9 @@ void change_send_event()
 
 // event data copies to avoid duplicate events being sent
 static unsigned int last_sent_battery = 0;
+static unsigned int set_speed = 50;
+static int set_corrector = 10;
+bool timer_running = false;
 
 /*
  * This is the main program for the IO_Processor, which in the case of 
@@ -426,6 +421,7 @@ int main(int argc, char** argv)
     command_mode = COMMANDS_LOCKED;
     stored_reset_type = resetSource();
     send_event(stored_reset_type);
+    timer_running = false;
     
     if(stored_reset_type == EV_POWER_ON_RESET)
     {
@@ -491,6 +487,16 @@ int main(int argc, char** argv)
                         send_event(battery_v & 0xFF);
                     }
                 }
+                if(timer_running)
+                {
+                    if(!is_timer_finished_move())
+                    {
+                        send_event(EV_FINISHED_MOVE);
+                        timer_running = false;
+                    }
+                }
+                
+                
                 //
                 // process commands
                 //
@@ -539,6 +545,36 @@ int main(int argc, char** argv)
                         }
                         break;
                     case CMD_TYPE_MOVE_COMMANDS:
+                        switch(low_nibble)
+                        {
+                            case 0: // motors off
+                                en_mot = mot_off;
+                                break;
+                            case 1: // forward (parameter = distance)
+                                en_mot = mot_on;
+                                fwd();
+                                timer_move(serial_get_int16(), set_speed, set_corrector);
+                                timer_running = true;
+                                break;
+                            case 2: // right (parameter = distance)
+                                en_mot = mot_on;
+                                turnr();
+                                timer_move(serial_get_int16(), set_speed, set_corrector);
+                                timer_running = true;
+                                break;
+                            case 3: // left (parameter = distance)
+                                en_mot = mot_on;
+                                turnl();
+                                timer_move(serial_get_int16(), set_speed, set_corrector);
+                                timer_running = true;
+                                break;
+                            case 4: // set speed
+                                set_speed = serial_get_uint16();
+                                break;
+                            case 5: // set steering correction
+                                set_corrector = serial_get_int16();
+                                break;
+                        }
                         break;
                     case CMD_TYPE_SYS_REQUESTS: 
                         break;

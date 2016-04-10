@@ -285,6 +285,19 @@ int serial_get_char()
     return (char)serial_get_byte();
 }
 
+unsigned int serial_get_uint16(void)
+{
+    int upper = serial_get_byte();
+    return (upper << 8) + serial_get_byte();
+}
+
+int serial_get_int16(void)
+{
+    int upper = serial_get_byte();
+    return (upper << 8) + serial_get_byte();
+}
+
+
 volatile unsigned int battery_voltage;
 volatile char battery_data_ready = 0;
 

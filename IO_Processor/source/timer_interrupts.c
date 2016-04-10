@@ -338,7 +338,7 @@ void init_timer_subsystems(void)
     T3CONbits.TON=1;		//battery monitor timer enable
 }
 
-void timer_move(int distance, int speed, int steering_corrector)
+void timer_move(int distance, unsigned int speed, int steering_corrector)
 {
     d_t_g = distance;
     l_speed = speed;

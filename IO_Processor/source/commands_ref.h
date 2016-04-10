@@ -54,7 +54,7 @@ typedef unsigned char cmd_t;
                                             //nnnn=7 reset type
 // 0xA0 unused
 // 0xB0 unused
-#define CMD_TYPE_MOVE_COMMANDS  0xC 
+#define CMD_TYPE_MOVE_COMMANDS  0xC
 // 0xD0 unused
 // 0xE0 unused
 #define CMD_TYPE_SYS_REQUESTS   0xF
@@ -98,6 +98,8 @@ typedef unsigned char cmd_t;
 #define EV_EXCEPTION_RESET		0x06
 
 #define EV_BATTERY_VOLTAGE      0x10
+#define EV_FINISHED_MOVE        0x20
+
 
 // unlocking
 #define EV_UNLOCK_FROM_LOCK     0xC0

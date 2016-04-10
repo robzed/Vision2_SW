@@ -18,7 +18,7 @@ extern "C" {
 
 void init_timer_subsystems(void);
 
-void timer_move(int distance, int speed, int steering_corrector);
+void timer_move(int distance, unsigned int speed, int steering_corrector);
 bool is_timer_finished_move(void);
 void timer_fine_to_move_another_cell(void);
 

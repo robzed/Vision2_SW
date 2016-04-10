@@ -57,6 +57,9 @@ void serial_flush(void);
 bool serial_byte_waiting();
 int serial_get_byte();
 int serial_get_char();
+unsigned int serial_get_uint16(void);
+int serial_get_int16(void);
+
 
 // Power on reset registers
 #define POR             (RCONbits.POR == 1)

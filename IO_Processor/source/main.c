@@ -456,7 +456,7 @@ int main(int argc, char** argv)
                 if(serial_get_byte() != CMD_BINARY_UNLOCK1) { break; }
                 command_mode = COMMANDS_BINARY;
                 //change_send_event();
-                //send_event(EV_UNLOCK_FROM_LOCK);
+                send_event(EV_UNLOCK_FROM_LOCK);
             }/*
             else if(cmd == CMD_ASCII_UNLOCK)
             {

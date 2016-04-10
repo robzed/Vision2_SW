@@ -13,16 +13,17 @@
 extern "C" {
 #endif
 
-void init_timer1(void);
-void init_timer2(void);
-void init_timer3(void);
-void init_timer4(void);
-void init_adc(void);
-unsigned int adc_read(unsigned int chan);
-//void battery_check(void);
-void sensor_select(void);
+#include <stdint.h>
+#include <stdbool.h>
 
+void init_timer_subsystems(void);
 
+void timer_move(int distance, int speed, int steering_corrector);
+bool is_timer_finished_move(void);
+void timer_fine_to_move_another_cell(void);
+
+void disable_IR_scanning(void);
+void enable_IR_scanning(void);
 
 #ifdef	__cplusplus
 }

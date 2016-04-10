@@ -208,9 +208,9 @@ void read_sensor(char sensor) {
     }
 }
 
-// should be backgrounded writes
+// should be background writes
 // 4-word deep transmit data buffer
-// 4-worddeepreceivedatabuffer
+// 4-word deep receive data buffer
 void serial_write_string(char* s)
 {
     char c;

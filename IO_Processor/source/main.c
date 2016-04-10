@@ -13,7 +13,7 @@
 
 #include "hardware.h"
 #include "commands_ref.h"
-
+#include "timer_interrupts.h"
 
 void LED_Test(void)
 {
@@ -383,6 +383,30 @@ void change_send_event()
 */
 #define send_event serial_write_uint8
 
+/* 
+ * Movement control:
+ * 
+ * 	en_mot=mot_on;		//energise motors
+ * 	en_mot=mot_off;		//turn motors off at this stage
+ * 
+ * 	turnl();
+ *  turnr();
+ *  fwd();
+ *  rev();      -- don't use?
+ * 
+ *  dist_to_test and dist_test_flag
+ * 
+ * 	old_left_wall=0;
+ *	old_right_wall=0;
+ * 
+ *  is_timer_finished_move() ... if running
+ * 
+ */
+
+
+// event data copies to avoid duplicate events being sent
+static unsigned int last_sent_battery = 0;
+
 /*
  * This is the main program for the IO_Processor, which in the case of 
  * Vision2 is a dsPIC30F4011. 
@@ -416,6 +440,10 @@ int main(int argc, char** argv)
     {
        test_main();
     }
+    
+    // we only do this AFTER we've not called test
+    init_timer_subsystems();
+
     
     while(1)
     {
@@ -456,8 +484,12 @@ int main(int argc, char** argv)
                     // slight race condition here, but not a major problem if we miss one
                     int battery_v = battery_voltage & 0x3FF;
                     battery_data_ready = 0;     // clear request
-                    send_event(EV_BATTERY_VOLTAGE + (battery_v >> 8));
-                    send_event(battery_v & 0xFF);
+                    if(battery_v != last_sent_battery)
+                    {
+                        last_sent_battery = battery_v;
+                        send_event(EV_BATTERY_VOLTAGE + (battery_v >> 8));
+                        send_event(battery_v & 0xFF);
+                    }
                 }
                 //
                 // process commands

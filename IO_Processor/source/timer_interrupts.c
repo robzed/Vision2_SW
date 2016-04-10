@@ -9,30 +9,45 @@
 #include "hardware.h"
 #include "timer_interrupts.h"
 
-static volatile int d_t_g=0;
-static volatile int dist_to_test=0;
-static volatile int dist_test_flag=0;
-static volatile unsigned int l_index=0;
-static volatile unsigned int r_index=0;
-static volatile unsigned int l_speed=50;
-static volatile unsigned int r_speed=50;
-static volatile unsigned int left_trim_flag=0;
-static volatile unsigned int right_trim_flag=0;
-static volatile unsigned int large_trim_flag=0;
+void sensor_select(void);
 
-static unsigned int sensor_count=1;
+static volatile int d_t_g=0;                // distance to go
 
-static volatile int left_wall=0;
-static volatile int old_left_wall=0;
-static volatile int right_wall=0;
-static volatile int old_right_wall=0;
+// these two are special feature to test for walls along a straight (normally))
+static volatile int dist_to_test=0;         // distance to test for walls
+static volatile int dist_test_flag=0;       // flag that changes state when dist_to_test is reached and every cell afterwards
 
-static volatile int wall_edge_flag=0;
-static volatile int d_t_g_flag=0;
-static volatile int corrector=0;
+static volatile unsigned int l_index=0;         // left motor speed level (internal)
+static volatile unsigned int r_index=0;         // right motor speed level (internal))
+static volatile unsigned int l_speed=50;        // maximum speed left
+static volatile unsigned int r_speed=50;        // maximum speed right
 
 
-// to be removed!!!
+// These trim flags communicate steering corrections between 
+// IR sensor timer interrupt and motor timer interrupt
+static unsigned int left_trim_flag=0;  // adjust left (internal)
+static volatile unsigned int right_trim_flag=0; // adjust right (internal)
+static volatile unsigned int large_trim_flag=0; // large adjust required (internal)
+
+static unsigned int sensor_count=1;         // the IR sensor read order index (internal)
+
+// these are just used inside sensor_select() to create wall_edge_flag
+static volatile int left_wall=0;        // left wall now? (internal)
+static volatile int old_left_wall=0;    // previously a left wall? (internal)
+static volatile int right_wall=0;       // right wall now? (internal)
+static volatile int old_right_wall=0;   // previously a right wall? (internal)
+
+// This is communication between the  IR sensor timer interrupt and motor 
+// timer interrupt to resynchronise the centre of a cell based on a passing 
+// wall edge. We only do this when we are stopping in this cell.
+static volatile int wall_edge_flag=0;       // resynchronise the distance to go (internal)
+
+static volatile int d_t_g_flag=0;       // it's fine to carry on an extra cell
+
+static volatile int corrector=0;        // steering correction factor
+
+
+// to be removed!!! (replaced with dynamic ones from RPi)
 #define cell	347			//adjust these values for cell distance		
 
 
@@ -40,15 +55,14 @@ static volatile int corrector=0;
 								//should equal distance from wall edge to
 								//centre of square 
 
-
-#define front_long_threshold 15		//adjusted once data output vis RS232
-#define front_short_threshold 50	//is available 
-#define ls_threshold		200
-#define rs_threshold		200
-#define r45_threshold		540
-#define l45_threshold		360
-#define r45_toclose		760
-#define l45_toclose		580
+#define front_long_threshold 15		// is there a wall far away - used for moving ahead on explore
+#define front_short_threshold 50	// front wall detection (also stops steering problems on turn)
+#define ls_threshold		200     // side wall detection
+#define rs_threshold		200     // side wall detection
+#define r45_threshold		540     // steering
+#define l45_threshold		360     // steering
+#define r45_toclose		760         // gross steering
+#define l45_toclose		580         // gross steering
 // end to be removed!!
 
 
@@ -195,7 +209,7 @@ void __attribute__((__interrupt__,shadow,auto_psv))_T2Interrupt(void)
 			else
 				{x=(x>>1)+(x>>2)+(x>>3);}	//reduce time to 0.875
 			left_trim_flag--;
-			led2=on;
+			//led2=on;
 		} 
 	PR2=x;
 	if (d_t_g<l_index) l_index--;			//slow down
@@ -231,7 +245,7 @@ void __attribute__((__interrupt__,shadow,auto_psv))_T4Interrupt(void)
 			else
 				{x=(x>>1)+(x>>2)+(x>>3);}	//reduce time to 0.875
 			right_trim_flag--;
-			led2=on;
+			//led2=on;
 		}
 	PR4=x;
 	if (d_t_g<r_index) r_index--;
@@ -246,7 +260,7 @@ void __attribute__((__interrupt__,shadow,auto_psv))_T4Interrupt(void)
 
 
 void sensor_select(void)
-{	led6=on;	
+{
 	sensor_count++;
 	if (sensor_count>3)sensor_count=1;
 		
@@ -308,13 +322,53 @@ void sensor_select(void)
 			old_right_wall=right_wall;
 		}
 		
-	led6=off;
 }	
-
-
 
 
 void init_timer_subsystems(void)
 {
+    // this was the setting the original code
+    sensor_count = 2;
+
+    init_timer1();
+    init_timer2();
+    init_timer3();
+    init_timer4();
     
+    T3CONbits.TON=1;		//battery monitor timer enable
 }
+
+void timer_move(int distance, int speed, int steering_corrector)
+{
+    d_t_g = distance;
+    l_speed = speed;
+    r_speed = speed;
+    corrector = steering_corrector;
+    
+	T4CONbits.TON=1;		//right motor timer enable
+    T2CONbits.TON=1;		//left motor timer enable
+}
+
+bool is_timer_finished_move(void)
+{
+    return T2CONbits.TON;
+}
+
+void timer_fine_to_move_another_cell(void)
+{
+    d_t_g_flag = 1;
+}
+
+void enable_IR_scanning(void)
+{
+    T1CONbits.TON=1;    // sensors on
+}
+
+void disable_IR_scanning(void)
+{
+    T1CONbits.TON=0;
+}
+
+
+
+

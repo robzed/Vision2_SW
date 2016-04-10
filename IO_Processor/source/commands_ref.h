@@ -25,7 +25,8 @@ extern "C" {
 // * If the dsPIC doesn’t hear for 100ms from the R-Pi it should lock to avoid spurious invalid commands.
 // *
 // * At 57600 we get a byte every 1/5760 seconds (5 per ms, approx.) maximum.
-//
+// * Network byte order: multi-byte data is transmitted as big-endian (big end first).
+// * 
 
 typedef unsigned char cmd_t;
 
@@ -62,6 +63,8 @@ typedef unsigned char cmd_t;
 //
 // individual commands
 //
+
+
 #define CMD_POLL            0x80
 
 //#define CMD_ASCII_UNLOCK    '+'            // +++ is unlock
@@ -75,6 +78,16 @@ typedef unsigned char cmd_t;
 // Outgoing events (dsPIC -> RPi)
 //
 
+// top nibbles
+//#define EV_TYPE_BUTTON      0x00
+//#define EV_TYPE_            0x10
+
+//#define EV_OLD_EVENT        0x80
+
+
+//
+// individual commands
+//
 // Reset_Event  0b 0000 0nnn    nnn = reset type
 #define EV_UNKNOWN_RESET		0x00
 #define EV_POWER_ON_RESET		0x01
@@ -83,6 +96,8 @@ typedef unsigned char cmd_t;
 #define EV_SOFTWARE_RESET		0x04
 #define EV_EXTERNAL_RESET		0x05
 #define EV_EXCEPTION_RESET		0x06
+
+#define EV_BATTERY_VOLTAGE      0x10
 
 // unlocking
 #define EV_UNLOCK_FROM_LOCK     0xC0

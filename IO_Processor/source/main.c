@@ -13,7 +13,7 @@
 
 #include "hardware.h"
 #include "commands_ref.h"
-#include "size_constants.h"
+
 
 void LED_Test(void)
 {
@@ -98,7 +98,16 @@ bool button_pressed(bool buttonA)
     return buttonA ? Grey_A_ButtonPressed() : Blue_B_ButtonPressed();
 }
 
-
+// Figures just for hardware test
+// Not used by Robot maze normally
+#define test_front_long_threshold    15
+#define test_front_short_threshold   50
+#define test_ls_threshold            200
+#define test_rs_threshold            200
+#define test_r45_threshold           360
+#define test_l45_threshold           360
+#define test_r45_toclose             540
+#define test_l45_toclose             540
 
 void IR_Test(bool button)
 {
@@ -110,39 +119,39 @@ void IR_Test(bool button)
         read_sensor(diag);
 
         AllLedsOff();
-        if(front_sensor > front_long_threshold && flash)
+        if(front_sensor > test_front_long_threshold && flash)
         {
             led_front = on;
         }
-        if(front_sensor > front_short_threshold)
+        if(front_sensor > test_front_short_threshold)
         {
             led_front = on;
         }
-	if(left_side_sensor > ls_threshold)
+	if(left_side_sensor > test_ls_threshold)
         {
             led4 = on;
             led5 = on;
             led6 = on;
         }
-        if(right_side_sensor > rs_threshold)
+        if(right_side_sensor > test_rs_threshold)
         {
             led1 = on;
             led2 = on;
             led3 = on;
         }
-        if(l45_sensor > l45_threshold && flash)
+        if(l45_sensor > test_l45_threshold && flash)
         {
             led_left = on;
         }
-        if(l45_sensor > l45_toclose)
+        if(l45_sensor > test_l45_toclose)
         {
             led_left = on;
         }
-        if(r45_sensor > r45_threshold && flash)
+        if(r45_sensor > test_r45_threshold && flash)
         {
             led_right = on;
         }
-        if(r45_sensor > r45_toclose)
+        if(r45_sensor > test_r45_toclose)
         {
             led_right = on;
         }
@@ -439,10 +448,20 @@ int main(int argc, char** argv)
         {
             while(command_mode)
             {
+                //
                 // check for events
-                
-                
+                //
+                if(battery_data_ready)
+                {
+                    // slight race condition here, but not a major problem if we miss one
+                    int battery_v = battery_voltage & 0x3FF;
+                    battery_data_ready = 0;     // clear request
+                    send_event(EV_BATTERY_VOLTAGE + (battery_v >> 8));
+                    send_event(battery_v & 0xFF);
+                }
+                //
                 // process commands
+                //
                 cmd = serial_get_byte();
                 //if(command_mode == COMMANDS_ASCII)
                 //{

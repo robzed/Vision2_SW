@@ -8,7 +8,6 @@
 
 #include "hardware.h"
 #include "timer_interrupts.h"
-#include "size_constants.h"
 
 static volatile int d_t_g=0;
 static volatile int dist_to_test=0;
@@ -32,6 +31,25 @@ static volatile int wall_edge_flag=0;
 static volatile int d_t_g_flag=0;
 static volatile int corrector=0;
 
+
+// to be removed!!!
+#define cell	347			//adjust these values for cell distance		
+
+
+#define wall_edge_to_crt	230	//front error corection value
+								//should equal distance from wall edge to
+								//centre of square 
+
+
+#define front_long_threshold 15		//adjusted once data output vis RS232
+#define front_short_threshold 50	//is available 
+#define ls_threshold		200
+#define rs_threshold		200
+#define r45_threshold		540
+#define l45_threshold		360
+#define r45_toclose		760
+#define l45_toclose		580
+// end to be removed!!
 
 
 //***************************************************************************************
@@ -95,41 +113,49 @@ int acc_table[512] __attribute__((space(auto_psv)))=
 };
 //*************************************************************************************
 
+// IR sensors, Base clock = 125KHz or 8us, actual expiry = 125000/0x800 = 16.376ms. 
+// Notice, out of phase with battery...
 void init_timer1(void)
 {	T1CON=0;				//stops timer1 and reset control register
 	TMR1=0;				//clear contents of timer register
 	PR1=0x07FF;			//load timer value into period register
-	IPC0bits.T1IP=1;		//set timer1 interrupt prioity to 1
+	IPC0bits.T1IP=1;		//set timer1 interrupt priority to 1
 	T1CONbits.TCKPS=2;		//set timer1 prescale to 1:64
 	IFS0bits.T1IF=1;		//clear timer1 interrupt status flag
 	IEC0bits.T1IE=1;		//enable timer1 interrupts
 	//to start timer1 - T1CONbits.TON=1
 }	
+
+// Left Motor (FCY/8 = 1MHz, therefore 1us*10 = 100,000KHz)
 void init_timer2(void)
 {	T2CON=0;				//stops timer2 and reset control register
 	TMR2=0;				//clear contents of timer register
 	PR2=0x000A;			//load timer value into period register
-	IPC1bits.T2IP=4;		//set timer2 interrupt prioity to 4
+	IPC1bits.T2IP=4;		//set timer2 interrupt priority to 4
 	T2CONbits.TCKPS=1;		//set timer2 prescale to 1:8
 	IFS0bits.T2IF=1;		//clear timer2 interrupt status flag
 	IEC0bits.T2IE=1;		//enable timer2 interrupts
 	//to start timer2 - T2CONbits.TON=1
 }
+
+// Battery Sensor, Base clock = 125KHz or 8us, actual expiry = 125000/4096 = 32.768ms
 void init_timer3(void)
 {	T3CON=0;				//stops timer3 and reset control register
 	TMR3=0;				//clear contents of timer register
 	PR3=0x1000;			//load timer value into period register
-	IPC1bits.T3IP=1;		//set timer3 interrupt prioity to 1
+	IPC1bits.T3IP=1;		//set timer3 interrupt priority to 1
 	T3CONbits.TCKPS=2;		//set timer3 prescale to 1:64
 	IFS0bits.T3IF=1;		//clear timer3 interrupt status flag
 	IEC0bits.T3IE=1;		//enable timer3 interrupts
 	//to start timer3 - T3CONbits.TON=1
 }
+
+// Right motor (FCY/8 = 1MHz, therefore 1us*10 = 100,000KHz)
 void init_timer4(void)
 {	T4CON=0;				//stops timer4 and reset control register
 	TMR4=0;				//clear contents of timer register
 	PR4=0x000A;			//load timer value into period register
-	IPC5bits.T4IP=4;		//set timer4 interrupt prioity to 4
+	IPC5bits.T4IP=4;		//set timer4 interrupt priority to 4
 	T4CONbits.TCKPS=1;		//set timer4 prescale to 1:8
 	IFS1bits.T4IF=1;		//clear timer4 interrupt status flag
 	IEC1bits.T4IE=1;		//enable timer4 interrupts
@@ -148,12 +174,12 @@ void __attribute__((__interrupt__,auto_psv))_T1Interrupt(void)
 //***************************************************************************************************
 //battery monitor timer interrupt
 //***************************************************************************************************
-/*void __attribute__((__interrupt__,auto_psv))_T3Interrupt(void)
+void __attribute__((__interrupt__,auto_psv))_T3Interrupt(void)
 {	
 	IFS0bits.T3IF = 0; 		// clear timer3 interrupt status flag
 	battery_check();
 }
- */
+
 
 //**************************************************************************************************
 //left motor interrupt
@@ -288,3 +314,7 @@ void sensor_select(void)
 
 
 
+void init_timer_subsystems(void)
+{
+    
+}

@@ -28,13 +28,15 @@
 
 
 void ConfigureOscillator(void);
-void InitPorts();
-void InitPeripherals();
+void InitPorts(void);
+void InitPeripherals(void);
 void AllLedsOff(void);
 void LedSwitch(int led, int state);
 void delay_ms(unsigned int ms_count);
 unsigned int adc_read(unsigned int chan);
 void delay_us( unsigned int us_count );
+
+void battery_check(void);
 
 // Input definition for read_sensor
 enum {
@@ -70,6 +72,9 @@ extern unsigned int right_side_sensor;
 extern unsigned int left_side_sensor;
 extern unsigned int r45_sensor;
 extern unsigned int l45_sensor;
+
+extern volatile unsigned int battery_voltage;
+extern volatile char battery_data_ready;
 
 
 #endif	/* HARDWARE_H */

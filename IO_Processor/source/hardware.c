@@ -12,9 +12,10 @@
 
 void ConfigureOscillator(void)
 {
+    // nothing to do here
 }
 
-void InitPorts()
+void InitPorts(void)
 {
     // Configure I/O port directions
     TRISB=0x003F;
@@ -49,7 +50,7 @@ void init_uart(void)
 	U1STA=0x8400;				//Enable interrupt, enable Transmit
 }
 
-void InitPeripherals()
+void InitPeripherals(void)
 {
     init_adc();
     init_uart();
@@ -283,3 +284,15 @@ int serial_get_char()
 {
     return (char)serial_get_byte();
 }
+
+volatile unsigned int battery_voltage;
+volatile char battery_data_ready = 0;
+
+void battery_check(void)
+{
+    battery_voltage = adc_read(bat);
+    battery_data_ready = 1;
+}
+
+
+

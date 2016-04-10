@@ -13,6 +13,7 @@
 
 #include "hardware.h"
 #include "commands_ref.h"
+#include "size_constants.h"
 
 void LED_Test(void)
 {
@@ -98,21 +99,6 @@ bool button_pressed(bool buttonA)
 }
 
 
-// figures just for test
-#define front_long_threshold    15
-#define front_short_threshold   50
-#define ls_threshold            200
-#define rs_threshold            200
-#define r45_threshold           360
-#define l45_threshold           360
-#define r45_toclose             540
-#define l45_toclose             540
-
-extern unsigned int front_sensor;
-extern unsigned int right_side_sensor;
-extern unsigned int left_side_sensor;
-extern unsigned int r45_sensor;
-extern unsigned int l45_sensor;
 
 void IR_Test(bool button)
 {
@@ -453,6 +439,10 @@ int main(int argc, char** argv)
         {
             while(command_mode)
             {
+                // check for events
+                
+                
+                // process commands
                 cmd = serial_get_byte();
                 //if(command_mode == COMMANDS_ASCII)
                 //{
@@ -486,6 +476,16 @@ int main(int argc, char** argv)
                         send_event(EV_POLL_REPLY + low_nibble);
                         break;
                     case CMD_TYPE_REQUEST_STATE:
+                        switch(low_nibble)
+                        {
+                            case 4: // battery voltage
+                                break;
+                            case 7: // 
+                                
+                            default:
+                                send_event(EV_FAIL_INVALID_COMMAND);
+                                break;
+                        }
                         break;
                     case CMD_TYPE_MOVE_COMMANDS:
                         break;

@@ -12,5 +12,10 @@ def main():
     s = port.read(bytes_waiting)
     print(":".join("{:02x}".format(ord(c)) for c in s))
 
+    report.write(b'\xFE\xFC\xF8\xFE')
+    s = port.read(10)
+    print(len(s)
+    print(":".join("{:02x}".format(ord(c)) for c in s))
+    
 main()
 

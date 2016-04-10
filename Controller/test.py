@@ -22,7 +22,7 @@ def wait_for_poll_repl(port):
     s = port.read(1)
     if s == '\x80':
         print("> Got Poll answer")
-    else if len(s) == 0:
+    elif len(s) == 0:
         print("No message received at all")
     else:
         print("Got", message_into_hex(s))
@@ -38,13 +38,13 @@ def send_switch_led_command(port, led, on):
 
     port.write(chr(command))
 
-def move_forward(port, distance)
+def move_forward(port, distance):
     s = "\xC1" + chr(distance >> 8) + chr(distance & 0xff)
     port.write(s)
 
 ################################################
     
-def recover_from_major_error(port)
+def recover_from_major_error(port):
     exit(1)
 
 def EV_UKNNOWN_RESET(port, cmd):
@@ -75,7 +75,7 @@ def EV_BATTERY_VOLTAGE(port, cmd):
     if len(ADC_reading == 0):
         print("Didn't get second byte of battery voltage")
         recover_from_major_error()
-    elseif len(ADC_reading > 1):
+    elif len(ADC_reading > 1):
         print("More than one byte in voltage")
         recover_from_major_error()
 
@@ -136,10 +136,11 @@ command_handlers = {
     0xE2: EV_FAIL_INVALID_COMMAND,
 }
 
-def event_processor()
+def event_processor():
     cmd = ord(port_read(1))
     if len(cmd) == 0:
         # no packet in timeout...
+        pass
     elif cmd in command_handlers:
         command_handlers[cmd](port, cmd)
     else:

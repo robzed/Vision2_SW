@@ -510,182 +510,194 @@ int main(int argc, char** argv)
                     send_event(key?EV_BUTTON_B_PRESS:EV_BUTTON_B_RELEASE);
                 }
                 
+                if(get_distance_test_flag())
+                {
+                    send_event(EV_TEST_DISTANCE);
+                    send_event(EV_IR_FRONT_SIDE_STATE + get_ir_front_side_bitmap());
+                }
+                
                 // -----------------------------------------------------
                 //
                 // process commands
                 //
-                cmd = serial_get_byte();
-                //if(command_mode == COMMANDS_ASCII)
-                //{
-                //    
-                //}
-                cmd_t low_nibble = cmd&0x0F;
-                switch(cmd >> 4)
+                if(serial_byte_waiting())
                 {
-                    case CMD_TYPE_LED_OFF:
-                        LedSwitch(low_nibble, off);
-                        break;
-                    case CMD_TYPE_LED_ON:
-                        LedSwitch(low_nibble, on);
-                        break;
-                    case CMD_TYPE_ALL_LEDS:
-                        LedSwitch(9, low_nibble&0x01);
-                        cmd = serial_get_byte();
-                        for(i = 1; i < 9; i++)
-                        {
-                            LedSwitch(i, cmd&0x01);
-                            cmd >>= 1;
-                        }
-                        break;
-                    case CMD_DISABLE_SERIAL:
-                        // any lower nibble
-                        send_event(EV_LOCK_BY_COMMAND);
-                        break;
-                    case CMD_DISABLE_SERIAL2:
-                        // any lower nibble
-                        send_event(EV_LOCK_BY_COMMAND);
-                        break;                    
-                    case CMD_TYPE_POLL:
-                        send_event(EV_POLL_REPLY + low_nibble);
-                        break;
-                    case CMD_TYPE_REQUEST_STATE:
-                        switch(low_nibble)
-                        {
-                            case 4: // battery voltage
+                    cmd = serial_get_byte();
+                    //if(command_mode == COMMANDS_ASCII)
+                    //{
+                    //    
+                    //}
+                    cmd_t low_nibble = cmd&0x0F;
+                    switch(cmd >> 4)
+                    {
+                        case CMD_TYPE_LED_OFF:
+                            LedSwitch(low_nibble, off);
+                            break;
+                        case CMD_TYPE_LED_ON:
+                            LedSwitch(low_nibble, on);
+                            break;
+                        case CMD_TYPE_ALL_LEDS:
+                            LedSwitch(9, low_nibble&0x01);
+                            cmd = serial_get_byte();
+                            for(i = 1; i < 9; i++)
                             {
-                                int battery_v = battery_voltage & 0x3FF;
-                                send_event(EV_BATTERY_VOLTAGE + (battery_v >> 8));
-                                send_event(battery_v & 0xFF);
-                                break;
+                                LedSwitch(i, cmd&0x01);
+                                cmd >>= 1;
                             }
-                            case 8: //IR front/side state
-                                send_event(EV_IR_FRONT_SIDE_STATE + get_ir_front_side_bitmap());
-                                break;
-                            case 9: //IR 45 state
-                                send_event(EV_IR_45_STATE + get_ir_45_bitmap());
-                                break;
-                            case 10: // IR front level
-                                send_event(EV_IR_FRONT_LEVEL);
-                                serial_write_int16(front_sensor);
-                                break;
-                            case 11: // L90 level
-                                send_event(EV_L90_LEVEL);
-                                serial_write_int16(left_side_sensor);
-                                break;
-                            case 12: // L45 level
-                                send_event(EV_L45_LEVEL);
-                                serial_write_int16(l45_sensor);
-                                break;
-                            case 13: // R90 level
-                                send_event(EV_R90_LEVEL);
-                                serial_write_int16(right_side_sensor);
-                                break;
-                            case 14: // R45 level
-                                send_event(EV_R45_LEVEL);
-                                serial_write_int16(r45_sensor);
-                                break;
-                            default:
-                                send_event(EV_FAIL_INVALID_COMMAND);
-                                break;
-                        }
-                        break;
-                    case CMD_TYPE_MOVE_COMMANDS:
-                        switch(low_nibble)
-                        {
-                            case 0: // motors off
-                                en_mot = mot_off;
-                                break;
-                            case 1: // forward (parameter = distance)
-                                en_mot = mot_on;
-                                fwd();
-                                timer_move(serial_get_int16(), set_speed, set_corrector);
-                                timer_running = true;
-                                break;
-                            case 2: // right (parameter = distance)
-                                en_mot = mot_on;
-                                turnr();
-                                timer_move(serial_get_int16(), set_speed, set_corrector);
-                                timer_running = true;
-                                break;
-                            case 3: // left (parameter = distance)
-                                en_mot = mot_on;
-                                turnl();
-                                timer_move(serial_get_int16(), set_speed, set_corrector);
-                                timer_running = true;
-                                break;
-                            case 4: // set speed
-                                set_speed = serial_get_uint16();
-                                break;
-                            case 5: // set steering correction
-                                set_corrector = serial_get_int16();
-                                break;
-                            case 6: // extend movement
-                                timer_fine_to_move_another_cell();
-                                break;
-                            case 7: // set cell distance (+2 bytes)
-                                set_cell_distance(serial_get_int16());
-                                break;
-                            case 8: // set correction distance (+2 bytes)
-                                set_wall_edge_to_crt_distance(serial_get_int16());
-                                break;
+                            break;
+                        case CMD_DISABLE_SERIAL:
+                            // any lower nibble
+                            send_event(EV_LOCK_BY_COMMAND);
+                            break;
+                        case CMD_DISABLE_SERIAL2:
+                            // any lower nibble
+                            send_event(EV_LOCK_BY_COMMAND);
+                            break;                    
+                        case CMD_TYPE_POLL:
+                            send_event(EV_POLL_REPLY + low_nibble);
+                            break;
+                        case CMD_TYPE_REQUEST_STATE:
+                            switch(low_nibble)
+                            {
+                                case 4: // battery voltage
+                                {
+                                    int battery_v = battery_voltage & 0x3FF;
+                                    send_event(EV_BATTERY_VOLTAGE + (battery_v >> 8));
+                                    send_event(battery_v & 0xFF);
+                                    break;
+                                }
+                                case 8: //IR front/side state
+                                    send_event(EV_IR_FRONT_SIDE_STATE + get_ir_front_side_bitmap());
+                                    break;
+                                case 9: //IR 45 state
+                                    send_event(EV_IR_45_STATE + get_ir_45_bitmap());
+                                    break;
+                                case 10: // IR front level
+                                    send_event(EV_IR_FRONT_LEVEL);
+                                    serial_write_int16(front_sensor);
+                                    break;
+                                case 11: // L90 level
+                                    send_event(EV_L90_LEVEL);
+                                    serial_write_int16(left_side_sensor);
+                                    break;
+                                case 12: // L45 level
+                                    send_event(EV_L45_LEVEL);
+                                    serial_write_int16(l45_sensor);
+                                    break;
+                                case 13: // R90 level
+                                    send_event(EV_R90_LEVEL);
+                                    serial_write_int16(right_side_sensor);
+                                    break;
+                                case 14: // R45 level
+                                    send_event(EV_R45_LEVEL);
+                                    serial_write_int16(r45_sensor);
+                                    break;
+                                default:
+                                    send_event(EV_FAIL_INVALID_COMMAND);
+                                    break;
+                            }
+                            break;
+                        case CMD_TYPE_MOVE_COMMANDS:
+                            switch(low_nibble)
+                            {
+                                case 0: // motors off
+                                    en_mot = mot_off;
+                                    break;
+                                case 1: // forward (parameter = distance)
+                                    en_mot = mot_on;
+                                    fwd();
+                                    timer_move(serial_get_int16(), set_speed, set_corrector);
+                                    timer_running = true;
+                                    break;
+                                case 2: // right (parameter = distance)
+                                    en_mot = mot_on;
+                                    turnr();
+                                    timer_move(serial_get_int16(), set_speed, set_corrector);
+                                    timer_running = true;
+                                    break;
+                                case 3: // left (parameter = distance)
+                                    en_mot = mot_on;
+                                    turnl();
+                                    timer_move(serial_get_int16(), set_speed, set_corrector);
+                                    timer_running = true;
+                                    break;
+                                case 4: // set speed
+                                    set_speed = serial_get_uint16();
+                                    break;
+                                case 5: // set steering correction
+                                    set_corrector = serial_get_int16();
+                                    break;
+                                case 6: // extend movement
+                                    timer_fine_to_move_another_cell();
+                                    break;
+                                case 7: // set cell distance (+2 bytes)
+                                    set_cell_distance(serial_get_int16());
+                                    break;
+                                case 8: // set correction distance (+2 bytes)
+                                    set_wall_edge_to_crt_distance(serial_get_int16());
+                                    break;
+                                case 9: // set distance to test (+2 bytes)
+                                    set_distance_to_test(serial_get_int16());
+                                    break;
+                                default:
+                                    break;
+                            }
+                            break;
+                        case CMD_TYPE_IR_CONTROL:
+                            switch(low_nibble)
+                            {
+                                case 0:
+                                    disable_IR_scanning();
+                                    break;
+                                case 1:
+                                    enable_IR_scanning();
+                                    break;
 
-                            default:
-                                break;
-                        }
-                        break;
-                    case CMD_TYPE_IR_CONTROL:
-                        switch(low_nibble)
-                        {
-                            case 0:
-                                disable_IR_scanning();
-                                break;
-                            case 1:
-                                enable_IR_scanning();
-                                break;
-                                
-                            case 8:
-                                set_front_long_threshold(serial_get_int16());
-                                break;
-                            case 9:
-                                set_front_short_threshold(serial_get_int16());
-                                break;
-                            case 10:
-                                set_left_side_threshold(serial_get_int16());
-                                break;
-                            case 11:
-                                set_right_side_threshold(serial_get_int16());
-                                break;
-                            case 12:
-                                set_left_45_threshold(serial_get_int16());
-                                break;
-                            case 13:
-                                set_right_45_threshold(serial_get_int16());
-                                break;
-                            case 14:
-                                set_left_45_too_close_threshold(serial_get_int16());
-                                break;
-                            case 15:
-                                set_right_45_too_close_threshold(serial_get_int16());
-                                break;
-                            default:
-                                break;
-                        }
-                        break;
-                    case CMD_TYPE_SYS_REQUESTS: 
-                        // for the moment, assume all unlock requests
-                        send_event(EV_UNLOCK_FROM_UNLOCK);
-                        break;
-                    default:
-                        send_event(EV_FAIL_INVALID_COMMAND);
-                        break;
-                }
+                                case 8:
+                                    set_front_long_threshold(serial_get_int16());
+                                    break;
+                                case 9:
+                                    set_front_short_threshold(serial_get_int16());
+                                    break;
+                                case 10:
+                                    set_left_side_threshold(serial_get_int16());
+                                    break;
+                                case 11:
+                                    set_right_side_threshold(serial_get_int16());
+                                    break;
+                                case 12:
+                                    set_left_45_threshold(serial_get_int16());
+                                    break;
+                                case 13:
+                                    set_right_45_threshold(serial_get_int16());
+                                    break;
+                                case 14:
+                                    set_left_45_too_close_threshold(serial_get_int16());
+                                    break;
+                                case 15:
+                                    set_right_45_too_close_threshold(serial_get_int16());
+                                    break;
+                                default:
+                                    break;
+                            }
+                            break;
+                        case CMD_TYPE_SYS_REQUESTS: 
+                            // for the moment, assume all unlock requests
+                            send_event(EV_UNLOCK_FROM_UNLOCK);
+                            break;
+                        default:
+                            send_event(EV_FAIL_INVALID_COMMAND);
+                            break;
+                            
+                    } // switch on upper nibble
+                    
+                    // finally, when read all bytes ... tell the host we are OK
+                    send_event(EV_GOT_INSTRUCTION);
+                }   // if byte waiting
                 
-                // finally, when read all bytes ... tell the host we are OK
-                send_event(EV_GOT_INSTRUCTION);
-
-            }
-        }
-    }
+            } // while(command_mode)
+        } // else (not locked)
+    } // while(1)
     return 0;
 }
 

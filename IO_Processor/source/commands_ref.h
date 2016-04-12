@@ -71,6 +71,7 @@ typedef unsigned char cmd_t;
                                         // nnnn = 6 extend movement
                                         // nnnn = 7 set cell distance + 2 bytes distance
                                         // nnnn = 8 wall edge correction + 2 bytes distance
+                                        // nnnn = 9 set distance to test + 2 bytes distance
 
 #define CMD_TYPE_IR_CONTROL     0xD     // bits 1-3=0, bit 0=1, turn on IR timers, bit 0=0, turn off IR timers.
                                         // bits 0-3 =  8 set_front_long_threshold (+2 bytes)
@@ -125,6 +126,7 @@ typedef unsigned char cmd_t;
 
 #define EV_BATTERY_VOLTAGE      0x10        // bit 0 and bit 1 plus extra byte
 #define EV_FINISHED_MOVE        0x20        // single command
+#define EV_TEST_DISTANCE        0x21        // single command (but always followed immediately by EV_IR_FRONT_SIDE_STATE)
 
 #define EV_BUTTON_A_RELEASE     0x30
 #define EV_BUTTON_B_RELEASE     0x31

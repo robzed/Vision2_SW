@@ -441,7 +441,7 @@ int get_ir_front_side_bitmap()
 // bit 1 = right 45
 // bit 2 = left 45 too close
 // bit 3 = right 45 too close
-int get_ir_45_bitmap()
+int get_ir_45_bitmap(void)
 {
     int b = 0;
     if(l45_sensor > l45_threshold) { b+=1; }
@@ -451,3 +451,15 @@ int get_ir_45_bitmap()
     return b;
 }
 
+void set_distance_to_test(int distance)
+{
+    dist_to_test = distance;
+    dist_test_flag = 0;
+}
+
+int get_distance_test_flag(void)
+{
+    int flag = dist_test_flag;
+    dist_test_flag = 0;
+    return flag;
+}

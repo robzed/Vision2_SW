@@ -42,7 +42,10 @@ void set_right_45_too_close_threshold(int);          // gross steering
 void set_left_45_too_close_threshold(int);    // gross steering
 
 int get_ir_front_side_bitmap();
-int get_ir_45_bitmap();
+int get_ir_45_bitmap(void);
+
+void set_distance_to_test(int distance);
+int get_distance_test_flag(void);
 
 #ifdef	__cplusplus
 }

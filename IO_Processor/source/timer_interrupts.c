@@ -413,7 +413,7 @@ void set_left_45_threshold(int t)
     l45_threshold = t;
 }
 
-void set_r45_too_close_threshold(int t)
+void set_right_45_too_close_threshold(int t)
 {
     r45_toclose = t;
 }

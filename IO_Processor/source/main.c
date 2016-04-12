@@ -605,7 +605,7 @@ int main(int argc, char** argv)
                         }
                         break;
                     case CMD_TYPE_IR_CONTROL:
-                        switch(low_nibble())
+                        switch(low_nibble)
                         {
                             case 0:
                                 disable_IR_scanning();
@@ -643,6 +643,8 @@ int main(int argc, char** argv)
                         }
                         
                     case CMD_TYPE_SYS_REQUESTS: 
+                        // for the moment, assume all unlock requests
+                        send_event(EV_UNLOCK_FROM_UNLOCK);
                         break;
                     default:
                         send_event(EV_FAIL_INVALID_COMMAND);

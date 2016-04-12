@@ -515,6 +515,7 @@ int main(int argc, char** argv)
                 // process commands
                 //
                 cmd = serial_get_byte();
+                send_event(EV_GOT_INSTRUCTION);
                 //if(command_mode == COMMANDS_ASCII)
                 //{
                 //    
@@ -537,19 +538,12 @@ int main(int argc, char** argv)
                             cmd >>= 1;
                         }
                         break;
-                    case CMD_TYPE_IR_CONTROL:
-                        if(low_nibble == 0)
-                        {
-                            disable_IR_scanning();
-                        }
-                        else if(low_nibble == 1)
-                        {
-                            enable_IR_scanning();
-                        }
-                    case DISABLE_SERIAL:
+                    case CMD_DISABLE_SERIAL:
+                        // any lower nibble
                         send_event(EV_LOCK_BY_COMMAND);
                         break;
-                    case DISABLE_SERIAL2:
+                    case CMD_DISABLE_SERIAL2:
+                        // any lower nibble
                         send_event(EV_LOCK_BY_COMMAND);
                         break;                    
                     case CMD_TYPE_POLL:
@@ -603,6 +597,15 @@ int main(int argc, char** argv)
                                 
                         }
                         break;
+                    case CMD_TYPE_IR_CONTROL:
+                        if(low_nibble == 0)
+                        {
+                            disable_IR_scanning();
+                        }
+                        else if(low_nibble == 1)
+                        {
+                            enable_IR_scanning();
+                        }
                     case CMD_TYPE_SYS_REQUESTS: 
                         break;
                     default:

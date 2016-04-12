@@ -38,11 +38,10 @@ typedef unsigned char cmd_t;
 #define CMD_TYPE_LED_OFF        0x0        // bottom 4 bits = LED 1-9
 #define CMD_TYPE_LED_ON         0x1        // bottom 4 bits = LED 1-9
 #define CMD_TYPE_ALL_LEDS       0x2        // extra byte (leds 1-8, led 9-bit 0 of cmd byte)
-#define CMD_TYPE_IR_CONTROL     0x3        // bit 0=1, turn on IR timers, bit 0=0, turn off IR timers.
 // 0x30 unused (ASCII range)
 // 0x40 unused (ASCII range)
-#define DISABLE_SERIAL          0x5        // Start of “Uncompressing Linux…”
-#define DISABLE_SERIAL2         0x6        // Start of “Uncompressing Linux…”
+#define CMD_DISABLE_SERIAL          0x5        // Start of “Uncompressing Linux…”
+#define CMD_DISABLE_SERIAL2         0x6        // Start of “Uncompressing Linux…”
 // 0x70 unused (ASCII range)
 #define CMD_TYPE_POLL           0x8        // bottom 4 bytes ignored / reflected(?) (To be confirmed)
 #define CMD_TYPE_REQUEST_STATE  0x9        // nnnn=0 all state (in the following order)
@@ -56,7 +55,7 @@ typedef unsigned char cmd_t;
 // 0xA0 unused
 // 0xB0 unused
 #define CMD_TYPE_MOVE_COMMANDS  0xC
-// 0xD0 unused
+#define CMD_TYPE_IR_CONTROL     0xD        // bit 0=1, turn on IR timers, bit 0=0, turn off IR timers.
 // 0xE0 unused
 #define CMD_TYPE_SYS_REQUESTS   0xF
 
@@ -115,7 +114,10 @@ typedef unsigned char cmd_t;
 
 #define EV_POLL_REPLY           0x80
 
+// general command / system message 0xEx
 #define EV_FAIL_INVALID_COMMAND 0xE2
+#define EV_GOT_INSTRUCTION      0xEF
+
 
 
 #ifdef	__cplusplus

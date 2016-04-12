@@ -42,6 +42,14 @@ def move_forward(port, distance):
     s = "\xC1" + chr(distance >> 8) + chr(distance & 0xff)
     port.write(s)
 
+def move_right(port, distance):
+    s = "\xC2" + chr(distance >> 8) + chr(distance & 0xff)
+    port.write(s)
+
+def move_left(port, distance):
+    s = "\xC3" + chr(distance >> 8) + chr(distance & 0xff)
+    port.write(s)
+
 def turn_on_ir(port):
     port.write("\xD1")
     

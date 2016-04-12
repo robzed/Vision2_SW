@@ -1,4 +1,4 @@
-#
+﻿#
 #
 from __future__ import print_function
 
@@ -53,6 +53,8 @@ def move_left(port, distance):
 def turn_on_ir(port):
     port.write("\xD1")
     
+def turn_off_ir(port):
+    port.write("\xD0")
 
 ################################################
     
@@ -160,6 +162,10 @@ def event_processor(port):
         print("Unknown event", hex(cmd), "ignoring")
         #recover_from_major_error()
 
+distance_cell	= 347			# adjust these values for cell distance		
+distance_turnl90	= 112		# turn left 90deg
+distance_turnr90	= 112		# turn right 90deg
+distance_turn180 = 224		# turn 180deg
 
 def main():
     port = serial.Serial("/dev/ttyAMA0", baudrate = 57600, timeout = 0.2)
@@ -179,11 +185,36 @@ def main():
     send_switch_led_command(port, 1, True)
     for i in range(3):
         event_processor(port)
+
     turn_on_ir(port)
     for i in range(3):
         event_processor(port)
 
     move_forward(port, 4*347)
+    for i in range(3):
+        event_processor(port)
+
+    turn_off_ir(port)
+    for i in range(3):
+        event_processor(port)
+
+    move_right(port, distance_turn180)
+    for i in range(3):
+        event_processor(port)
+
+    turn_on_ir(port)
+    for i in range(3):
+        event_processor(port)
+
+    move_forward(port, 347)
+    for i in range(3):
+        event_processor(port)
+
+    turn_off_ir(port)
+    for i in range(3):
+        event_processor(port)
+
+    move_left(port, distance_turnl90)
     for i in range(3):
         event_processor(port)
 

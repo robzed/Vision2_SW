@@ -97,8 +97,13 @@ typedef unsigned char cmd_t;
 #define EV_EXTERNAL_RESET		0x05
 #define EV_EXCEPTION_RESET		0x06
 
-#define EV_BATTERY_VOLTAGE      0x10
-#define EV_FINISHED_MOVE        0x20
+#define EV_BATTERY_VOLTAGE      0x10        // bit 0 and bit 1 plus extra byte
+#define EV_FINISHED_MOVE        0x20        // single command
+
+#define EV_BUTTON_A_RELEASE     0x30
+#define EV_BUTTON_B_RELEASE     0x31
+#define EV_BUTTON_A_PRESS       0x38
+#define EV_BUTTON_B_PRESS       0x39
 
 
 // unlocking

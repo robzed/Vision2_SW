@@ -37,6 +37,7 @@ unsigned int adc_read(unsigned int chan);
 void delay_us( unsigned int us_count );
 
 void battery_check(void);
+void key_scan(void);
 
 // Input definition for read_sensor
 enum {

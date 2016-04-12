@@ -574,6 +574,10 @@ int main(int argc, char** argv)
                             case 5: // set steering correction
                                 set_corrector = serial_get_int16();
                                 break;
+                            case 6: // extend movement
+                                timer_fine_to_move_another_cell();
+                                break;
+                                
                         }
                         break;
                     case CMD_TYPE_SYS_REQUESTS: 

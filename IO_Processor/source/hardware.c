@@ -307,5 +307,13 @@ void battery_check(void)
     battery_data_ready = 1;
 }
 
+volatile char key_map = 0;
+volatile char key_changed = 0;
 
+void key_scan(void)
+{
+    if(!(key_map & 1) == Grey_A_ButtonPressed())
+    {
+    }
+}
 

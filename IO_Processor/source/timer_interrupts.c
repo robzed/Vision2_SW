@@ -192,6 +192,7 @@ void __attribute__((__interrupt__,auto_psv))_T3Interrupt(void)
 {	
 	IFS0bits.T3IF = 0; 		// clear timer3 interrupt status flag
 	battery_check();
+    key_scan();
 }
 
 

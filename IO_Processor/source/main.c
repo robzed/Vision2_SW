@@ -552,9 +552,38 @@ int main(int argc, char** argv)
                         switch(low_nibble)
                         {
                             case 4: // battery voltage
+                            {
+                                int battery_v = battery_voltage & 0x3FF;
+                                send_event(EV_BATTERY_VOLTAGE + (battery_v >> 8));
+                                send_event(battery_v & 0xFF);
                                 break;
-                            case 7: // 
-                                
+                            }
+                            case 8: //IR front/side state
+                                send_event(EV_IR_FRONT_SIDE_STATE + get_ir_front_side_bitmap());
+                                break;
+                            case 9: //IR 45 state
+                                send_event(EV_IR_45_STATE + get_ir_45_bitmap());
+                                break;
+                            case 10: // IR front level
+                                send_event(EV_IR_FRONT_LEVEL);
+                                serial_write_int16(front_sensor);
+                                break;
+                            case 11: // L90 level
+                                send_event(EV_L90_LEVEL);
+                                serial_write_int16(left_side_sensor);
+                                break;
+                            case 12: // L45 level
+                                send_event(EV_L45_LEVEL);
+                                serial_write_int16(l45_sensor);
+                                break;
+                            case 13: // R90 level
+                                send_event(EV_R90_LEVEL);
+                                serial_write_int16(right_side_sensor);
+                                break;
+                            case 14: // R45 level
+                                send_event(EV_R45_LEVEL);
+                                serial_write_int16(r45_sensor);
+                                break;
                             default:
                                 send_event(EV_FAIL_INVALID_COMMAND);
                                 break;
@@ -641,7 +670,7 @@ int main(int argc, char** argv)
                             default:
                                 break;
                         }
-                        
+                        break;
                     case CMD_TYPE_SYS_REQUESTS: 
                         // for the moment, assume all unlock requests
                         send_event(EV_UNLOCK_FROM_UNLOCK);

@@ -44,14 +44,22 @@ typedef unsigned char cmd_t;
 #define CMD_DISABLE_SERIAL2         0x6        // Start of “Uncompressing Linux…”
 // 0x70 unused (ASCII range)
 #define CMD_TYPE_POLL           0x8        // bottom 4 bytes ignored / reflected(?) (To be confirmed)
-#define CMD_TYPE_REQUEST_STATE  0x9        // nnnn=0 all state (in the following order)
-                                            //nnnn=1 LED state
-                                            //nnnn=2 movement state
-                                            //nnnn=3 IR state
-                                            //nnnn=4 battery voltage
-                                            //nnnn=5 IR levels
+#define CMD_TYPE_REQUEST_STATE  0x9        // nnnn=0 all state <not implemented>(in the following order)
+                                            //nnnn=1 LED state <not implemented>
+                                            //nnnn=2 movement state<not implemented>
+                                            //nnnn=3 <spare>
+                                            //nnnn=4 battery voltage <not implemented>
+                                            //nnnn=5 <spare>
                                             //nnnn=6 move_count
                                             //nnnn=7 reset type
+                                            //nnnn=8 IR front/side state
+                                            //nnnn=9 IR 45 state
+                                            //nnnn=10 IR front level
+                                            //nnnn=11 L90 level
+                                            //nnnn=12 L45 level
+                                            //nnnn=13 R90 level
+                                            //nnnn=14 R45 level
+
 // 0xA0 unused
 // 0xB0 unused
 #define CMD_TYPE_MOVE_COMMANDS  0xC     // nnnn = 0 stop motors
@@ -122,6 +130,20 @@ typedef unsigned char cmd_t;
 #define EV_BUTTON_B_RELEASE     0x31
 #define EV_BUTTON_A_PRESS       0x38
 #define EV_BUTTON_B_PRESS       0x39
+
+#define EV_IR_FRONT_SIDE_STATE  0x40        // bit 0 = front long
+                                            // bit 1 = front short
+                                            // bit 2 = left side
+                                            // bit 3 = right side
+#define EV_IR_45_STATE          0x50        // bit 0 = left 45
+                                            // bit 1 = right 45
+                                            // bit 2 = left 45 too close
+                                            // bit 3 = right 45 too close
+#define EV_IR_FRONT_LEVEL       0x61
+#define EV_L90_LEVEL            0x62
+#define EV_L45_LEVEL            0x63
+#define EV_R90_LEVEL            0x64
+#define EV_R45_LEVEL            0x65
 
 
 // unlocking

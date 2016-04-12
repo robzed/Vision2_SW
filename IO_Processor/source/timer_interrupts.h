@@ -41,6 +41,9 @@ void set_left_45_threshold(int);   // steering
 void set_right_45_too_close_threshold(int);          // gross steering
 void set_left_45_too_close_threshold(int);    // gross steering
 
+int get_ir_front_side_bitmap();
+int get_ir_45_bitmap();
+
 #ifdef	__cplusplus
 }
 #endif

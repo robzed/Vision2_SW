@@ -422,3 +422,32 @@ void set_left_45_too_close_threshold(int t)
 {
     l45_toclose = t;
 }
+
+// bit 0 = front long
+// bit 1 = front short
+// bit 2 = left side
+// bit 3 = right side
+int get_ir_front_side_bitmap()
+{
+    int b = 0;
+    if(front_sensor > front_long_threshold) { b+=1; }
+    if(front_sensor > front_short_threshold) { b+=2; }
+    if(left_side_sensor > ls_threshold) { b+=4; }
+    if(right_side_sensor > rs_threshold) { b+=8; };
+    return b;
+}
+
+// bit 0 = left 45
+// bit 1 = right 45
+// bit 2 = left 45 too close
+// bit 3 = right 45 too close
+int get_ir_45_bitmap()
+{
+    int b = 0;
+    if(l45_sensor > l45_threshold) { b+=1; }
+    if(r45_sensor > r45_threshold) { b+=2; }
+    if(l45_sensor > l45_toclose) { b+=4; }
+    if(r45_sensor > r45_toclose) { b+=8; };
+    return b;
+}
+

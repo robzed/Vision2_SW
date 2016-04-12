@@ -99,7 +99,11 @@ def EV_BATTERY_VOLTAGE(port, cmd):
     voltage = 5 * 12000 * (ADC_reading / (33000+12000))
     print("Approximate battery voltage = ", voltage)
 
+move_finished = False
+
 def EV_FINISHED_MOVE(port, cmd):
+    global move_finished
+    move_finished = True
     print("Got move finished")
 
 def EV_UNLOCK_FROM_LOCK(port, cmd):
@@ -194,6 +198,11 @@ def main():
     for i in range(3):
         event_processor(port)
 
+    global move_finished
+    while not move_finished:
+        event_processor(port)
+    move_finished = False
+
     turn_off_ir(port)
     for i in range(3):
         event_processor(port)
@@ -201,6 +210,10 @@ def main():
     move_right(port, distance_turn180)
     for i in range(3):
         event_processor(port)
+
+    while not move_finished:
+        event_processor(port)
+    move_finished = False
 
     turn_on_ir(port)
     for i in range(3):
@@ -210,6 +223,10 @@ def main():
     for i in range(3):
         event_processor(port)
 
+    while not move_finished:
+        event_processor(port)
+    move_finished = False
+
     turn_off_ir(port)
     for i in range(3):
         event_processor(port)
@@ -217,6 +234,10 @@ def main():
     move_left(port, distance_turnl90)
     for i in range(3):
         event_processor(port)
+
+    while not move_finished:
+        event_processor(port)
+    move_finished = False
 
     send_switch_led_command(port, 3, True)
     for i in range(3):

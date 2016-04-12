@@ -593,18 +593,55 @@ int main(int argc, char** argv)
                             case 6: // extend movement
                                 timer_fine_to_move_another_cell();
                                 break;
-                                
+                            case 7: // set cell distance (+2 bytes)
+                                set_cell_distance(serial_get_int16());
+                                break;
+                            case 8: // set correction distance (+2 bytes)
+                                set_wall_edge_to_crt_distance(serial_get_int16());
+                                break;
+
+                            default:
+                                break;
                         }
                         break;
                     case CMD_TYPE_IR_CONTROL:
-                        if(low_nibble == 0)
+                        switch(low_nibble())
                         {
-                            disable_IR_scanning();
+                            case 0:
+                                disable_IR_scanning();
+                                break;
+                            case 1:
+                                enable_IR_scanning();
+                                break;
+                                
+                            case 8:
+                                set_front_long_threshold(serial_get_int16());
+                                break;
+                            case 9:
+                                set_front_short_threshold(serial_get_int16());
+                                break;
+                            case 10:
+                                set_left_side_threshold(serial_get_int16());
+                                break;
+                            case 11:
+                                set_right_side_threshold(serial_get_int16());
+                                break;
+                            case 12:
+                                set_left_45_threshold(serial_get_int16());
+                                break;
+                            case 13:
+                                set_right_45_threshold(serial_get_int16());
+                                break;
+                            case 14:
+                                set_left_45_too_close_threshold(serial_get_int16());
+                                break;
+                            case 15:
+                                set_right_45_too_close_threshold(serial_get_int16());
+                                break;
+                            default:
+                                break;
                         }
-                        else if(low_nibble == 1)
-                        {
-                            enable_IR_scanning();
-                        }
+                        
                     case CMD_TYPE_SYS_REQUESTS: 
                         break;
                     default:

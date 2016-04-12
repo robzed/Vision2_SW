@@ -25,6 +25,22 @@ void timer_fine_to_move_another_cell(void);
 void disable_IR_scanning(void);
 void enable_IR_scanning(void);
 
+void set_cell_distance(int);	//adjust these values for cell distance		
+
+
+void set_wall_edge_to_crt_distance(int); //front error correction value
+								//should equal distance from wall edge to
+								//centre of square 
+
+void set_front_long_threshold(int);		// is there a wall far away - used for moving ahead on explore
+void set_front_short_threshold(int);     // front wall detection (also stops steering problems on turn)
+void set_left_side_threshold(int);    // side wall detection
+void set_right_side_threshold(int);    // side wall detection
+void set_right_45_threshold(int);   // steering
+void set_left_45_threshold(int);   // steering
+void set_right_45_too_close_threshold(int);          // gross steering
+void set_left_45_too_close_threshold(int);    // gross steering
+
 #ifdef	__cplusplus
 }
 #endif

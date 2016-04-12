@@ -54,8 +54,26 @@ typedef unsigned char cmd_t;
                                             //nnnn=7 reset type
 // 0xA0 unused
 // 0xB0 unused
-#define CMD_TYPE_MOVE_COMMANDS  0xC
-#define CMD_TYPE_IR_CONTROL     0xD        // bit 0=1, turn on IR timers, bit 0=0, turn off IR timers.
+#define CMD_TYPE_MOVE_COMMANDS  0xC     // nnnn = 0 stop motors
+                                        // nnnn = 1 forward + 2 bytes distance
+                                        // nnnn = 2 right + 2 bytes distance
+                                        // nnnn = 3 left + 2 bytes distance
+                                        // nnnn = 4 set speed + 2 bytes distance
+                                        // nnnn = 5 set steering correction + 2 bytes distance
+                                        // nnnn = 6 extend movement
+                                        // nnnn = 7 set cell distance + 2 bytes distance
+                                        // nnnn = 8 wall edge correction + 2 bytes distance
+
+#define CMD_TYPE_IR_CONTROL     0xD     // bits 1-3=0, bit 0=1, turn on IR timers, bit 0=0, turn off IR timers.
+                                        // bits 0-3 =  8 set_front_long_threshold (+2 bytes)
+                                        // bits 0-3 =  9 set_front_short_threshold (+2 bytes)
+                                        // bits 0-3 = 10 set_left_side_threshold (+2 bytes)
+                                        // bits 0-3 = 11 set_right_side_threshold (+2 bytes)
+                                        // bits 0-3 = 12 set_left_45_threshold (+2 bytes)
+                                        // bits 0-3 = 13 set_right_45_threshold (+2 bytes)
+                                        // bits 0-3 = 14 set_left_45_too_close_threshold (+2 bytes)
+                                        // bits 0-3 = 15 set_right_45_too_close_threshold (+2 bytes)
+                                           
 // 0xE0 unused
 #define CMD_TYPE_SYS_REQUESTS   0xF
 

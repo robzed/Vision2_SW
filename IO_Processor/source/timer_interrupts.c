@@ -46,24 +46,24 @@ static volatile int d_t_g_flag=0;       // it's fine to carry on an extra cell
 
 static volatile int corrector=0;        // steering correction factor
 
+//
+// internal working 'constants'
+//
+static int cell	= 347;			//adjust these values for cell distance		
 
-// to be removed!!! (replaced with dynamic ones from RPi)
-#define cell	347			//adjust these values for cell distance		
 
-
-#define wall_edge_to_crt	230	//front error corection value
+static int wall_edge_to_crt	= 230;	//front error correction value
 								//should equal distance from wall edge to
 								//centre of square 
 
-#define front_long_threshold 15		// is there a wall far away - used for moving ahead on explore
-#define front_short_threshold 50	// front wall detection (also stops steering problems on turn)
-#define ls_threshold		200     // side wall detection
-#define rs_threshold		200     // side wall detection
-#define r45_threshold		540     // steering
-#define l45_threshold		360     // steering
-#define r45_toclose		760         // gross steering
-#define l45_toclose		580         // gross steering
-// end to be removed!!
+static int front_long_threshold = 15;		// is there a wall far away - used for moving ahead on explore
+static int front_short_threshold = 50;     // front wall detection (also stops steering problems on turn)
+static int ls_threshold = 200;    // side wall detection
+static int rs_threshold = 200;    // side wall detection
+static int r45_threshold = 540;   // steering
+static int l45_threshold = 360;   // steering
+static int r45_toclose	= 760;     // gross steering
+static int l45_toclose	= 580;     // gross steering
 
 
 //***************************************************************************************
@@ -373,3 +373,52 @@ void disable_IR_scanning(void)
 
 
 
+void set_cell_distance(int d)
+{
+    cell = d;
+}
+
+void set_wall_edge_to_crt_distance(int d)
+{
+    wall_edge_to_crt = d;
+}
+
+void set_front_long_threshold(int t)
+{
+    front_long_threshold = t;
+}
+
+void set_front_short_threshold(int t)
+{
+    front_short_threshold = t;
+}
+
+void set_left_side_threshold(int t)
+{
+    ls_threshold = t;
+}
+
+void set_right_side_threshold(int t)
+{
+    rs_threshold = t;
+}
+
+void set_right_45_threshold(int t)
+{
+    r45_threshold = t;
+}
+
+void set_left_45_threshold(int t)
+{
+    l45_threshold = t;
+}
+
+void set_r45_too_close_threshold(int t)
+{
+    r45_toclose = t;
+}
+
+void set_left_45_too_close_threshold(int t)
+{
+    l45_toclose = t;
+}

@@ -38,6 +38,9 @@ def send_switch_led_command(port, led, on):
 
     port.write(chr(command))
 
+def turn_off_motors(port)
+    port.write("\xC0")
+
 def move_forward(port, distance):
     s = "\xC1" + chr(distance >> 8) + chr(distance & 0xff)
     port.write(s)
@@ -239,6 +242,9 @@ def main():
         event_processor(port)
     move_finished = False
 
+    turn_off_ir(port)
+    turn_off_motors(port)
+    
     send_switch_led_command(port, 3, True)
     for i in range(3):
         event_processor(port)

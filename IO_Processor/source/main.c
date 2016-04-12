@@ -496,6 +496,18 @@ int main(int argc, char** argv)
                     }
                 }
                 
+                if(key_A_changed)
+                {
+                    char key = key_A_stored;
+                    key_A_changed = 0;
+                    send_event(key?EV_BUTTON_A_PRESS:EV_BUTTON_A_RELEASE);
+                }
+                if(key_B_changed)
+                {
+                    char key = key_B_stored;
+                    key_B_changed = 0;
+                    send_event(key?EV_BUTTON_B_PRESS:EV_BUTTON_B_RELEASE);
+                }
                 
                 //
                 // process commands

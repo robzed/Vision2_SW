@@ -80,6 +80,11 @@ extern unsigned int l45_sensor;
 extern volatile unsigned int battery_voltage;
 extern volatile char battery_data_ready;
 
+extern volatile char key_A_stored;
+extern volatile char key_A_changed;
+
+extern volatile char key_B_stored;
+extern volatile char key_B_changed;
 
 #endif	/* HARDWARE_H */
 

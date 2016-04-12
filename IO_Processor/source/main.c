@@ -515,7 +515,6 @@ int main(int argc, char** argv)
                 // process commands
                 //
                 cmd = serial_get_byte();
-                send_event(EV_GOT_INSTRUCTION);
                 //if(command_mode == COMMANDS_ASCII)
                 //{
                 //    
@@ -612,6 +611,10 @@ int main(int argc, char** argv)
                         send_event(EV_FAIL_INVALID_COMMAND);
                         break;
                 }
+                
+                // finally, when read all bytes ... tell the host we are OK
+                send_event(EV_GOT_INSTRUCTION);
+
             }
         }
     }

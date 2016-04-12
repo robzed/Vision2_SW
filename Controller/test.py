@@ -48,7 +48,7 @@ def turn_on_ir(port):
 
 ################################################
     
-def recover_from_major_error(port):
+def recover_from_major_error(): #(port):
     exit(1)
 
 def EV_UKNNOWN_RESET(port, cmd):
@@ -149,8 +149,8 @@ def event_processor(port):
     if cmd in command_handlers:
         command_handlers[cmd](port, cmd)
     else:
-        print("Unknown event", hex(s), "ignoring")
-        recover_from_major_error()
+        print("Unknown event", hex(cmd), "ignoring")
+        #recover_from_major_error()
 
 
 def main():
@@ -175,7 +175,7 @@ def main():
     for i in range(3):
         event_processor(port)
 
-    move_forward(port, 347)
+    move_forward(port, 4*347)
     for i in range(3):
         event_processor(port)
 

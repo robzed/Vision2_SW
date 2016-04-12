@@ -307,13 +307,49 @@ void battery_check(void)
     battery_data_ready = 1;
 }
 
-volatile char key_map = 0;
-volatile char key_changed = 0;
+#define KEY_DEBOUNCE_COUNT 3
+
+volatile char key_A_stored = 0;
+volatile char key_A_changed = 0;
+static char key_A_debounce = KEY_DEBOUNCE_COUNT;
+
+volatile char key_B_stored = 0;
+volatile char key_B_changed = 0;
+static char key_B_debounce = KEY_DEBOUNCE_COUNT;
 
 void key_scan(void)
 {
-    if(!(key_map & 1) == Grey_A_ButtonPressed())
+    // we only debounce a new state change if we've read the previous one.
+    char key = Grey_A_ButtonPressed();
+    if(!key_A_changed && key != key_A_stored)
     {
+        key_A_debounce--;
+        if(key_A_debounce == 0)
+        {
+            key_A_stored = key;
+            key_A_changed = 1;
+            key_A_debounce = KEY_DEBOUNCE_COUNT;
+        }
+    }
+    else
+    {
+        key_A_debounce = KEY_DEBOUNCE_COUNT;
+    }
+
+    key = Blue_B_ButtonPressed();
+    if(!key_B_changed && key != key_B_stored)
+    {
+        key_B_debounce--;
+        if(key_B_debounce == 0)
+        {
+            key_B_stored = key;
+            key_B_changed = 1;
+            key_B_debounce = KEY_DEBOUNCE_COUNT;
+        }
+    }
+    else
+    {
+        key_B_debounce = KEY_DEBOUNCE_COUNT;
     }
 }
 

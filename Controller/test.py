@@ -42,6 +42,10 @@ def move_forward(port, distance):
     s = "\xC1" + chr(distance >> 8) + chr(distance & 0xff)
     port.write(s)
 
+def turn_on_ir(port):
+    port.write("\xD1")
+    
+
 ################################################
     
 def recover_from_major_error(port):
@@ -165,6 +169,9 @@ def main():
         event_processor(port)
 
     send_switch_led_command(port, 1, True)
+    for i in range(3):
+        event_processor(port)
+    turn_on_ir(port)
     for i in range(3):
         event_processor(port)
 

@@ -472,6 +472,7 @@ int main(int argc, char** argv)
         {
             while(command_mode)
             {
+                // -----------------------------------------------------
                 //
                 // check for events
                 //
@@ -509,6 +510,7 @@ int main(int argc, char** argv)
                     send_event(key?EV_BUTTON_B_PRESS:EV_BUTTON_B_RELEASE);
                 }
                 
+                // -----------------------------------------------------
                 //
                 // process commands
                 //
@@ -535,6 +537,15 @@ int main(int argc, char** argv)
                             cmd >>= 1;
                         }
                         break;
+                    case CMD_TYPE_IR_CONTROL:
+                        if(low_nibble == 0)
+                        {
+                            disable_IR_scanning();
+                        }
+                        else if(low_nibble == 1)
+                        {
+                            enable_IR_scanning();
+                        }
                     case DISABLE_SERIAL:
                         send_event(EV_LOCK_BY_COMMAND);
                         break;

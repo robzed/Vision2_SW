@@ -38,6 +38,7 @@ typedef unsigned char cmd_t;
 #define CMD_TYPE_LED_OFF        0x0        // bottom 4 bits = LED 1-9
 #define CMD_TYPE_LED_ON         0x1        // bottom 4 bits = LED 1-9
 #define CMD_TYPE_ALL_LEDS       0x2        // extra byte (leds 1-8, led 9-bit 0 of cmd byte)
+#define CMD_TYPE_IR_CONTROL     0x3        // bit 0=1, turn on IR timers, bit 0=0, turn off IR timers.
 // 0x30 unused (ASCII range)
 // 0x40 unused (ASCII range)
 #define DISABLE_SERIAL          0x5        // Start of “Uncompressing Linux…”

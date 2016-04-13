@@ -39,24 +39,30 @@ def send_switch_led_command(port, led, on):
     port.write(chr(command))
 
 def turn_off_motors(port):
+    print("Turn off motors")
     port.write("\xC0")
 
 def move_forward(port, distance):
+    print("Forward")
     s = "\xC1" + chr(distance >> 8) + chr(distance & 0xff)
     port.write(s)
 
 def move_right(port, distance):
+    print("right")
     s = "\xC2" + chr(distance >> 8) + chr(distance & 0xff)
     port.write(s)
 
 def move_left(port, distance):
+    print("left")
     s = "\xC3" + chr(distance >> 8) + chr(distance & 0xff)
     port.write(s)
 
 def turn_on_ir(port):
+    print("IR on")
     port.write("\xD1")
     
 def turn_off_ir(port):
+    print("IR off")
     port.write("\xD0")
 
 ################################################
@@ -201,6 +207,7 @@ def main():
     for i in range(3):
         event_processor(port)
 
+    print("Wait for move finished")
     global move_finished
     while not move_finished:
         event_processor(port)

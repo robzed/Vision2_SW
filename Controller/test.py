@@ -38,7 +38,7 @@ def send_switch_led_command(port, led, on):
 
     port.write(chr(command))
 
-def turn_off_motors(port)
+def turn_off_motors(port):
     port.write("\xC0")
 
 def move_forward(port, distance):

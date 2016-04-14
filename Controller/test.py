@@ -4,6 +4,21 @@ from __future__ import print_function
 
 import serial
 import time
+from collections import deque
+
+sent_bytes_in_flight = 0
+message_in_flight_queue = deque()
+
+def send_message(port, message):
+    global sent_bytes_in_flight
+    global message_in_flight_queue
+    ml = len(message)
+    while (ml + sent_bytes_in_flight) >= 4:
+        event_processor(port)
+
+    sent_bytes_in_flight += ml
+    message_in_flight_q.append(ml)
+    port.write(message)
 
 def message_into_hex(s):
     return ":".join("{:02x}".format(ord(c)) for c in s)

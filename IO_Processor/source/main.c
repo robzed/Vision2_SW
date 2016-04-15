@@ -398,6 +398,8 @@ void change_send_event()
 
 // event data copies to avoid duplicate events being sent
 static unsigned int last_sent_battery = 0;
+#define BATTERY_TRANSMIT_ANYWAY_COUNT 20
+static int battery_count = BATTERY_TRANSMIT_ANYWAY_COUNT;
 static unsigned int set_speed = 50;
 static int set_corrector = 10;
 bool timer_running = false;
@@ -481,11 +483,18 @@ int main(int argc, char** argv)
                     // slight race condition here, but not a major problem if we miss one
                     int battery_v = battery_voltage & 0x3FF;
                     battery_data_ready = 0;     // clear request
-                    if(battery_v != last_sent_battery)
+                    if(battery_v != last_sent_battery || battery_count == 0)
                     {
                         last_sent_battery = battery_v;
                         send_event(EV_BATTERY_VOLTAGE + (battery_v >> 8));
                         send_event(battery_v & 0xFF);
+                        battery_count = BATTERY_TRANSMIT_ANYWAY_COUNT;
+                    }
+                    else
+                    {
+                        // We only ignore the reading because it's
+                        // the same, but we transmit it every 10 anyway.
+                        battery_count --;
                     }
                 }
                 if(timer_running)

@@ -258,10 +258,11 @@ battery_voltage_conversion = Aref_voltage * (33000+12000) / 12000 / 1023
 
 def EV_BATTERY_VOLTAGE(port, cmd):
     ADC_reading = port.read(1)
-    if len(ADC_reading == 0):
+    ADClen = len(ADC_reading)
+    if ADClen == 0:
         print("Didn't get second byte of battery voltage")
         recover_from_major_error()
-    elif len(ADC_reading > 1):
+    elif ADClen > 1:
         print("More than one byte in voltage")
         recover_from_major_error()
 

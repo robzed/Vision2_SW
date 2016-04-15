@@ -19,6 +19,8 @@ verbose = True
 # 
 
 #port = None
+move_finished = False
+
 
 ################################################################
 # 
@@ -30,6 +32,9 @@ def recover_from_major_error():
     exit(1)
 
 
+# define timer function
+# Need to test time.time against datetime.utcnow() or date.now() on RPi
+read_accurate_time = time.time
 
 
 ################################################################
@@ -39,18 +44,35 @@ def recover_from_major_error():
 
 
 sent_bytes_in_flight = 0
-message_in_flight_queue = deque()
+messages_in_flight_queue = deque()
 
 def send_message(port, message):
     global sent_bytes_in_flight
     global message_in_flight_queue
+    
     ml = len(message)
+
+    # run one anyway 
+    event_processor(port)
+    
     while (ml + sent_bytes_in_flight) >= 4:
         event_processor(port)
 
     sent_bytes_in_flight += ml
-    message_in_flight_q.append(ml)
+    messages_in_flight_queue.append(ml)
     port.write(message)
+
+
+def acknowledge_send(port, cmd):
+    global sent_bytes_in_flight
+    global message_in_flight_queue
+
+    try:
+        count = messages_in_flight_queue.popleft()
+    except IndexError:
+        recover_from_major_error()
+
+    sent_bytes_in_flight -= count
 
 
 ################################################################
@@ -63,12 +85,12 @@ def message_into_hex(s):
 
 def send_unlock_command(port):
     if verbose: print("Send Unlock")
-    port.write(b'\xFE\xFC\xF8\xFE')
+    send_message(port, b'\xFE\xFC\xF8\xFE')
 
 
 def send_poll_command(port):
     if verbose: print("Send Poll")
-    port.write(b'\x80')
+    send_message(port, b'\x80')
 
 #def wait_for_poll_repl(port):
 #    s = port.read(1)
@@ -88,34 +110,49 @@ def send_switch_led_command(port, led, on):
         if verbose: print("Switch LED", led, "off")
         command = 0x00 + led
 
-    port.write(chr(command))
+    send_message(port, chr(command))
 
 def turn_off_motors(port):
     if verbose: print("Turn off motors")
-    port.write("\xC0")
+    send_message(port, "\xC0")
 
 def move_forward(port, distance):
+    global move_finished
+    move_finished = False
+    
     if verbose: print("Forward")
     s = "\xC1" + chr(distance >> 8) + chr(distance & 0xff)
-    port.write(s)
+    send_message(port, s)
 
 def move_right(port, distance):
+    global move_finished
+    move_finished = False
+    
     if verbose: print("right")
     s = "\xC2" + chr(distance >> 8) + chr(distance & 0xff)
-    port.write(s)
+    send_message(port, s)
 
 def move_left(port, distance):
+    global move_finished
+    move_finished = False
+    
     if verbose: print("left")
     s = "\xC3" + chr(distance >> 8) + chr(distance & 0xff)
-    port.write(s)
+    send_message(port, s)
 
 def turn_on_ir(port):
     if verbose: print("IR on")
-    port.write("\xD1")
+    send_message(port, "\xD1")
     
 def turn_off_ir(port):
     if verbose: print("IR off")
-    port.write("\xD0")
+    send_message(port, "\xD0")
+
+
+def set_speed(port, speed):
+    if verbose: print("set speed", speed)
+    s = "\xC4" + chr(speed >> 8) + chr(speed & 0xff)
+    send_message(port, s)
 
 
 ################################################################
@@ -124,7 +161,6 @@ def turn_off_ir(port):
 #
 # Non-real-time timer...
 #
-# Need to test time.time against datetime.utcnow() or date.now() on RPi
 
 list_of_events = []
 timer_next_end_time = time.time+1
@@ -137,11 +173,11 @@ execution_state_LED6 = True
 
 def run_timers(port):
     global timer_next_end_time
-    time_now = time.time()
+    time_now = read_accurate_time()
     if time_now > timer_next_end_time:
         
         # notice: time slip possible here, no 'catchup' attempted.
-        timer_next_end_time = time_now()+1
+        timer_next_end_time = read_accurate_time()+1
 
         # we hard code a function here, for the moment
         send_switch_led_command(port, 6, execution_state_LED6)
@@ -198,26 +234,38 @@ def EV_BATTERY_VOLTAGE(port, cmd):
     voltage = ADC_reading * battery_voltage_conversion
     print("Batt V", voltage, "cell:", voltage/4)
 
-move_finished = False
 
 def EV_FINISHED_MOVE(port, cmd):
     global move_finished
     move_finished = True
     print("Got move finished")
 
+locked = True
+
 def EV_UNLOCK_FROM_LOCK(port, cmd):
     print("Got unlock from lock")
+    global locked
+    locked = False
 
 def EV_UNLOCK_FROM_UNLOCK(port, cmd):
     print("Got unlock from unlock")
+    global locked
+    locked = False
 
 def EV_LOCK_BY_TIMER(port, cmd):
-    print("Got lock by timer")
+    print("Got lock by timer - NOT HANDLED")
     recover_from_major_error()
+    global locked
+    locked = True
+    # @todo: We should issue unlock here, immediately!
 
 def EV_LOCK_BY_COMMAND(port, cmd):
-    print("Got lock by command")
+    print("Got lock by command - NOT HANDLED")
     recover_from_major_error()
+    global locked
+    locked = True
+    # @todo: We should issue unlock here, immediately!
+
 
 def EV_POLL_REPLY(port, cmd):
     print("Got poll reply")
@@ -226,6 +274,8 @@ def EV_FAIL_INVALID_COMMAND(port, cmd):
     print("Got innvalid command")
     recover_from_major_error()
 
+#def EV_GOT_INSTRUCTION(port, cmd):
+#    acknowledge_send()
 
 ################################################################
 # 
@@ -241,11 +291,53 @@ command_handlers = {
     0x05: EV_EXTERNAL_RESET,
     0x06: EV_EXCEPTION_RESET,
 
-    0x10: EV_BATTERY_VOLTAGE,
+    0x10: EV_BATTERY_VOLTAGE,   # bit 0 and bit 1 plus extra byte
     0x11: EV_BATTERY_VOLTAGE,
     0x12: EV_BATTERY_VOLTAGE,
     0x13: EV_BATTERY_VOLTAGE,
+    
     0x20: EV_FINISHED_MOVE,
+    
+#    0x21: EV_TEST_DISTANCE,    # single command (but always followed immediately by EV_IR_FRONT_SIDE_STATE)
+
+#    0x30: EV_BUTTON_A_RELEASE,
+#    0x31: EV_BUTTON_B_RELEASE,
+#    0x38: EV_BUTTON_A_PRESS,
+#    0x39: EV_BUTTON_B_PRESS,
+
+#    0x40: EV_IR_FRONT_SIDE_STATE,
+#    0x41: EV_IR_FRONT_SIDE_STATE,
+#    0x42: EV_IR_FRONT_SIDE_STATE,
+#    0x43: EV_IR_FRONT_SIDE_STATE,
+#    0x44: EV_IR_FRONT_SIDE_STATE,
+#    0x45: EV_IR_FRONT_SIDE_STATE,
+#    0x46: EV_IR_FRONT_SIDE_STATE,
+#    0x47: EV_IR_FRONT_SIDE_STATE,
+#    0x48: EV_IR_FRONT_SIDE_STATE,
+#    0x49: EV_IR_FRONT_SIDE_STATE,
+#    0x4A: EV_IR_FRONT_SIDE_STATE,
+#    0x4B: EV_IR_FRONT_SIDE_STATE,
+#    0x4C: EV_IR_FRONT_SIDE_STATE,
+#    0x4D: EV_IR_FRONT_SIDE_STATE,
+#    0x4E: EV_IR_FRONT_SIDE_STATE,
+#    0x4F: EV_IR_FRONT_SIDE_STATE,
+
+#    0x50: EV_IR_45_STATE,
+#    0x51: EV_IR_45_STATE,
+#    0x52: EV_IR_45_STATE,
+#    0x53: EV_IR_45_STATE,
+#    0x54: EV_IR_45_STATE,
+#    0x55: EV_IR_45_STATE,
+#    0x56: EV_IR_45_STATE,
+#    0x57: EV_IR_45_STATE,
+#    0x58: EV_IR_45_STATE,
+#    0x59: EV_IR_45_STATE,
+#    0x5A: EV_IR_45_STATE,
+#    0x5B: EV_IR_45_STATE,
+#    0x5C: EV_IR_45_STATE,
+#    0x5D: EV_IR_45_STATE,
+#    0x5E: EV_IR_45_STATE,
+#    0x5F: EV_IR_45_STATE,
 
 
     # unlocking
@@ -257,6 +349,7 @@ command_handlers = {
     0x80: EV_POLL_REPLY,
 
     0xE2: EV_FAIL_INVALID_COMMAND,
+    0xEF: acknowledge_send,  # no intermediate function required, like EV_GOT_INSTRUCTION
 }
         
 
@@ -273,7 +366,32 @@ def event_processor(port):
         #recover_from_major_error()
 
     run_timers(port)
-        
+
+################################################################
+# 
+# Control Functions
+#       
+
+def wait_for_move_to_finish(port):
+    if verbose: print("Wait for move finished")
+    global move_finished
+    while not move_finished:
+        event_processor(port)
+    move_finished = False
+    
+
+def wait_for_unlock_to_complete(port):
+    if verbose: print("Waiting for unlock to complete")
+    start_time = read_accurate_time()
+
+    # run one anway
+    event_processor(port)
+    while locked:
+        event_processor(port)
+        if read_accurate_time() > (start_time + 2):
+            return False
+
+    return True
 
 
 ################################################################
@@ -289,78 +407,40 @@ distance_turn180 = 224		# turn 180deg
 def main():
     port = serial.Serial("/dev/ttyAMA0", baudrate = 57600, timeout = 0.1)
     bytes_waiting = port.inWaiting()
-    print(bytes_waiting)
-    s = port.read(bytes_waiting)
-    print(":".join("{:02x}".format(ord(c)) for c in s))
+    if bytes_waiting != 0:
+        print("Bytes Waiting = ", bytes_waiting)
 
-    send_unlock_command(port)
-    for i in range(3):
-        event_processor(port)
-
-    send_poll_command(port)
-    for i in range(3):
-        event_processor(port)
-
-    send_switch_led_command(port, 1, True)
-    for i in range(3):
-        event_processor(port)
-
-    turn_on_ir(port)
-    for i in range(3):
-        event_processor(port)
-
-    move_forward(port, 4*347)
-    for i in range(3):
-        event_processor(port)
-
-    print("Wait for move finished")
-    global move_finished
-    while not move_finished:
-        event_processor(port)
-    move_finished = False
-
-    turn_off_ir(port)
-    for i in range(3):
-        event_processor(port)
-
-    move_right(port, distance_turn180)
-    for i in range(3):
-        event_processor(port)
-
-    while not move_finished:
-        event_processor(port)
-    move_finished = False
-
-    turn_on_ir(port)
-    for i in range(3):
-        event_processor(port)
-
-    move_forward(port, 347)
-    for i in range(3):
-        event_processor(port)
-
-    while not move_finished:
-        event_processor(port)
-    move_finished = False
-
-    turn_off_ir(port)
-    for i in range(3):
-        event_processor(port)
-
-    move_left(port, distance_turnl90)
-    for i in range(3):
-        event_processor(port)
-
-    while not move_finished:
-        event_processor(port)
-    move_finished = False
-
-    turn_off_ir(port)
-    turn_off_motors(port)
+    while True:
+        send_unlock_command(port)
+        if wait_for_unlock_to_complete(port):
+            break
+        print("Unlock failed - Retrying")
     
+    send_poll_command(port)
+    send_switch_led_command(port, 1, True)
+
+    set_speed(port, 100)    # normal search speed
+    
+    turn_on_ir(port)
+    move_forward(port, 4*347)
+    wait_for_move_to_finish(port)
+
+    turn_off_ir(port)
+    move_right(port, distance_turn180)
+    wait_for_move_to_finish(port)
+
+    turn_on_ir(port)
+    move_forward(port, 347)
+    wait_for_move_to_finish(port)
+    
+    turn_off_ir(port)
+    move_left(port, distance_turnl90)
+    wait_for_move_to_finish(port)
+
+    # shut down
+    turn_off_ir(port)
+    turn_off_motors(port)    
     send_switch_led_command(port, 3, True)
-    for i in range(3):
-        event_processor(port)
 
     while True:
         event_processor(port)

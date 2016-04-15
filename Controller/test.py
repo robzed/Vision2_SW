@@ -6,6 +6,38 @@ import serial
 import time
 from collections import deque
 
+################################################################
+# 
+# Constants
+# 
+
+verbose = True
+
+################################################################
+# 
+# Module-level Variables
+# 
+
+#port = None
+
+################################################################
+# 
+# General functions
+# 
+def recover_from_major_error():
+    print()
+    print("Major error - aborting")
+    exit(1)
+
+
+
+
+################################################################
+# 
+# Transmit Management
+# 
+
+
 sent_bytes_in_flight = 0
 message_in_flight_queue = deque()
 
@@ -20,71 +52,106 @@ def send_message(port, message):
     message_in_flight_q.append(ml)
     port.write(message)
 
+
+################################################################
+# 
+# Commands to Send
+# 
+
 def message_into_hex(s):
     return ":".join("{:02x}".format(ord(c)) for c in s)
 
 def send_unlock_command(port):
-    print("Send Unlock")
+    if verbose: print("Send Unlock")
     port.write(b'\xFE\xFC\xF8\xFE')
 
 
-
 def send_poll_command(port):
-    print("Send Poll")
+    if verbose: print("Send Poll")
     port.write(b'\x80')
 
-def wait_for_poll_repl(port):
-    s = port.read(1)
-    if s == '\x80':
-        print("> Got Poll answer")
-    elif len(s) == 0:
-        print("No message received at all")
-    else:
-        print("Got", message_into_hex(s))
+#def wait_for_poll_repl(port):
+#    s = port.read(1)
+#    if s == '\x80':
+#        if verbose: print("> Got Poll answer")
+#    elif len(s) == 0:
+#        print("For Poll Reply: No message received at all")
+#    else:
+#        print("For Poll Reply: Got", message_into_hex(s))
 
 
 def send_switch_led_command(port, led, on):
     if on:
         command = 0x10 + led
-        print("Switch LED", led, "on")
+        if verbose: print("Switch LED", led, "on")
     else:
-        print("Switch LED", led, "off")
+        if verbose: print("Switch LED", led, "off")
         command = 0x00 + led
 
     port.write(chr(command))
 
 def turn_off_motors(port):
-    print("Turn off motors")
+    if verbose: print("Turn off motors")
     port.write("\xC0")
 
 def move_forward(port, distance):
-    print("Forward")
+    if verbose: print("Forward")
     s = "\xC1" + chr(distance >> 8) + chr(distance & 0xff)
     port.write(s)
 
 def move_right(port, distance):
-    print("right")
+    if verbose: print("right")
     s = "\xC2" + chr(distance >> 8) + chr(distance & 0xff)
     port.write(s)
 
 def move_left(port, distance):
-    print("left")
+    if verbose: print("left")
     s = "\xC3" + chr(distance >> 8) + chr(distance & 0xff)
     port.write(s)
 
 def turn_on_ir(port):
-    print("IR on")
+    if verbose: print("IR on")
     port.write("\xD1")
     
 def turn_off_ir(port):
-    print("IR off")
+    if verbose: print("IR off")
     port.write("\xD0")
 
-################################################
-    
-def recover_from_major_error(): #(port):
-    exit(1)
 
+################################################################
+# 
+# Time Management
+#
+# Non-real-time timer...
+#
+# Need to test time.time against datetime.utcnow() or date.now() on RPi
+
+list_of_events = []
+timer_next_end_time = time.time+1
+
+def add_event(function, repeating=False):
+    pass
+
+
+execution_state_LED6 = True
+
+def run_timers(port):
+    global timer_next_end_time
+    time_now = time.time()
+    if time_now > timer_next_end_time:
+        
+        # notice: time slip possible here, no 'catchup' attempted.
+        timer_next_end_time = time_now()+1
+
+        # we hard code a function here, for the moment
+        send_switch_led_command(port, 6, execution_state_LED6)
+        execution_state_LED6 = not execution_state_LED6
+        
+
+################################################################
+# 
+# Recieved Event Functions
+# 
 def EV_UKNNOWN_RESET(port, cmd):
     print("Unknown Reset")
     recover_from_major_error()
@@ -158,6 +225,12 @@ def EV_POLL_REPLY(port, cmd):
 def EV_FAIL_INVALID_COMMAND(port, cmd):
     print("Got innvalid command")
     recover_from_major_error()
+
+
+################################################################
+# 
+# Event Processor 
+# 
     
 command_handlers = {
     0x00: EV_UKNNOWN_RESET,
@@ -185,6 +258,7 @@ command_handlers = {
 
     0xE2: EV_FAIL_INVALID_COMMAND,
 }
+        
 
 def event_processor(port):
     cmd = port.read(1)
@@ -198,13 +272,22 @@ def event_processor(port):
         print("Unknown event", hex(cmd), "ignoring")
         #recover_from_major_error()
 
+    run_timers(port)
+        
+
+
+################################################################
+# 
+# Control Loop
+# 
+
 distance_cell	= 347			# adjust these values for cell distance		
 distance_turnl90	= 112		# turn left 90deg
 distance_turnr90	= 112		# turn right 90deg
 distance_turn180 = 224		# turn 180deg
 
 def main():
-    port = serial.Serial("/dev/ttyAMA0", baudrate = 57600, timeout = 0.2)
+    port = serial.Serial("/dev/ttyAMA0", baudrate = 57600, timeout = 0.1)
     bytes_waiting = port.inWaiting()
     print(bytes_waiting)
     s = port.read(bytes_waiting)

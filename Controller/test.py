@@ -108,6 +108,13 @@ def EV_EXCEPTION_RESET(port, cmd):
     recover_from_major_error()
 
 
+# approximately 5v. 1024 steps (1024=max). Multiplier for potential divider.
+
+Vfeed = 5.0
+Aref_voltage = 5.0 * 0.95
+battery_voltage_conversion = Aref_voltage * (33000+12000) / 12000 / 1023
+
+
 def EV_BATTERY_VOLTAGE(port, cmd):
     ADC_reading = port.read(1)
     if len(ADC_reading == 0):
@@ -117,11 +124,12 @@ def EV_BATTERY_VOLTAGE(port, cmd):
         print("More than one byte in voltage")
         recover_from_major_error()
 
-    ADC_reading = ord(ADC_reading) + (cmd & 0x03)
+    ADC_reading = ord(ADC_reading) + 256 * (cmd & 0x03)
 
     # potential divider is 33K and 12K. This does into an ADC where the reference is approx. 5v.
-    voltage = 5 * 12000 * (ADC_reading / (33000+12000))
-    print("Approximate battery voltage = ", voltage)
+    global battery_voltage_conversion
+    voltage = ADC_reading * battery_voltage_conversion
+    print("Batt V", voltage, "cell:", voltage/4)
 
 move_finished = False
 

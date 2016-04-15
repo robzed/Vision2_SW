@@ -5,6 +5,7 @@ from __future__ import print_function
 import serial
 import time
 from collections import deque
+import os
 
 ################################################################
 # 
@@ -12,6 +13,11 @@ from collections import deque
 # 
 
 verbose = True
+
+distance_cell	= 347			# adjust these values for cell distance		
+distance_turnl90	= 112		# turn left 90deg
+distance_turnr90	= 112		# turn right 90deg
+distance_turn180 = 224		# turn 180deg
 
 ################################################################
 # 
@@ -21,6 +27,20 @@ verbose = True
 #port = None
 move_finished = False
 
+maze_selected = 5   # should be 5 or 16
+
+keys_in_queue = deque()
+
+################################################################
+# 
+# Exceptions
+# 
+
+class SoftReset(Exception):
+    pass
+
+class ShutdownRequest(Exception):
+    pass
 
 ################################################################
 # 
@@ -74,6 +94,12 @@ def acknowledge_send(port, cmd):
 
     sent_bytes_in_flight -= count
 
+def reset_message_queue():
+    global sent_bytes_in_flight
+    global message_in_flight_queue
+
+    send_bytes_in_flight = 0
+    messages_in_flight_queue = deque()
 
 ################################################################
 # 
@@ -112,6 +138,11 @@ def send_switch_led_command(port, led, on):
 
     send_message(port, chr(command))
 
+
+def turn_off_all_LEDs(port):
+    # 0x20 = CMD_TYPE_ALL_LEDS - extra byte (leds 1-8, led 9-bit 0 of cmd byte)
+    send_message(port, "\x20\x00")
+    
 def turn_off_motors(port):
     if verbose: print("Turn off motors")
     send_message(port, "\xC0")
@@ -205,7 +236,8 @@ def EV_SOFTWARE_RESET(port, cmd):
     recover_from_major_error()
 def EV_EXTERNAL_RESET(port, cmd):
     print("External Reset")
-    recover_from_major_error()
+    raise SoftReset
+
 def EV_EXCEPTION_RESET(port, cmd):
     print("Exception Reset")
     recover_from_major_error()
@@ -277,6 +309,22 @@ def EV_FAIL_INVALID_COMMAND(port, cmd):
 #def EV_GOT_INSTRUCTION(port, cmd):
 #    acknowledge_send()
 
+
+def EV_BUTTON_A_RELEASE(port, cmd):
+    # @todo: can use for held key (A+ B+)
+    pass
+
+def EV_BUTTON_B_RELEASE(port, cmd):
+    # @todo: can use for held key
+    pass
+
+def EV_BUTTON_A_PRESS(port, cmd):
+    keys_in_queue.append('A')
+
+def EV_BUTTON_B_PRESS(port, cmd):
+    keys_in_queue.append('B')
+
+
 ################################################################
 # 
 # Event Processor 
@@ -300,10 +348,10 @@ command_handlers = {
     
 #    0x21: EV_TEST_DISTANCE,    # single command (but always followed immediately by EV_IR_FRONT_SIDE_STATE)
 
-#    0x30: EV_BUTTON_A_RELEASE,
-#    0x31: EV_BUTTON_B_RELEASE,
-#    0x38: EV_BUTTON_A_PRESS,
-#    0x39: EV_BUTTON_B_PRESS,
+    0x30: EV_BUTTON_A_RELEASE,
+    0x31: EV_BUTTON_B_RELEASE,
+    0x38: EV_BUTTON_A_PRESS,
+    0x39: EV_BUTTON_B_PRESS,
 
 #    0x40: EV_IR_FRONT_SIDE_STATE,
 #    0x41: EV_IR_FRONT_SIDE_STATE,
@@ -398,15 +446,106 @@ def wait_for_poll_reply(port):
     # @todo: complete this funnction
     pass
 
+def get_key(port):
+    while True:
+        # always poll events at least once
+        event_processor(port)
+        
+        # check the key queue
+        if keys_in_queue:
+            return keys_in_queue.popleft()
+
+
 ################################################################
 # 
 # Control Loop
 # 
 
-distance_cell	= 347			# adjust these values for cell distance		
-distance_turnl90	= 112		# turn left 90deg
-distance_turnr90	= 112		# turn right 90deg
-distance_turn180 = 224		# turn 180deg
+
+# LED 1 = size 5 maze selected
+# LED 2 = size 16 maze selected
+# LED 3 = running
+
+# LED 4 = <unused>
+# LED 5 = shutdown running (not implemented)
+# LED 6 = slow flash if running, fast flash if battery problem (going to shutdown soon)
+
+def run_program():
+    while True:
+        send_unlock_command(port)
+        if wait_for_unlock_to_complete(port):
+            break
+        print("Unlock failed - Retrying")
+
+
+    while True:
+        # let's process some events anyway
+        for i in range(1,10):
+            event_processor(port)
+        
+        send_poll_command(port)
+        wait_for_poll_reply(port)
+
+        turn_off_all_LEDs(port)
+        turn_off_motors(port)
+        turn_off_ir(port)
+
+        running = False
+        while running:
+            if maze_selected == 5:
+                send_switch_led_command(port, 1, True)
+                send_switch_led_command(port, 2, False)
+            elif maze_selected == 16:
+                send_switch_led_command(port, 1, False)
+                send_switch_led_command(port, 2, True)
+            else:
+                send_switch_led_command(port, 1, False)
+                send_switch_led_command(port, 2, False)
+
+            while True:
+                A = get_key(port)
+                if key == "A":
+                    if maze_selected == 5:
+                        maze_selected == 16
+                    else:
+                        maze_selected = 5
+                    break
+                elif key == "B":
+                    # start key
+                    running = True
+                    break
+                elif key == "A+":
+                    raise ShutdownRequest
+                elif key == "B+":
+                    print("B held key - no action")
+
+
+        # start the run
+        send_switch_led_command(port, 3, True)
+
+        set_speed(port, 100)    # normal search speed
+        
+        turn_on_ir(port)
+        move_forward(port, 4*347)
+        wait_for_move_to_finish(port)
+
+        turn_off_ir(port)
+        move_right(port, distance_turn180)
+        wait_for_move_to_finish(port)
+
+        turn_on_ir(port)
+        move_forward(port, 347)
+        wait_for_move_to_finish(port)
+        
+        turn_off_ir(port)
+        move_left(port, distance_turnl90)
+        wait_for_move_to_finish(port)
+
+        # shut down
+        turn_off_ir(port)
+        turn_off_motors(port)
+        send_switch_led_command(port, 3, False)
+
 
 def main():
     port = serial.Serial("/dev/ttyAMA0", baudrate = 57600, timeout = 0.1)
@@ -415,41 +554,24 @@ def main():
         print("Bytes Waiting = ", bytes_waiting)
 
     while True:
-        send_unlock_command(port)
-        if wait_for_unlock_to_complete(port):
-            break
-        print("Unlock failed - Retrying")
-    
-    send_poll_command(port)
-    wait_for_poll_reply(port)
+        try:
+            run_program()
+            
+        except SoftReset:
+            # @todo: Fix this to reset variables, and restart
+            # @todo: Go though all variables in project, and set... maybe collate variables at top?
+            reset_message_queue()
+            global locked
+            locked = True
+            global keys_in_queue
+            keys_in_queue = deque()
+            
+        except ShutdownRequest:
+            print("Need to issue RPi shutdown command")
+            send_led_pattern_command(port, 0x20)
+            turn_off_ir(port)
+            turn_off_motors(port)
+            os.system("sudo poweroff")
 
-    send_switch_led_command(port, 1, True)
-
-    set_speed(port, 100)    # normal search speed
-    
-    turn_on_ir(port)
-    move_forward(port, 4*347)
-    wait_for_move_to_finish(port)
-
-    turn_off_ir(port)
-    move_right(port, distance_turn180)
-    wait_for_move_to_finish(port)
-
-    turn_on_ir(port)
-    move_forward(port, 347)
-    wait_for_move_to_finish(port)
-    
-    turn_off_ir(port)
-    move_left(port, distance_turnl90)
-    wait_for_move_to_finish(port)
-
-    # shut down
-    turn_off_ir(port)
-    turn_off_motors(port)    
-    send_switch_led_command(port, 3, True)
-
-    while True:
-        event_processor(port)
-    
 main()
 

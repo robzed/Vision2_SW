@@ -26,6 +26,7 @@ distance_turn180 = 224		# turn 180deg
 
 #port = None
 move_finished = False
+battery_voltage = 17
 
 maze_selected = 5   # should be 5 or 16
 
@@ -200,7 +201,8 @@ def set_speed(port, speed):
 #
 
 list_of_events = []
-timer_next_end_time = time.time+1
+timer_next_end_time = read_accurate_time()+1
+battery_count = 10
 
 def add_event(function, repeating=False):
     pass
@@ -217,9 +219,14 @@ def run_timers(port):
         timer_next_end_time = read_accurate_time()+1
 
         # we hard code a function here, for the moment
+	global execution_state_LED6
         send_switch_led_command(port, 6, execution_state_LED6)
         execution_state_LED6 = not execution_state_LED6
-        
+        global battery_count
+        battery_count -= 1
+        if battery_count <= 0:
+                print("Batt V", battery_voltage, "cell:", battery_voltage/4)
+                battery_count = 10
 
 ################################################################
 # 
@@ -270,8 +277,9 @@ def EV_BATTERY_VOLTAGE(port, cmd):
 
     # potential divider is 33K and 12K. This does into an ADC where the reference is approx. 5v.
     global battery_voltage_conversion
-    voltage = ADC_reading * battery_voltage_conversion
-    print("Batt V", voltage, "cell:", voltage/4)
+    global battery_voltage
+    battery_voltage = ADC_reading * battery_voltage_conversion
+    #print("Batt V", voltage, "cell:", voltage/4)
 
 
 def EV_FINISHED_MOVE(port, cmd):
@@ -477,7 +485,7 @@ def get_key(port):
 # LED 5 = shutdown running (not implemented)
 # LED 6 = slow flash if running, fast flash if battery problem (going to shutdown soon)
 
-def run_program():
+def run_program(port):
     while True:
         send_unlock_command(port)
         if wait_for_unlock_to_complete(port):
@@ -562,7 +570,7 @@ def main():
 
     while True:
         try:
-            run_program()
+            run_program(port)
             
         except SoftReset:
             # @todo: Fix this to reset variables, and restart

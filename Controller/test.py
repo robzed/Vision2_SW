@@ -394,6 +394,10 @@ def wait_for_unlock_to_complete(port):
     return True
 
 
+def wait_for_poll_reply(port):
+    # @todo: complete this funnction
+    pass
+
 ################################################################
 # 
 # Control Loop
@@ -417,6 +421,8 @@ def main():
         print("Unlock failed - Retrying")
     
     send_poll_command(port)
+    wait_for_poll_reply(port)
+
     send_switch_led_command(port, 1, True)
 
     set_speed(port, 100)    # normal search speed

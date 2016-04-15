@@ -483,7 +483,7 @@ int main(int argc, char** argv)
                     // slight race condition here, but not a major problem if we miss one
                     int battery_v = battery_voltage & 0x3FF;
                     battery_data_ready = 0;     // clear request
-                    if(battery_v != last_sent_battery || battery_count == 0)
+                    if(battery_v != last_sent_battery || battery_count <= 0)
                     {
                         last_sent_battery = battery_v;
                         send_event(EV_BATTERY_VOLTAGE + (battery_v >> 8));

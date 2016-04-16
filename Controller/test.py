@@ -527,12 +527,12 @@ def run_program(port):
                     break
                 elif key == "B":
                     # start key
-                    running = True
+                    running = True      # should be hold
                     break
                 elif key == "A+":
                     raise ShutdownRequest
                 elif key == "B+":
-                    print("B held key - no action")
+                    print("B held key - should be start running @todo!")
 
 
         # start the run

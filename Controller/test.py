@@ -70,6 +70,7 @@ read_accurate_time = time.time
 
 sent_bytes_in_flight = 0
 messages_in_flight_queue = deque()
+flight_queue_full = False
 
 def send_message(port, message):
     global sent_bytes_in_flight
@@ -82,7 +83,10 @@ def send_message(port, message):
     
     print(">", ml, sent_bytes_in_flight)
     while (ml + sent_bytes_in_flight) > 4:
+        global flight_queue_full
+        flight_queue_full = True
         event_processor(port)
+        flight_queue_full = False
 
     sent_bytes_in_flight += ml
     messages_in_flight_queue.append(ml)
@@ -229,10 +233,12 @@ def run_timers(port):
         # notice: time slip possible here, no 'catchup' attempted.
         timer_next_end_time = read_accurate_time()+1
 
-        # we hard code a function here, for the moment
-        global execution_state_LED6
-        send_switch_led_command(port, 6, execution_state_LED6)
-        execution_state_LED6 = not execution_state_LED6
+        # only do this if we are not running full already...
+        if not flight_queue_full:
+            # we hard code a function here, for the moment
+            global execution_state_LED6
+            send_switch_led_command(port, 6, execution_state_LED6)
+            execution_state_LED6 = not execution_state_LED6
 
         global battery_count
         battery_count -= 1
@@ -330,7 +336,7 @@ def EV_POLL_REPLY(port, cmd):
     print("Got poll reply")
 
 def EV_FAIL_INVALID_COMMAND(port, cmd):
-    print("Got innvalid command")
+    print("Got invalid command")
     recover_from_major_error()
 
 #def EV_GOT_INSTRUCTION(port, cmd):

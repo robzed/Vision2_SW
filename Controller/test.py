@@ -227,9 +227,10 @@ def run_timers(port):
         timer_next_end_time = read_accurate_time()+1
 
         # we hard code a function here, for the moment
-	global execution_state_LED6
+        global execution_state_LED6
         send_switch_led_command(port, 6, execution_state_LED6)
         execution_state_LED6 = not execution_state_LED6
+
         global battery_count
         battery_count -= 1
         if battery_count <= 0:
@@ -601,6 +602,32 @@ def get_wall_info(port):
     
     return left_wall_sense, front_short_wall_sense, right_wall_sense
 
+def scan_for_walls(port, m, robot_direction, robot_row, robot_column):
+    left, front, right = get_wall_info(port)
+    print(left, front, right)
+    wall_changed = False
+    if left and not m.get_left_wall(robot_direction, robot_row, robot_column):
+        m.set_left_wall(robot_direction, robot_row, robot_column)
+        wall_changed = True
+    if right and not m.get_right_wall(robot_direction, robot_row, robot_column):
+        m.set_right_wall(robot_direction, robot_row, robot_column)
+        wall_changed = True
+    if front and not m.get_front_wall(robot_direction, robot_row, robot_column):
+        m.set_front_wall(robot_direction, robot_row, robot_column)
+        wall_changed = True
+
+    if wall_changed:
+        m.flood_fill_all()
+
+def wait_seconds(port, time):
+    if time < 0:
+        return
+    
+    end_time = read_accurate_time() + time
+    while read_accurate_time() < end_time:
+        event_processor(port)
+
+    
 ################################################################
 #
 # Control Loop
@@ -621,18 +648,17 @@ def run_program(port):
             break
         print("Unlock failed - Retrying")
 
+    turn_off_all_LEDs(port)
+    turn_off_motors(port)
+    turn_off_ir(port)
 
     while True:
         # let's process some events anyway
-        for i in range(1,10):
+        for _ in range(1,10):
             event_processor(port)
         
         send_poll_command(port)
         wait_for_poll_reply(port)
-
-        turn_off_all_LEDs(port)
-        turn_off_motors(port)
-        turn_off_ir(port)
 
         running = False
         while running:
@@ -649,6 +675,7 @@ def run_program(port):
             while True:
                 key = get_key(port)
                 if key == "A":
+                    # @todo: we might want test mode and calibration mode here?
                     if maze_selected == 5:
                         maze_selected = 16
                     else:
@@ -663,42 +690,76 @@ def run_program(port):
                 elif key == "B+":
                     print("B held key - should be start running @todo!")
 
-
+        start_time = read_accurate_time()
         # start the run
+        turn_on_ir(port)        # do this early so IR system has time to scan before scan_for_walls()
         send_switch_led_command(port, 3, True)
         set_speed(port, 100)    # normal search speed
         m = Maze(maze_selected)
+        m.target_normal_end_cells()
         m.flood_fill_all()
         robot_direction = 0     # 0=north, 1=east, 2=west 
+        robot_row = 0
+        robot_column = 0
         
-        turn_on_ir(port)
-        #move_forward(port, 4*347)
-        #wait_for_move_to_finish(port)
-        
-        for _ in range(1,5):
-            left, front, right = get_wall_info(port)
-            print(left, front, right)
-            move_forward(port, distance_cell)
-            wait_for_move_to_finish(port)
-            # add code here
+        # this is the start cell. We scan here anyway, although it's not necessary.
+        scan_for_walls(port, m, robot_direction, robot_row, robot_column)
 
-        turn_off_ir(port)
-        move_right(port, distance_turn180)
-        wait_for_move_to_finish(port)
+        # ensure we wait at least 2 seconds before we move, under all circumstances
+        time_left = 2 - (read_accurate_time() - start_time)
+        wait_seconds(port, time_left)
 
-        turn_on_ir(port)
-        move_forward(port, distance_cell)
-        wait_for_move_to_finish(port)
-        
-        turn_off_ir(port)
-        move_left(port, distance_turnl90)
-        wait_for_move_to_finish(port)
+        completed = False
+        while True:
+
+            headings = m.get_lowest_directions_against_heading(robot_direction, robot_row, robot_column)
+            if len(headings) == 0:
+                current_cell_value = m.get_cell_value(robot_row, robot_column)
+                if current_cell_value == 0:
+                    #completed
+                    completed = True
+                    break
+                else:
+                    # can't get any better cell? Probably unsolvable?
+                    completed = False
+                    break
+            # @todo: we should select a specific one here, but we just choose the first one at the moment
+            heading = headings[0] & 3
+            if heading == 0:
+                turn_on_ir(port)
+                move_forward(port, distance_cell)
+                wait_for_move_to_finish(port)
+                scan_for_walls(port, m, robot_direction, robot_row, robot_column)
+            elif heading == 1:
+                turn_off_ir(port)
+                move_right(port, distance_turnr90)
+                wait_for_move_to_finish(port)
+                turn_on_ir(port)
+            elif heading == 2:
+                turn_off_ir(port)
+                move_right(port, distance_turn180)
+                wait_for_move_to_finish(port)
+                turn_on_ir(port)
+            else:
+                turn_off_ir(port)
+                move_left(port, distance_turnl90)
+                wait_for_move_to_finish(port)
 
         # shut down
         turn_off_ir(port)
         turn_off_motors(port)
-        send_switch_led_command(port, 3, False)
 
+        send_switch_led_command(port, 3, False)
+        if not completed:
+            # flash for 6 seconds
+            for _ in range(1, 6):
+                send_switch_led_command(port, 4, True)
+                wait_seconds(0.5)
+                send_switch_led_command(port, 4, False)
+                wait_seconds(0.5)
+            send_switch_led_command(port, 4, True)
+        
+        # loop back to top to do keys again
 
 def main():
     port = serial.Serial("/dev/ttyAMA0", baudrate = 57600, timeout = 0.1)

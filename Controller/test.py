@@ -44,6 +44,9 @@ class SoftReset(Exception):
 class ShutdownRequest(Exception):
     pass
 
+class MajorError(Exception):
+    pass
+
 ################################################################
 # 
 # General functions
@@ -51,7 +54,7 @@ class ShutdownRequest(Exception):
 def recover_from_major_error():
     print()
     print("Major error - aborting")
-    exit(1)
+    raise MajorError
 
 
 # define timer function
@@ -78,7 +81,7 @@ def send_message(port, message):
     event_processor(port)
     
     print(">", ml, sent_bytes_in_flight)
-    while (ml + sent_bytes_in_flight) >= 4:
+    while (ml + sent_bytes_in_flight) > 4:
         event_processor(port)
 
     sent_bytes_in_flight += ml
@@ -93,7 +96,9 @@ def acknowledge_send(port, cmd):
     try:
         count = messages_in_flight_queue.popleft()
     except IndexError:
-        recover_from_major_error()
+        #recover_from_major_error()
+        print("Index Error")
+        count = 0
 
     sent_bytes_in_flight -= count
 
@@ -340,9 +345,11 @@ def EV_BUTTON_B_RELEASE(port, cmd):
     pass
 
 def EV_BUTTON_A_PRESS(port, cmd):
+    print("press A")
     keys_in_queue.append('A')
 
 def EV_BUTTON_B_PRESS(port, cmd):
+    print("press B")
     keys_in_queue.append('B')
 
 got_wall_info = False
@@ -619,7 +626,7 @@ def run_program(port):
             break
         print("Unlock failed - Retrying")
 
-
+    global maze_selected
     while True:
         # let's process some events anyway
         for i in range(1,10):

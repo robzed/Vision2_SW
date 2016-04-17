@@ -11,7 +11,7 @@ from __future__ import print_function
 class Maze(object):
     
     # value of cell data if we can't get to it
-    UNREACHED = 9999     # probably needs changing for 32x32 (=1024 cells)
+    UNREACHED = 9999     
 
     def __init__(self, size_of_maze, standard_target = False, init_start_wall = True):
         # need to tell engine where to head for before flood works!

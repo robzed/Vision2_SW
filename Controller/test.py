@@ -77,6 +77,7 @@ def send_message(port, message):
     # run one anyway 
     event_processor(port)
     
+    print(">", ml, sent_bytes_in_flight)
     while (ml + sent_bytes_in_flight) >= 4:
         event_processor(port)
 
@@ -100,7 +101,7 @@ def reset_message_queue():
     global sent_bytes_in_flight
     global message_in_flight_queue
 
-    send_bytes_in_flight = 0
+    sent_bytes_in_flight = 0
     messages_in_flight_queue = deque()
 
 ################################################################

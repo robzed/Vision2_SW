@@ -78,7 +78,7 @@ def send_message(port, message):
     event_processor(port)
     
     print(">", ml, sent_bytes_in_flight)
-    while (ml + sent_bytes_in_flight) >= 4:
+    while (ml + sent_bytes_in_flight) > 4:
         event_processor(port)
 
     sent_bytes_in_flight += ml
@@ -93,7 +93,9 @@ def acknowledge_send(port, cmd):
     try:
         count = messages_in_flight_queue.popleft()
     except IndexError:
-        recover_from_major_error()
+        print("Got acknowledge send without anything in message_in_flight_queue - Ignoring")
+        count = 0
+        #recover_from_major_error()
 
     sent_bytes_in_flight -= count
 
@@ -524,7 +526,7 @@ command_handlers = {
     0xE2: EV_FAIL_INVALID_COMMAND,
     0xEF: acknowledge_send,  # no intermediate function required, like EV_GOT_INSTRUCTION
 }
-        
+
 
 def event_processor(port):
     cmd = port.read(1)

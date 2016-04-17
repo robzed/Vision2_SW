@@ -9,11 +9,22 @@ from __future__ import print_function
 #
 
 class Maze(object):
-    def __init__(self, size_of_maze):
+    def __init__(self, size_of_maze, standard_target = True, init_start_wall = True):
         # need to tell engine where to head for before flood works!
         self.targets = []
         self.size = size_of_maze
         self.clear_maze_data()
+        if standard_target:
+            if size_of_maze == 5:
+                self.set_target_cell(4, 4)
+            elif size_of_maze == 16:
+                self.set_target_cell(7, 7)
+                self.set_target_cell(7, 8)
+                self.set_target_cell(8, 7)
+                self.set_target_cell(8, 8)
+
+        if init_start_wall:
+            self.set_right_wall(0, 0, 0)
 
     def clear_north_south_maze_wall_data(self):
         size = self.size
@@ -21,21 +32,25 @@ class Maze(object):
         
         # row 0
         line = []
-        for column in range(0, size):
+        # for each column
+        for _ in range(0, size):
             line.append(1)
         self.NS_wall_data.append(line)
 
         # row 1 to max
-        for row in range(1, size):
+        # for each row
+        for _ in range(1, size):
             line = []
-            for column in range(0,size):
+            # and each column
+            for _ in range(0,size):
                 line.append(0)
             
             self.NS_wall_data.append(line)
 
         # last line, size+1
         line = []
-        for column in range(0, size):
+        # column
+        for _ in range(0, size):
                 line.append(1)
         self.NS_wall_data.append(line)
 
@@ -44,7 +59,7 @@ class Maze(object):
         self.EW_wall_data = []
         
         # row 1 to max
-        for row in range(0, size):
+        for _ in range(0, size):
             line = []
             for column in range(0,size+1):
                 if column == 0 or column == size:
@@ -58,9 +73,11 @@ class Maze(object):
         size = self.size
         self.maze_cell_data = []
         
-        for row in range(0, size):
+        # for each row
+        for _ in range(0, size):
             line = []
-            for column in range(0,size):
+            # for each column
+            for _ in range(0,size):
                 line.append(999)            # big enough for 32x32 maze would be 1024 cells!
             
             self.maze_cell_data.append(line)
@@ -118,26 +135,127 @@ class Maze(object):
         print("EW Wall rows =", len(self.EW_wall_data[0]))
         print("NS wall rows =", len(self.NS_wall_data[0]))
 
+    def get_cell_value(self, row, column):
+        if row < 0 or row >= self.size or column < 0 or column >= self.size:
+            return 999
+        return self.maze_cell_data[row, column]
+    
+    def flood_adjust_one_square(self, row, column):
+        cell = 999
+        
+        if not self.NS_wall_data[row+1][column]:
+            cell = min(cell, self.maze_cell_data[row+1][column])
+        if not self.NS_wall_data[row][column]:
+            cell = min(cell, self.maze_cell_data[row-1][column])
+
+        if not self.EW_wall_data[row][column+1]:
+            cell = min(cell, self.maze_cell_data[row][column+1])
+        if not self.EW_wall_data[row][column]:
+            cell = min(cell, self.maze_cell_data[row][column-1])
+
+        cell += 1   # if we have to get to it from another cell, then it will be one higher
+        if cell < self.maze_cell_data[row][column]:
+            self.maze_cell_data[row][column] = cell
+            return True
+
+        return False
+    
     def flood_fill_all(self):
-        for target in self.targets:
-            row, column = target
+        #for target in self.targets:
+        #    row, column = target
+        iterations = 0
+        while True:
+            changed = False
+            for row in range(0, self.size):
+                for column in range(0, self.size):
+                    new_change = self.flood_adjust_one_square(row, column)
+                    changed = changed or new_change
+                    
+            iterations += 1
+            if changed == False:
+                break
+            
+        return iterations
 
-    def floor_fill_update_from_here(self, row, column):
-        pass
-
-    def start_incremental_flood_fill_from_here(self, row, column):
-        pass
-
-    def step_incremental_flood_fill_from_here(self):
-        return True
+#    def floor_fill_update_from_here(self, row, column):
+#        pass
+#
+#    def start_incremental_flood_fill_from_here(self, row, column):
+#        pass
+#
+#    def step_incremental_flood_fill_from_here(self):
+#        return True
 
     # set_target_cell can be called multipled times (e.g. in 4 square for 16x16)
     def set_target_cell(self, row, column):
         self.maze_cell_data[row][column] = 0
         target = (row, column)
-        self.targets.append = target
+        self.targets.append(target)
 
     def clear_targets(self):
         self.targets = []
 
+    def set_front_wall(self, heading, row, column):
+        if row < 0 or row >= self.size or column < 0 or column >= self.size:
+            return
+        
+        heading &= 3
+        if heading == 0:
+            self.NS_wall_data[row+1][column] = 1
+        elif heading == 1:
+            self.EW_wall_data[row][column+1] = 1
+        elif heading == 2:
+            self.NS_wall_data[row][column] = 1
+        else:
+            self.EW_wall_data[row][column] = 1
+    
+    def set_left_wall(self, heading, row, column):
+        self.set_front_wall(heading-1, row, column)
 
+    def set_right_wall(self, heading, row, column):
+        self.set_front_wall(heading+1, row, column)
+
+if __name__ == "__main__":
+    def test():
+        m = Maze(5)
+        iterations = m.flood_fill_all()
+        m.print_maze()
+        print(iterations)
+        print()
+
+        print()
+        m = Maze(16)
+        m.set_front_wall(0, 1, 1)
+        m.set_front_wall(1, 2, 2)
+        m.set_front_wall(2, 3, 3)
+        m.set_front_wall(3, 4, 4)
+        iterations = m.flood_fill_all()
+        m.print_maze()
+        print(iterations)
+
+        print()
+        m = Maze(5)
+        m.set_front_wall(0, 1, 1)
+        m.set_left_wall(0, 1, 1)
+        iterations = m.flood_fill_all()
+        m.print_maze()
+        print(iterations)
+
+        m.set_right_wall(0, 1, 1)
+        m.flood_fill_all()
+        iterations = m.flood_fill_all()
+        m.print_maze()
+        print(iterations)
+
+        print()
+        m = Maze(5)
+        m.set_front_wall(1, 1, 1)
+        m.set_left_wall(1, 1, 1)
+        m.set_right_wall(1, 1, 1)
+        iterations = m.flood_fill_all()
+        m.print_maze()
+        print(iterations)
+        
+    test()
+    
+    

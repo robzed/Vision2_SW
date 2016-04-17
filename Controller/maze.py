@@ -102,7 +102,7 @@ class Maze(object):
     def clear_maze_data(self, just_walls = False):
         self.clear_north_south_maze_wall_data()
         self.clear_east_west_maze_wall_data()
-        if just_walls:
+        if not just_walls:
             self.clear_maze_cell_data()
 
     def print_maze(self):

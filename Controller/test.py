@@ -6,6 +6,7 @@ import serial
 import time
 from collections import deque
 import os
+from maze import Maze
 
 ################################################################
 # 
@@ -143,7 +144,7 @@ def send_switch_led_command(port, led, on):
 def send_led_pattern_command(port, led_states):
     # 0x20 = CMD_TYPE_ALL_LEDS - extra byte (leds 1-8, led 9-bit 0 of cmd byte)
     leds_1to8 = chr(led_states & 0xFF)
-    cmd_and_led_9 = char(0x20 + ((led_states >> 8) & 1))
+    cmd_and_led_9 = chr(0x20 + ((led_states >> 8) & 1))
     send_message(port, cmd_and_led_9 + leds_1to8)
 
 def turn_off_all_LEDs(port):

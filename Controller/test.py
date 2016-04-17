@@ -519,10 +519,10 @@ def run_program(port):
                 send_switch_led_command(port, 2, False)
 
             while True:
-                A = get_key(port)
+                key = get_key(port)
                 if key == "A":
                     if maze_selected == 5:
-                        maze_selected == 16
+                        maze_selected = 16
                     else:
                         maze_selected = 5
                     break
@@ -538,12 +538,16 @@ def run_program(port):
 
         # start the run
         send_switch_led_command(port, 3, True)
-
         set_speed(port, 100)    # normal search speed
+        m = Maze(maze_selected)
+        m.flood_fill_all()
         
         turn_on_ir(port)
         move_forward(port, 4*347)
         wait_for_move_to_finish(port)
+        
+        if 0:
+            pass
 
         turn_off_ir(port)
         move_right(port, distance_turn180)

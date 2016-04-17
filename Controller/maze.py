@@ -13,12 +13,12 @@ class Maze(object):
         # need to tell engine where to head for before flood works!
         self.targets = []
         self.size = size_of_maze
+        
         if standard_target:
             self.clear_maze_data(just_walls = True) # avoid setting the maze cells twice
             self.target_normal_end_cells()
         else:
             self.clear_maze_data()
-
 
         if init_start_wall:
             self.set_right_wall(0, 0, 0)

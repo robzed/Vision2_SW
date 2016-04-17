@@ -193,6 +193,10 @@ def set_speed(port, speed):
     s = "\xC4" + chr(speed >> 8) + chr(speed & 0xff)
     send_message(port, s)
 
+def send_get_wall_info(port):
+    if verbose: print("Get wall IR")
+    send_message(port, "\x98")
+
 
 ################################################################
 # 
@@ -340,6 +344,109 @@ def EV_BUTTON_A_PRESS(port, cmd):
 def EV_BUTTON_B_PRESS(port, cmd):
     keys_in_queue.append('B')
 
+got_wall_info = False
+left_wall_sense = False
+right_wall_sense = False
+front_short_wall_sense = False
+front_long_wall_sense = False
+
+#EV_IR_FRONT_SIDE_STATE  0x40        // bit 0 = front long
+#                                    // bit 1 = front short
+#                                    // bit 2 = left side
+#                                    // bit 3 = right side
+def EV_IR_FRONT_SIDE_STATE(port, cmd):
+    global got_wall_info
+    global left_wall_sense
+    global right_wall_sense
+    global front_short_wall_sense
+    global front_long_wall_sense
+    left_wall_sense = cmd&4
+    right_wall_sense = cmd&8
+    front_short_wall_sense = cmd&2
+    front_long_wall_sense = cmd&1
+    got_wall_info = True
+
+"""
+def EV_IR_FRONT_SIDE_STATE_0(port, cmd):
+    # we use short sensor for wall measurement
+    # left, front, right, front_long
+    return False, False, False, False  # cmd&4, cmd&2, cmd&8, cmd&1
+
+def EV_IR_FRONT_SIDE_STATE_1(port, cmd):
+    # we use short sensor for wall measurement
+    # left, front, right, front_long
+    return False, False, False, True  # cmd&4, cmd&2, cmd&8, cmd&1
+
+def EV_IR_FRONT_SIDE_STATE_2(port, cmd):
+    # we use short sensor for wall measurement
+    # left, front, right, front_long
+    return False, True, False, False  # cmd&4, cmd&2, cmd&8, cmd&1
+
+def EV_IR_FRONT_SIDE_STATE_3(port, cmd):
+    # we use short sensor for wall measurement
+    # left, front, right, front_long
+    return False, True, False, True  # cmd&4, cmd&2, cmd&8, cmd&1
+
+def EV_IR_FRONT_SIDE_STATE_4(port, cmd):
+    # we use short sensor for wall measurement
+    # left, front, right, front_long
+    return True, False, False, False  # cmd&4, cmd&2, cmd&8, cmd&1
+
+def EV_IR_FRONT_SIDE_STATE_5(port, cmd):
+    # we use short sensor for wall measurement
+    # left, front, right, front_long
+    return True, False, False, True  # cmd&4, cmd&2, cmd&8, cmd&1
+
+def EV_IR_FRONT_SIDE_STATE_6(port, cmd):
+    # we use short sensor for wall measurement
+    # left, front, right, front_long
+    return True, True, False, False  # cmd&4, cmd&2, cmd&8, cmd&1
+
+def EV_IR_FRONT_SIDE_STATE_7(port, cmd):
+    # we use short sensor for wall measurement
+    # left, front, right, front_long
+    return True, True, False, True  # cmd&4, cmd&2, cmd&8, cmd&1
+
+def EV_IR_FRONT_SIDE_STATE_8(port, cmd):
+    # we use short sensor for wall measurement
+    # left, front, right, front_long
+    return False, False, True, False  # cmd&4, cmd&2, cmd&8, cmd&1
+
+def EV_IR_FRONT_SIDE_STATE_9(port, cmd):
+    # we use short sensor for wall measurement
+    # left, front, right, front_long
+    return False, False, True, True  # cmd&4, cmd&2, cmd&8, cmd&1
+
+def EV_IR_FRONT_SIDE_STATE_A(port, cmd):
+    # we use short sensor for wall measurement
+    # left, front, right, front_long
+    return False, True, True, False  # cmd&4, cmd&2, cmd&8, cmd&1
+
+def EV_IR_FRONT_SIDE_STATE_B(port, cmd):
+    # we use short sensor for wall measurement
+    # left, front, right, front_long
+    return False, True, True, True  # cmd&4, cmd&2, cmd&8, cmd&1
+
+def EV_IR_FRONT_SIDE_STATE_C(port, cmd):
+    # we use short sensor for wall measurement
+    # left, front, right, front_long
+    return True, False, True, False  # cmd&4, cmd&2, cmd&8, cmd&1
+
+def EV_IR_FRONT_SIDE_STATE_D(port, cmd):
+    # we use short sensor for wall measurement
+    # left, front, right, front_long
+    return True, False, True, True  # cmd&4, cmd&2, cmd&8, cmd&1
+
+def EV_IR_FRONT_SIDE_STATE_E(port, cmd):
+    # we use short sensor for wall measurement
+    # left, front, right, front_long
+    return True, True, True, False  # cmd&4, cmd&2, cmd&8, cmd&1
+
+def EV_IR_FRONT_SIDE_STATE_F(port, cmd):
+    # we use short sensor for wall measurement
+    # left, front, right, front_long
+    return True, True, True, True  # cmd&4, cmd&2, cmd&8, cmd&1
+"""
 
 ################################################################
 # 
@@ -369,22 +476,23 @@ command_handlers = {
     0x38: EV_BUTTON_A_PRESS,
     0x39: EV_BUTTON_B_PRESS,
 
-#    0x40: EV_IR_FRONT_SIDE_STATE,
-#    0x41: EV_IR_FRONT_SIDE_STATE,
-#    0x42: EV_IR_FRONT_SIDE_STATE,
-#    0x43: EV_IR_FRONT_SIDE_STATE,
-#    0x44: EV_IR_FRONT_SIDE_STATE,
-#    0x45: EV_IR_FRONT_SIDE_STATE,
-#    0x46: EV_IR_FRONT_SIDE_STATE,
-#    0x47: EV_IR_FRONT_SIDE_STATE,
-#    0x48: EV_IR_FRONT_SIDE_STATE,
-#    0x49: EV_IR_FRONT_SIDE_STATE,
-#    0x4A: EV_IR_FRONT_SIDE_STATE,
-#    0x4B: EV_IR_FRONT_SIDE_STATE,
-#    0x4C: EV_IR_FRONT_SIDE_STATE,
-#    0x4D: EV_IR_FRONT_SIDE_STATE,
-#    0x4E: EV_IR_FRONT_SIDE_STATE,
-#    0x4F: EV_IR_FRONT_SIDE_STATE,
+
+    0x40: EV_IR_FRONT_SIDE_STATE,
+    0x41: EV_IR_FRONT_SIDE_STATE,
+    0x42: EV_IR_FRONT_SIDE_STATE,
+    0x43: EV_IR_FRONT_SIDE_STATE,
+    0x44: EV_IR_FRONT_SIDE_STATE,
+    0x45: EV_IR_FRONT_SIDE_STATE,
+    0x46: EV_IR_FRONT_SIDE_STATE,
+    0x47: EV_IR_FRONT_SIDE_STATE,
+    0x48: EV_IR_FRONT_SIDE_STATE,
+    0x49: EV_IR_FRONT_SIDE_STATE,
+    0x4A: EV_IR_FRONT_SIDE_STATE,
+    0x4B: EV_IR_FRONT_SIDE_STATE,
+    0x4C: EV_IR_FRONT_SIDE_STATE,
+    0x4D: EV_IR_FRONT_SIDE_STATE,
+    0x4E: EV_IR_FRONT_SIDE_STATE,
+    0x4F: EV_IR_FRONT_SIDE_STATE,
 
 #    0x50: EV_IR_45_STATE,
 #    0x51: EV_IR_45_STATE,
@@ -472,6 +580,23 @@ def get_key(port):
             return keys_in_queue.popleft()
 
 
+#
+got_wall_info = False
+left_wall_sense = False
+right_wall_sense = False
+front_short_wall_sense = False
+front_long_wall_sense = False
+
+    
+def get_wall_info(port):
+    global got_wall_info
+    got_wall_info = False
+    
+    send_get_wall_info(port)
+    while not got_wall_info:
+        event_processor(port)
+    
+    return left_wall_sense, front_short_wall_sense, right_wall_sense
 
 ################################################################
 #
@@ -541,20 +666,25 @@ def run_program(port):
         set_speed(port, 100)    # normal search speed
         m = Maze(maze_selected)
         m.flood_fill_all()
+        robot_direction = 0     # 0=north, 1=east, 2=west 
         
         turn_on_ir(port)
-        move_forward(port, 4*347)
-        wait_for_move_to_finish(port)
+        #move_forward(port, 4*347)
+        #wait_for_move_to_finish(port)
         
-        if 0:
-            pass
+        for _ in range(1,5):
+            left, front, right = get_wall_info(port)
+            print(left, front, right)
+            move_forward(port, distance_cell)
+            wait_for_move_to_finish(port)
+            # add code here
 
         turn_off_ir(port)
         move_right(port, distance_turn180)
         wait_for_move_to_finish(port)
 
         turn_on_ir(port)
-        move_forward(port, 347)
+        move_forward(port, distance_cell)
         wait_for_move_to_finish(port)
         
         turn_off_ir(port)

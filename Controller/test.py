@@ -2,6 +2,7 @@
 #
 from __future__ import print_function
 
+#from low_level_emulator import serial
 import serial
 import time
 from collections import deque

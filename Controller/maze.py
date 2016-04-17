@@ -13,19 +13,32 @@ class Maze(object):
         # need to tell engine where to head for before flood works!
         self.targets = []
         self.size = size_of_maze
-        self.clear_maze_data()
         if standard_target:
-            if size_of_maze == 5:
-                self.set_target_cell(4, 4)
-            elif size_of_maze == 16:
-                self.set_target_cell(7, 7)
-                self.set_target_cell(7, 8)
-                self.set_target_cell(8, 7)
-                self.set_target_cell(8, 8)
+            self.clear_maze_data(just_walls = True) # avoid setting the maze cells twice
+            self.target_normal_end_cells()
+        else:
+            self.clear_maze_data()
+
 
         if init_start_wall:
             self.set_right_wall(0, 0, 0)
 
+    def target_normal_end_cells(self):
+        self.clear_maze_cell_data()
+        self.clear_targets()
+        if self.size == 5:
+            self.set_target_cell(4, 4)
+        elif self.size == 16:
+            self.set_target_cell(7, 7)
+            self.set_target_cell(7, 8)
+            self.set_target_cell(8, 7)
+            self.set_target_cell(8, 8)
+    
+    def target_start_cell(self):
+        self.clear_maze_cell_data()
+        self.clear_targets()
+        self.set_target_cell(0, 0)
+    
     def clear_north_south_maze_wall_data(self):
         size = self.size
         self.NS_wall_data = []
@@ -82,10 +95,11 @@ class Maze(object):
             
             self.maze_cell_data.append(line)
 
-    def clear_maze_data(self):
+    def clear_maze_data(self, just_walls = False):
         self.clear_north_south_maze_wall_data()
         self.clear_east_west_maze_wall_data()
-        self.clear_maze_cell_data()
+        if just_walls:
+            self.clear_maze_cell_data()
 
     def print_maze(self):
         print("Start cell is bottom left")

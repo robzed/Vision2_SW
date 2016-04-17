@@ -459,6 +459,7 @@ int main(int argc, char** argv)
                 command_mode = COMMANDS_BINARY;
                 //change_send_event();
                 send_event(EV_UNLOCK_FROM_LOCK);
+                send_event(EV_GOT_INSTRUCTION);     // we need to tell RPi about this command as well.
             }/*
             else if(cmd == CMD_ASCII_UNLOCK)
             {

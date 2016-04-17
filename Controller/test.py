@@ -759,6 +759,11 @@ def run_program(port):
                 wait_seconds(0.5)
             send_switch_led_command(port, 4, True)
         
+        # @todo: go to start then wait for keys
+        # @todo: do speed run.
+        # @todo: move forward without stopping
+        # @todo: curved turns
+
         # loop back to top to do keys again
 
 def main():

@@ -9,7 +9,11 @@ from __future__ import print_function
 #
 
 class Maze(object):
-    def __init__(self, size_of_maze, standard_target = True, init_start_wall = True):
+    
+    # value of cell data if we can't get to it
+    UNREACHED = 9999     # probably needs changing for 32x32 (=1024 cells)
+
+    def __init__(self, size_of_maze, standard_target = False, init_start_wall = True):
         # need to tell engine where to head for before flood works!
         self.targets = []
         self.size = size_of_maze
@@ -91,7 +95,7 @@ class Maze(object):
             line = []
             # for each column
             for _ in range(0,size):
-                line.append(999)            # big enough for 32x32 maze would be 1024 cells!
+                line.append(self.UNREACHED)            # big enough for 32x32 maze would be 1024 cells!
             
             self.maze_cell_data.append(line)
 
@@ -111,9 +115,9 @@ class Maze(object):
             line_str = []
             for column in range(0, self.size):
                 if self.NS_wall_data[line+1][column]:
-                    line_str.append("+---")
+                    line_str.append("+----")
                 else:
-                    line_str.append("+   ")
+                    line_str.append("+    ")
             line_str.append("+")
             print("".join(line_str))
 
@@ -124,7 +128,7 @@ class Maze(object):
                     line_str.append("|")
                 else:
                     line_str.append(" ")
-                line_str.append("%3s" % self.maze_cell_data[line][column])
+                line_str.append("%4s" % self.maze_cell_data[line][column])
                 
             if self.EW_wall_data[line][self.size]:
                 line_str.append("|")
@@ -136,9 +140,9 @@ class Maze(object):
         line_str = []
         for column in range(0, self.size):
             if self.NS_wall_data[0][column]:
-                line_str.append("----")
+                line_str.append("-----")
             else:
-                line_str.append("    ")
+                line_str.append("     ")
         print("".join(line_str))
 
     def print_stats(self):
@@ -148,14 +152,9 @@ class Maze(object):
         print("Cell data rows =", len(self.maze_cell_data[0]))
         print("EW Wall rows =", len(self.EW_wall_data[0]))
         print("NS wall rows =", len(self.NS_wall_data[0]))
-
-    def get_cell_value(self, row, column):
-        if row < 0 or row >= self.size or column < 0 or column >= self.size:
-            return 999
-        return self.maze_cell_data[row, column]
     
     def flood_adjust_one_square(self, row, column):
-        cell = 999
+        cell = self.UNREACHED
         
         if not self.NS_wall_data[row+1][column]:
             cell = min(cell, self.maze_cell_data[row+1][column])
@@ -228,6 +227,67 @@ class Maze(object):
 
     def set_right_wall(self, heading, row, column):
         self.set_front_wall(heading+1, row, column)
+
+    def get_front_wall(self, heading, row, column):
+        if row < 0 or row >= self.size or column < 0 or column >= self.size:
+            return
+        
+        heading &= 3
+        if heading == 0:
+            return self.NS_wall_data[row+1][column]
+        elif heading == 1:
+            return self.EW_wall_data[row][column+1]
+        elif heading == 2:
+            return self.NS_wall_data[row][column]
+        else:
+            return self.EW_wall_data[row][column]
+    
+    def get_left_wall(self, heading, row, column):
+        return self.get_front_wall(heading-1, row, column)
+
+    def get_right_wall(self, heading, row, column):
+        return self.get_front_wall(heading+1, row, column)
+
+    def get_cell_value(self, row, column):    
+        if row < 0 or row >= self.size or column < 0 or column >= self.size:
+            return self.UNREACHED
+        return self.maze_cell_data[row, column]
+
+    def get_next_cell_value(self, heading, row, column):
+        heading &= 3
+
+        if heading == 0:
+            row += 1
+        elif heading == 1:
+            column += 1
+        elif heading == 2:
+            row -= 1
+        else:
+            column -= 1
+        
+        if row < 0 or row >= self.size or column < 0 or column >= self.size:
+            return self.UNREACHED
+
+        return self.maze_cell_data[row, column]
+        
+    def get_lowest_directions_against_heading(self, heading, row, column):
+        heading_list = []
+        current = self.get_cell_value(row, column)
+        front = self.get_next_cell_value(heading, row, column)
+        right = self.get_next_cell_value(heading+1, row, column)
+        back = self.get_next_cell_value(heading+2, row, column)
+        left = self.get_next_cell_value(heading-1, row, column)
+        
+        if front < current:
+            heading_list.append(0)
+        if right < current:
+            heading_list.append(1)
+        if back < current:
+            heading_list.append(2)
+        if left < current:
+            heading_list.append(3)
+        
+        return heading_list
 
 if __name__ == "__main__":
     def test():

@@ -44,6 +44,9 @@ class SoftReset(Exception):
 class ShutdownRequest(Exception):
     pass
 
+class MajorError(Exception):
+    pass
+
 ################################################################
 # 
 # General functions
@@ -51,7 +54,7 @@ class ShutdownRequest(Exception):
 def recover_from_major_error():
     print()
     print("Major error - aborting")
-    exit(1)
+    raise MajorError
 
 
 # define timer function
@@ -343,9 +346,11 @@ def EV_BUTTON_B_RELEASE(port, cmd):
     pass
 
 def EV_BUTTON_A_PRESS(port, cmd):
+    print("press A")
     keys_in_queue.append('A')
 
 def EV_BUTTON_B_PRESS(port, cmd):
+    print("press B")
     keys_in_queue.append('B')
 
 got_wall_info = False
@@ -652,6 +657,7 @@ def run_program(port):
     turn_off_motors(port)
     turn_off_ir(port)
 
+    global maze_selected
     while True:
         # let's process some events anyway
         for _ in range(1,10):

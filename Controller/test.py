@@ -742,21 +742,37 @@ def run_program(port):
                 turn_on_ir(port)
                 move_forward(port, distance_cell)
                 wait_for_move_to_finish(port)
+
+                if robot_direction == 0:
+                    robot_row += 1
+                elif robot_direction == 1:
+                    robot_column += 1
+                elif robot_direction == 2:
+                    robot_row -= 1
+                else:
+                    robot_column -= 1
+
                 scan_for_walls(port, m, robot_direction, robot_row, robot_column)
             elif heading == 1:
                 turn_off_ir(port)
                 move_right(port, distance_turnr90)
                 wait_for_move_to_finish(port)
                 turn_on_ir(port)
+                robot_direction += 1
+                robot_direction &= 3
             elif heading == 2:
                 turn_off_ir(port)
                 move_right(port, distance_turn180)
                 wait_for_move_to_finish(port)
                 turn_on_ir(port)
+                robot_direction += 2
+                robot_direction &= 3
             else:
                 turn_off_ir(port)
                 move_left(port, distance_turnl90)
                 wait_for_move_to_finish(port)
+                robot_direction -= 1
+                robot_direction &= 3
 
         # shut down
         turn_off_ir(port)

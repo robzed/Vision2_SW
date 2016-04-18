@@ -314,20 +314,27 @@ class Maze(object):
     def get_lowest_directions_against_heading(self, heading, row, column):
         heading_list = []
         current = self.get_cell_value(row, column)
-        front = self.get_next_cell_value(heading, row, column)
-        right = self.get_next_cell_value(heading+1, row, column)
-        back = self.get_next_cell_value(heading+2, row, column)
-        left = self.get_next_cell_value(heading-1, row, column)
         
-        if front < current:
-            heading_list.append(0)
-        if right < current:
-            heading_list.append(1)
-        if back < current:
-            heading_list.append(2)
-        if left < current:
-            heading_list.append(3)
-        
+        # this order might be used to prioritse a naive implementation
+        # forward first
+        if not self.get_front_wall(heading, row, column):
+            front = self.get_next_cell_value(heading, row, column)
+            if front < current:
+                heading_list.append(0)
+        if not self.get_right_wall(heading, row, column):
+            right = self.get_next_cell_value(heading+1, row, column)
+            if right < current:
+                heading_list.append(1)
+        if not self.get_left_wall(heading, row, column):
+            left = self.get_next_cell_value(heading-1, row, column)
+            if left < current:
+                heading_list.append(3)
+        # back last
+        if not self.get_front_wall(heading+2, row, column):
+            back = self.get_next_cell_value(heading+2, row, column)
+            if back < current:
+                heading_list.append(2)
+
         return heading_list
     
     def parse_maz_EW(self, line, row):

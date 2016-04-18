@@ -614,7 +614,7 @@ def get_wall_info(port):
 
 def scan_for_walls(port, m, robot_direction, robot_row, robot_column):
     left, front, right = get_wall_info(port)
-    print(left, front, right)
+    if verbose: print("Directions LFR =", left, front, right)
     wall_changed = False
     if left and not m.get_left_wall(robot_direction, robot_row, robot_column):
         m.set_left_wall(robot_direction, robot_row, robot_column)
@@ -781,9 +781,9 @@ def run_program(port):
             # flash for 6 seconds
             for _ in range(1, 6):
                 send_switch_led_command(port, 4, True)
-                wait_seconds(0.5)
+                wait_seconds(port, 0.5)
                 send_switch_led_command(port, 4, False)
-                wait_seconds(0.5)
+                wait_seconds(port, 0.5)
             send_switch_led_command(port, 4, True)
         
         # @todo: go to start then wait for keys

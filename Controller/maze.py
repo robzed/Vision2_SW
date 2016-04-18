@@ -2,6 +2,8 @@
 #
 from __future__ import print_function
 
+class MazeFailedToRead(Exception):
+    pass
 
 ################################################################
 # 
@@ -145,6 +147,44 @@ class Maze(object):
                 line_str.append("     ")
         print("".join(line_str))
 
+    def print_maz_format(self):
+        # (0,0) is bottom left
+        for line in range(self.size-1, -1, -1):
+            
+            # line above
+            line_str = []
+            for column in range(0, self.size):
+                if self.NS_wall_data[line+1][column]:
+                    line_str.append("+-")
+                else:
+                    line_str.append("+ ")
+            line_str.append("+")
+            print("".join(line_str))
+
+            # wall line
+            line_str = []
+            for column in range(0, self.size):
+                if self.EW_wall_data[line][column]:
+                    line_str.append("| ")
+                else:
+                    line_str.append("  ")
+                
+            if self.EW_wall_data[line][self.size]:
+                line_str.append("|")
+            else:
+                line_str.append("+")
+            print("".join(line_str))
+
+        # line above
+        line_str = []
+        for column in range(0, self.size):
+            if self.NS_wall_data[0][column]:
+                line_str.append("+-")
+            else:
+                line_str.append("+ ")
+        line_str.append("+")
+        print("".join(line_str))
+        
     def print_stats(self):
         print("Cell data lines =", len(self.maze_cell_data))
         print("EW Wall lines =", len(self.EW_wall_data))
@@ -208,25 +248,26 @@ class Maze(object):
     def clear_targets(self):
         self.targets = []
 
-    def set_front_wall(self, heading, row, column):
+    def set_front_wall(self, heading, row, column, state=True):
         if row < 0 or row >= self.size or column < 0 or column >= self.size:
             return
         
+        if state: state = 1
         heading &= 3
         if heading == 0:
-            self.NS_wall_data[row+1][column] = 1
+            self.NS_wall_data[row+1][column] = state
         elif heading == 1:
-            self.EW_wall_data[row][column+1] = 1
+            self.EW_wall_data[row][column+1] = state
         elif heading == 2:
-            self.NS_wall_data[row][column] = 1
+            self.NS_wall_data[row][column] = state
         else:
-            self.EW_wall_data[row][column] = 1
+            self.EW_wall_data[row][column] = state
     
-    def set_left_wall(self, heading, row, column):
-        self.set_front_wall(heading-1, row, column)
+    def set_left_wall(self, heading, row, column, state=True):
+        self.set_front_wall(heading-1, row, column, state)
 
-    def set_right_wall(self, heading, row, column):
-        self.set_front_wall(heading+1, row, column)
+    def set_right_wall(self, heading, row, column, state=True):
+        self.set_front_wall(heading+1, row, column, state=state)
 
     def get_front_wall(self, heading, row, column):
         if row < 0 or row >= self.size or column < 0 or column >= self.size:
@@ -251,7 +292,7 @@ class Maze(object):
     def get_cell_value(self, row, column):    
         if row < 0 or row >= self.size or column < 0 or column >= self.size:
             return self.UNREACHED
-        return self.maze_cell_data[row, column]
+        return self.maze_cell_data[row][column]
 
     def get_next_cell_value(self, heading, row, column):
         heading &= 3
@@ -268,7 +309,7 @@ class Maze(object):
         if row < 0 or row >= self.size or column < 0 or column >= self.size:
             return self.UNREACHED
 
-        return self.maze_cell_data[row, column]
+        return self.maze_cell_data[row][column]
         
     def get_lowest_directions_against_heading(self, heading, row, column):
         heading_list = []
@@ -288,17 +329,80 @@ class Maze(object):
             heading_list.append(3)
         
         return heading_list
+    
+    def parse_maz_EW(self, line, row):
+        column = 0
+        state = 0
+        for c in line:
+            if state == 1:
+                if c != " ":
+                    print("Failed to read space")
+                    print(row)
+                    raise MazeFailedToRead
+            else:
+                if c == "|":
+                    self.set_front_wall(3, row, column, 1)
+                elif c == " ":
+                    self.set_front_wall(3, row, column, 0)
+                else:
+                    print("didn't understand")
+                    print(row)
+                    raise MazeFailedToRead
+                
+                column += 1
+            state = 1 - state
+    
+    def parse_maz_NS(self, line, row):
+        column = 0
+        state = 0
+        heading = 0
+        if row == -1:
+            heading = 2
+            row = 0
+        for c in line:
+            if state == 0:
+                if c != "+":
+                    print("Failed to read +")
+                    print(line)
+                    raise MazeFailedToRead
+            else:
+                if c == "-":
+                    self.set_front_wall(heading, row, column, 1)
+                elif c == " ":
+                    self.set_front_wall(heading, row, column, 0)
+                else:
+                    print("didn't understand")
+                    print(line)
+                    raise MazeFailedToRead
+                
+                column += 1
+            state = 1 - state
+            
+    
+    def parse_maz_format(self, maz_string):
+        maz = maz_string.split("\n")
+        expected_lines = self.size * 2 + 1
+        if expected_lines != len(maz):
+            print("Wrong number of lines, expected", len(maz), "actual", expected_lines)
+        
+        row = len(maz)-2
+        for line in maz:
+            if row % 2:
+                self.parse_maz_NS(line, int(row/2))
+            else:
+                self.parse_maz_EW(line, int(row/2))
+            row -= 1
 
 if __name__ == "__main__":
     def test():
-        m = Maze(5)
+        m = Maze(5, standard_target = True)
         iterations = m.flood_fill_all()
         m.print_maze()
         print(iterations)
         print()
 
         print()
-        m = Maze(16)
+        m = Maze(16, standard_target = True)
         m.set_front_wall(0, 1, 1)
         m.set_front_wall(1, 2, 2)
         m.set_front_wall(2, 3, 3)
@@ -308,7 +412,7 @@ if __name__ == "__main__":
         print(iterations)
 
         print()
-        m = Maze(5)
+        m = Maze(5, standard_target = True)
         m.set_front_wall(0, 1, 1)
         m.set_left_wall(0, 1, 1)
         iterations = m.flood_fill_all()
@@ -322,7 +426,7 @@ if __name__ == "__main__":
         print(iterations)
 
         print()
-        m = Maze(5)
+        m = Maze(5, standard_target = True)
         m.set_front_wall(1, 1, 1)
         m.set_left_wall(1, 1, 1)
         m.set_right_wall(1, 1, 1)
@@ -330,6 +434,48 @@ if __name__ == "__main__":
         m.print_maze()
         print(iterations)
         
+        standard_maze_89iee_maz = \
+"""+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+|   |   |   |                   |
++ + + + + +-+ + + +-+-+-+-+-+-+ +
+| |   |       | |             | |
++ + +-+ +-+ + +-+ +-+-+-+-+-+ + +
+|       |   |     |           | |
++ +-+ + + + +-+-+-+ +-+-+-+-+-+ +
+| |   |   |                   | |
++ + + + + +-+ +-+-+-+-+-+-+-+ + +
+|   |   |   |                 | |
++ + + + +-+-+ +-+-+-+-+-+-+-+-+ +
+| |   |       |                 |
++ + + +-+ +-+-+ +-+-+-+-+-+-+-+ +
+|   |   |     | |   |   |   |   |
++ +-+-+-+-+ + + +-+ + + + + + + +
+|           | |   | | |   |   | |
++ +-+-+-+-+-+ + + + + +-+-+-+ + +
+| |         | |   | |       | | |
++ + +-+-+-+ +-+-+-+ +-+-+-+ + + +
+| | |       |               | | |
++ + + +-+-+-+ +-+-+-+-+ +-+-+ + +
+|   | |               |       | |
++-+ + + +-+-+-+-+-+-+ +-+-+-+-+ +
+|   | | |                     | |
++ + + + + +-+-+-+-+-+-+-+-+-+ + +
+| | | | |             |         |
++ + + + +-+-+-+-+-+-+ + +-+-+-+ +
+| | | |             | |       | |
++ + + + +-+-+-+-+-+ + +-+-+-+ + +
+| | |   |           | |       | |
++ + +-+-+ + +-+-+-+-+ + +-+-+-+-+
+| |       |                     |
++-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+"""
+        m = Maze(16, standard_target = True)
+        m.parse_maz_format(standard_maze_89iee_maz)
+        iterations = m.flood_fill_all()
+        m.print_maz_format()
+        m.print_maze()
+        print(iterations)
+
+    
     test()
     
     

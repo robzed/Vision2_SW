@@ -1,5 +1,7 @@
 from __future__ import print_function
 from collections import deque
+from maze import Maze
+import time
 
 class serial:
     class Serial:
@@ -12,11 +14,27 @@ class serial:
             self.row = 0
             self.column = 0
 
-            # or maybe just use maze?
-            #self.trans = "   ", "[  ", " _]", 
-            #self.nw_walls = [ # "[_]
-            #                 [1,1,1,1,1,1,1,1,1,1,1,1]
-            #                 ]
+            self.maze = Maze(16)
+            self.maze.load_example_maze()
+            self.start_time = time.time()
+            self.timer_state = 0
+            
+            self.IR = False
+
+
+        def do_timers(self):
+            if (time.time() - self.start_time) > 2:
+                self.timer_state += 1
+                if self.timer_state == 1:
+                    self._wrdata("\x38")    # A press
+                elif self.timer_state == 2:
+                    self._wrdata("\x30")    # A release
+                elif self.timer_state == 3:
+                    self._wrdata("\x39")    # B press
+                elif self.timer_state == 4:
+                    self._wrdata("\x31")    # B release
+
+        
         def inWaiting(self):
             return 0
         
@@ -27,6 +45,7 @@ class serial:
             if len(params) != num_params:
                 print("Command", hex(ord(cmd)), "had", len(params), "parameters, not", num_params)
                 exit(1)
+                
         def _process_cmd(self, cmd, params):
             cmdv = ord(cmd)
             if cmd == "\x20":
@@ -44,12 +63,94 @@ class serial:
                 
             elif cmd == "\x98":
                 self._paramcheck(cmd, params, 0)
-                self._wrdata("\x40")     # no walls
+                
+                if self.IR == False:
+                    print("Scanning IR not on - QUITTING")
+                    exit(1)
+
+                # bit 0 = front long
+                # bit 1 = front short
+                # bit 2 = left side
+                # bit 3 = right side
+                value = 0x40
+                if self.maze.get_front_wall(self.heading, self.row, self.column):
+                    value += 3
+                    print("       ___")
+                else:
+                    nrow = self.row
+                    ncolumn = self.column
+                    if self.heading == 0:
+                        nrow += 1
+                    elif self.heading == 1:
+                        ncolumn += 1
+                    elif self.heading == 2:
+                        nrow -= 1
+                    else:
+                        ncolumn -= 1
+
+                    next_cell = self.maze.get_front_wall(self.heading, nrow, ncolumn)
+                    if next_cell == None or next_cell:
+                        value += 1
+                if self.maze.get_left_wall(self.heading, self.row, self.column):
+                    value += 0x04
+                    print("       |", end="")
+                else:
+                    print("        ", end="")
+                if self.maze.get_right_wall(self.heading, self.row, self.column):
+                    value += 0x08
+                    print("  |")
+                else:
+                    print(" ")
+                
+                #print("*** value", value & 0x0f)
+                
+                self._wrdata(chr(value))
             
             elif cmd == "\xC0":
                 self._paramcheck(cmd, params, 0)
                 print("***STOP MOTORS")
-            
+
+            elif cmd == "\xC1":
+                self._paramcheck(cmd, params, 2)
+                distance_value = ord(params[0])*256+ord(params[1])
+                print("***FORWARD!", distance_value)
+                
+                if self.maze.get_front_wall(self.heading, self.row, self.column):
+                    print("*** CRASHED ***!")
+                    exit(1)
+                    
+                if self.heading == 0:
+                    self.row += 1
+                elif self.heading == 1:
+                    self.column += 1
+                elif self.heading == 2:
+                    self.row -= 1
+                else:
+                    self.column -= 1
+                
+                print("***Position (%d, %d) Heading %d" % (self.row, self.column, self.heading))
+                self._wrdata("\x20")
+
+            elif cmd == "\xC2": # right
+                self._paramcheck(cmd, params, 2)
+                distance_value = ord(params[0])*256+ord(params[1])
+                print("***RIGHT!", distance_value)
+                
+                self.heading = 3 & (self.heading + 1)
+
+                print("***Position (%d, %d) Heading %d" % (self.row, self.column, self.heading))
+                self._wrdata("\x20")
+
+            elif cmd == "\xC3": # left
+                self._paramcheck(cmd, params, 2)
+                distance_value = ord(params[0])*256+ord(params[1])
+                print("***LEFT!", distance_value)
+
+                print("***Position (%d, %d) Heading %d" % (self.row, self.column, self.heading))
+                self.heading = 3 & (self.heading - 1)
+
+                self._wrdata("\x20")
+                
             elif cmd == "\xC4":
                 self._paramcheck(cmd, params, 2)
                 print("***Set speed to", ord(params[0])*256+ord(params[1]))
@@ -57,10 +158,12 @@ class serial:
             elif cmd == "\xD0":
                 self._paramcheck(cmd, params, 0)
                 print("*** TURN OFF IR***")
+                self.IR = False
 
             elif cmd == "\xD1":
                 self._paramcheck(cmd, params, 0)
                 print("*** TURN ON IR***")
+                self.IR = True
                 
             elif cmd == "\xfe":
                 self._paramcheck(cmd, params, 3)
@@ -78,6 +181,8 @@ class serial:
                 print("EXITING")
                 exit(1)
             self._wrdata("\xEF")
+            
+            self.do_timers()
             
         def write(self, data):
             self._process_cmd(data[0], data[1:])

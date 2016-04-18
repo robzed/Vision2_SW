@@ -543,15 +543,13 @@ command_handlers = {
 
 def event_processor(port):
     cmd = port.read(1)
-    if len(cmd) == 0:
-        # no packet in timeout...
-        return
-    cmd = ord(cmd)
-    if cmd in command_handlers:
-        command_handlers[cmd](port, cmd)
-    else:
-        print("Unknown event", hex(cmd), "ignoring")
-        #recover_from_major_error()
+    if len(cmd) != 0:
+        cmd = ord(cmd)
+        if cmd in command_handlers:
+            command_handlers[cmd](port, cmd)
+        else:
+            print("Unknown event", hex(cmd), "ignoring")
+            #recover_from_major_error()
 
     run_timers(port)
 
@@ -674,7 +672,7 @@ def run_program(port):
         wait_for_poll_reply(port)
 
         running = False
-        while running:
+        while not running:
             if maze_selected == 5:
                 send_switch_led_command(port, 1, True)
                 send_switch_led_command(port, 2, False)

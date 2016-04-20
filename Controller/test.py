@@ -244,7 +244,7 @@ def run_timers(port):
         global battery_count
         battery_count -= 1
         if battery_count <= 0:
-                print("Batt V", battery_voltage, "cell:", battery_voltage/4)
+                print("Batt V", battery_voltage, "cell:", battery_voltage/4.0)
                 battery_count = 10
 
 ################################################################

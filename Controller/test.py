@@ -715,7 +715,8 @@ def run_program(port):
         
         # this is the start cell. We scan here anyway, although it's not necessary.
         scan_for_walls(port, m, robot_direction, robot_row, robot_column)
-
+        m.set_visited(robot_row, robot_column)
+        
         # ensure we wait at least 2 seconds before we move, under all circumstances
         time_left = 2 - (read_accurate_time() - start_time)
         wait_seconds(port, time_left)
@@ -754,6 +755,7 @@ def run_program(port):
                         robot_column -= 1
     
                     scan_for_walls(port, m, robot_direction, robot_row, robot_column)
+                    m.set_visited(robot_row, robot_column)
                     m.print_maze()
                 elif heading == 1:
                     turn_off_ir(port)
@@ -808,6 +810,10 @@ def run_program(port):
                 print("Back at start")
                 print("===========================================")
                 print()
+                m.clear_targets()
+                m.target_normal_end_cells()
+                m.flood_fill_all()
+                m.print_maze()
                 break
         
         # @todo: do speed run.

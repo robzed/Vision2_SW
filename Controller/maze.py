@@ -112,7 +112,15 @@ class Maze(object):
         self.clear_north_south_maze_wall_data()
         self.clear_east_west_maze_wall_data()
 
+        self.visited = []
+        size = self.size
+        for _ in range(size):
+            line = [False]*size
+            self.visited.append(line)
 
+    def set_visited(self, row, column):
+        self.visited[row][column] = True
+    
     def print_maze(self):
         print("Start cell is bottom left")
         
@@ -136,7 +144,10 @@ class Maze(object):
                     line_str.append("|")
                 else:
                     line_str.append(" ")
-                line_str.append("%4s" % self.maze_cell_data[line][column])
+                if self.visited[line][column]:
+                    line_str.append("*%3s" % self.maze_cell_data[line][column])
+                else:
+                    line_str.append("%4s" % self.maze_cell_data[line][column])
                 
             if self.EW_wall_data[line][self.size]:
                 line_str.append("|")
@@ -498,6 +509,7 @@ if __name__ == "__main__":
         import timeit
         m = Maze(5, standard_target = True)
         iterations = m.flood_fill_all()
+        m.set_visited(0,0)
         m.print_maze()
         print(iterations)
         print()

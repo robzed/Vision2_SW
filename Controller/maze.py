@@ -148,9 +148,9 @@ class Maze(object):
         line_str = []
         for column in range(0, self.size):
             if self.NS_wall_data[0][column]:
-                line_str.append("-----")
+                line_str.append("+----")
             else:
-                line_str.append("     ")
+                line_str.append("+    ")
         print("".join(line_str))
 
     def print_maz_format(self):

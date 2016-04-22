@@ -804,7 +804,10 @@ def run_program(port):
                 print()
                 phase = 2
             else:
+                print()
                 print("Back at start")
+                print("===========================================")
+                print()
                 break
         
         # @todo: do speed run.

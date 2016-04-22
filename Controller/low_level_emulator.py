@@ -134,9 +134,13 @@ class serial:
             elif cmd == "\xC2": # right
                 self._paramcheck(cmd, params, 2)
                 distance_value = ord(params[0])*256+ord(params[1])
-                print("***RIGHT!", distance_value)
+                if distance_value > 180:
+                    print("***U-TURN!", distance_value)
+                    self.heading = 3 & (self.heading + 2)
+                else:
+                    print("***RIGHT!", distance_value)
+                    self.heading = 3 & (self.heading + 1)
                 
-                self.heading = 3 & (self.heading + 1)
 
                 print("***Position (%d, %d) Heading %d" % (self.row, self.column, self.heading))
                 self._wrdata("\x20")

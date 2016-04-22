@@ -21,16 +21,14 @@ class Maze(object):
         self.size = size_of_maze
         
         if standard_target:
-            self.clear_maze_data(just_walls = True) # avoid setting the maze cells twice
             self.target_normal_end_cells()
-        else:
-            self.clear_maze_data()
+
+        self.clear_maze_data()
 
         if init_start_wall:
             self.set_right_wall(0, 0, 0)
 
     def target_normal_end_cells(self):
-        self.clear_maze_cell_data()
         self.clear_targets()
         if self.size == 5:
             self.set_target_cell(4, 4)
@@ -41,10 +39,14 @@ class Maze(object):
             self.set_target_cell(8, 8)
     
     def target_start_cell(self):
-        self.clear_maze_cell_data()
         self.clear_targets()
         self.set_target_cell(0, 0)
     
+    def _apply_targets(self):
+        for target in self.targets:
+            row, column = target
+            self.maze_cell_data[row][column] = 0
+
     def clear_north_south_maze_wall_data(self):
         size = self.size
         self.NS_wall_data = []
@@ -88,24 +90,28 @@ class Maze(object):
             
             self.EW_wall_data.append(line)
 
+
     def clear_maze_cell_data(self):
         size = self.size
         self.maze_cell_data = []
         
         # for each row
         for _ in range(0, size):
-            line = []
+            #line = []
+            line = [self.UNREACHED]*size
+            
             # for each column
-            for _ in range(0,size):
-                line.append(self.UNREACHED)            # big enough for 32x32 maze would be 1024 cells!
+            #for _ in range(0,size):
+            #    line.append(self.UNREACHED)            # big enough for 32x32 maze would be 1024 cells!
             
             self.maze_cell_data.append(line)
+        self._apply_targets()
 
-    def clear_maze_data(self, just_walls = False):
+
+    def clear_maze_data(self):
         self.clear_north_south_maze_wall_data()
         self.clear_east_west_maze_wall_data()
-        if not just_walls:
-            self.clear_maze_cell_data()
+
 
     def print_maze(self):
         print("Start cell is bottom left")
@@ -213,9 +219,8 @@ class Maze(object):
 
         return False
     
-    def flood_fill_all(self):
-        #for target in self.targets:
-        #    row, column = target
+    def flood_fill_all_multipass(self): #_multipass(self):
+        self.clear_maze_cell_data()
         iterations = 0
         while True:
             changed = False
@@ -230,6 +235,19 @@ class Maze(object):
             
         return iterations
 
+    def flood_fill_all(self):
+        self.clear_maze_cell_data()
+        cell_list = self.targets    # start from target
+        while len(cell_list):
+            new_list = []
+            for cell in cell_list:
+                row, column = cell
+                new_list.extend(self._process_higher_surrounding_cells(row, column))
+            cell_list = []
+            for cell in new_list:
+                row, column = cell
+                cell_list.extend(self._process_higher_surrounding_cells(row, column))
+        
 #    def floor_fill_update_from_here(self, row, column):
 #        pass
 #
@@ -241,7 +259,6 @@ class Maze(object):
 
     # set_target_cell can be called multipled times (e.g. in 4 square for 16x16)
     def set_target_cell(self, row, column):
-        self.maze_cell_data[row][column] = 0
         target = (row, column)
         self.targets.append(target)
 
@@ -337,6 +354,45 @@ class Maze(object):
 
         return heading_list
     
+    def _process_higher_surrounding_cells(self, row, column):
+        # This function is called lots of times, so all the function calls have
+        # been replaced with direct array accesses. This is fine because we 
+        # do not need the flexibility of headings here. So the code is still
+        # not confused by this.
+        cell_list = []
+        current = 1 + self.maze_cell_data[row][column]
+
+        #if not self.get_front_wall(0, row, column):
+        if not self.NS_wall_data[row+1][column]:
+            front = self.maze_cell_data[row+1][column]
+            if front > current:
+                cell_list.append( (row+1, column) )
+                self.maze_cell_data[row+1][column] = current
+                
+        #if not self.get_right_wall(0, row, column):
+        if not self.EW_wall_data[row][column+1]:
+            right = self.maze_cell_data[row][column+1]
+            if right > current:
+                cell_list.append( (row, column+1) )
+                self.maze_cell_data[row][column+1] = current
+
+        #if not self.get_left_wall(0, row, column):
+        if not self.EW_wall_data[row][column]:
+            left = self.maze_cell_data[row][column-1]
+            if left > current:
+                cell_list.append( (row, column-1) )
+                self.maze_cell_data[row][column-1] = current
+
+        # back last
+        #if not self.get_front_wall(2, row, column):
+        if not self.NS_wall_data[row][column]:
+            back = self.maze_cell_data[row-1][column]
+            if back > current:
+                cell_list.append( (row-1, column) )
+                self.maze_cell_data[row-1][column] = current
+
+        return cell_list
+
     def parse_maz_EW(self, line, row):
         column = 0
         state = 0
@@ -439,6 +495,7 @@ class Maze(object):
 
 if __name__ == "__main__":
     def test():
+        import timeit
         m = Maze(5, standard_target = True)
         iterations = m.flood_fill_all()
         m.print_maze()
@@ -464,7 +521,6 @@ if __name__ == "__main__":
         print(iterations)
 
         m.set_right_wall(0, 1, 1)
-        m.flood_fill_all()
         iterations = m.flood_fill_all()
         m.print_maze()
         print(iterations)
@@ -480,12 +536,35 @@ if __name__ == "__main__":
         
         m = Maze(16, standard_target = True)
         m.load_example_maze()
-        iterations = m.flood_fill_all()
+        time_taken = []
+        for _ in range(10):
+            start_time = timeit.default_timer()
+            iterations = m.flood_fill_all()
+            time_taken.append(timeit.default_timer() - start_time)
+        print("Fast Fill Time = ", min(time_taken)*1000, "ms")
+        #print("XTime = ", 100 * min(timeit.repeat(m.flood_fill_all, repeat=10, number=10)), "ms")
         m.print_maz_format()
         m.print_maze()
         print(iterations)
 
-    
+        n = Maze(16, standard_target = True)
+        n.load_example_maze()
+        time_taken = []
+        for _ in range(10):
+            start_time = timeit.default_timer()
+            for _ in range(10):
+                n.flood_fill_all_multipass()
+            time_taken.append(timeit.default_timer() - start_time)
+        print("Slow Fill Time = ", min(time_taken)*100, "ms")
+        n.print_maze()
+        
+        for row in range(16):
+            for column in range(16):
+                if n.maze_cell_data[row][column] != m.maze_cell_data[row][column]:
+                    print("Mismatch in cell data", row, column)
+                    exit(1)
+
+
     test()
     
     

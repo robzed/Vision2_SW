@@ -2,8 +2,8 @@
 #
 from __future__ import print_function
 
-#from low_level_emulator import serial
-import serial
+from low_level_emulator import serial
+#import serial
 import time
 from collections import deque
 import os
@@ -720,73 +720,93 @@ def run_program(port):
         time_left = 2 - (read_accurate_time() - start_time)
         wait_seconds(port, time_left)
 
-        completed = False
-        while True:
-
-            headings = m.get_lowest_directions_against_heading(robot_direction, robot_row, robot_column)
-            if len(headings) == 0:
-                current_cell_value = m.get_cell_value(robot_row, robot_column)
-                if current_cell_value == 0:
-                    #completed
-                    completed = True
-                    break
+        phase = 1
+        while True:    
+            completed = False
+            while True:
+    
+                headings = m.get_lowest_directions_against_heading(robot_direction, robot_row, robot_column)
+                print(headings)
+                if len(headings) == 0:
+                    current_cell_value = m.get_cell_value(robot_row, robot_column)
+                    if current_cell_value == 0:
+                        #completed
+                        completed = True
+                        break
+                    else:
+                        # can't get any better cell? Probably unsolvable?
+                        completed = False
+                        break
+                # @todo: we should select a specific one here, but we just choose the first one at the moment
+                heading = headings[0] & 3
+                if heading == 0:
+                    turn_on_ir(port)
+                    move_forward(port, distance_cell)
+                    wait_for_move_to_finish(port)
+    
+                    if robot_direction == 0:
+                        robot_row += 1
+                    elif robot_direction == 1:
+                        robot_column += 1
+                    elif robot_direction == 2:
+                        robot_row -= 1
+                    else:
+                        robot_column -= 1
+    
+                    scan_for_walls(port, m, robot_direction, robot_row, robot_column)
+                    m.print_maze()
+                elif heading == 1:
+                    turn_off_ir(port)
+                    move_right(port, distance_turnr90)
+                    wait_for_move_to_finish(port)
+                    turn_on_ir(port)
+                    robot_direction += 1
+                    robot_direction &= 3
+                elif heading == 2:
+                    turn_off_ir(port)
+                    move_right(port, distance_turn180)
+                    wait_for_move_to_finish(port)
+                    turn_on_ir(port)
+                    robot_direction += 2
+                    robot_direction &= 3
                 else:
-                    # can't get any better cell? Probably unsolvable?
-                    completed = False
-                    break
-            # @todo: we should select a specific one here, but we just choose the first one at the moment
-            heading = headings[0] & 3
-            if heading == 0:
-                turn_on_ir(port)
-                move_forward(port, distance_cell)
-                wait_for_move_to_finish(port)
-
-                if robot_direction == 0:
-                    robot_row += 1
-                elif robot_direction == 1:
-                    robot_column += 1
-                elif robot_direction == 2:
-                    robot_row -= 1
-                else:
-                    robot_column -= 1
-
-                scan_for_walls(port, m, robot_direction, robot_row, robot_column)
-            elif heading == 1:
-                turn_off_ir(port)
-                move_right(port, distance_turnr90)
-                wait_for_move_to_finish(port)
-                turn_on_ir(port)
-                robot_direction += 1
-                robot_direction &= 3
-            elif heading == 2:
-                turn_off_ir(port)
-                move_right(port, distance_turn180)
-                wait_for_move_to_finish(port)
-                turn_on_ir(port)
-                robot_direction += 2
-                robot_direction &= 3
-            else:
-                turn_off_ir(port)
-                move_left(port, distance_turnl90)
-                wait_for_move_to_finish(port)
-                robot_direction -= 1
-                robot_direction &= 3
-
-        # shut down
-        turn_off_ir(port)
-        turn_off_motors(port)
-
-        send_switch_led_command(port, 3, False)
-        if not completed:
-            # flash for 6 seconds
-            for _ in range(1, 6):
+                    turn_off_ir(port)
+                    move_left(port, distance_turnl90)
+                    wait_for_move_to_finish(port)
+                    robot_direction -= 1
+                    robot_direction &= 3
+    
+            # shut down
+            turn_off_ir(port)
+            turn_off_motors(port)
+    
+            send_switch_led_command(port, 3, False)
+            if not completed:
+                print("Failed to complete")
+                # flash for 6 seconds
+                for _ in range(1, 6):
+                    send_switch_led_command(port, 4, True)
+                    wait_seconds(port, 0.5)
+                    send_switch_led_command(port, 4, False)
+                    wait_seconds(port, 0.5)
                 send_switch_led_command(port, 4, True)
-                wait_seconds(port, 0.5)
-                send_switch_led_command(port, 4, False)
-                wait_seconds(port, 0.5)
-            send_switch_led_command(port, 4, True)
+                break
+            
+            if phase == 1:
+                # Go to start then wait for keys
+                m.clear_targets()
+                m.target_start_cell()
+                m.flood_fill_all()
+                m.print_maze()
+                print()
+                print("Got to center")
+                print("===========================================")
+                print()
+                phase = 2
+            else:
+                print("Back at start")
+                break
         
-        # @todo: go to start then wait for keys
         # @todo: do speed run.
         # @todo: move forward without stopping
         # @todo: curved turns

@@ -108,18 +108,30 @@ class Maze(object):
         self._apply_targets()
 
 
+    def clear_marks(self):
+        self.marks = []
+        size = self.size
+        for _ in range(size):
+            line = [False]*size
+            self.marks.append(line)
+        
+    def set_mark(self, row, column):
+        self.marks[row][column] = True
+        
     def clear_maze_data(self):
         self.clear_north_south_maze_wall_data()
         self.clear_east_west_maze_wall_data()
 
-        self.visited = []
+        self.explored = []
         size = self.size
         for _ in range(size):
             line = [False]*size
-            self.visited.append(line)
+            self.explored.append(line)
 
-    def set_visited(self, row, column):
-        self.visited[row][column] = True
+        self.clear_marks()
+        
+    def set_explored(self, row, column):
+        self.explored[row][column] = True
     
     def print_maze(self):
         print("Start cell is bottom left")
@@ -144,8 +156,16 @@ class Maze(object):
                     line_str.append("|")
                 else:
                     line_str.append(" ")
-                if self.visited[line][column]:
+
+                if self.marks[line][column]:
+                    if self.explored[line][column]:
+                        line_str.append("#%3s" % self.maze_cell_data[line][column])
+                    else:
+                        line_str.append("+%3s" % self.maze_cell_data[line][column])
+                        
+                elif self.explored[line][column]:
                     line_str.append("*%3s" % self.maze_cell_data[line][column])
+                    
                 else:
                     line_str.append("%4s" % self.maze_cell_data[line][column])
                 
@@ -509,7 +529,10 @@ if __name__ == "__main__":
         import timeit
         m = Maze(5, standard_target = True)
         iterations = m.flood_fill_all()
-        m.set_visited(0,0)
+        m.set_explored(0,0)
+        m.set_explored(1,0)
+        m.set_mark(1,0)
+        m.set_mark(2,0)
         m.print_maze()
         print(iterations)
         print()

@@ -2,8 +2,12 @@
 #
 from __future__ import print_function
 
-from low_level_emulator import serial
-#import serial
+SIMULATOR = True
+if SIMULATOR:
+    from low_level_emulator import serial
+else:
+    import serial
+    
 import time
 from collections import deque
 import os
@@ -637,6 +641,38 @@ def wait_seconds(port, time):
     while read_accurate_time() < end_time:
         event_processor(port)
 
+def is_shortest_path_explored(m):
+    # do a virtual dry run
+    row = 0
+    column = 0
+    direction = 0
+    m.clear_marks()
+    
+    while True:
+        m.set_mark(row, column)
+        if m.explored[row][column] == False:
+            return False
+        
+        headings = m.get_lowest_directions_against_heading(direction, row, column)
+        if len(headings) == 0:
+            return True     # don't care, leave
+        heading = headings[0]
+        if heading == 0:
+            if direction == 0:
+                row += 1
+            elif direction == 1:
+                column += 1
+            elif direction == 2:
+                row -= 1
+            else:
+                column -= 1
+        elif heading == 1:
+            direction = 3 & (direction + 1)
+        elif heading == 3:
+            direction = 3 & (direction - 1)
+        else:   # should never need to backtrack!
+            return True
+    
     
 ################################################################
 #
@@ -715,7 +751,7 @@ def run_program(port):
         
         # this is the start cell. We scan here anyway, although it's not necessary.
         scan_for_walls(port, m, robot_direction, robot_row, robot_column)
-        m.set_visited(robot_row, robot_column)
+        m.set_explored(robot_row, robot_column)
         
         # ensure we wait at least 2 seconds before we move, under all circumstances
         time_left = 2 - (read_accurate_time() - start_time)
@@ -755,8 +791,8 @@ def run_program(port):
                         robot_column -= 1
     
                     scan_for_walls(port, m, robot_direction, robot_row, robot_column)
-                    m.set_visited(robot_row, robot_column)
-                    m.print_maze()
+                    m.set_explored(robot_row, robot_column)
+                    #m.print_maze()
                 elif heading == 1:
                     turn_off_ir(port)
                     move_right(port, distance_turnr90)
@@ -805,7 +841,7 @@ def run_program(port):
                 print("===========================================")
                 print()
                 phase = 2
-            else:
+            elif phase == 2:
                 print()
                 print("Back at start")
                 print("===========================================")
@@ -813,8 +849,13 @@ def run_program(port):
                 m.clear_targets()
                 m.target_normal_end_cells()
                 m.flood_fill_all()
+                shortest = is_shortest_path_explored(m)
+                print("Is shortest path explored?", shortest)
                 m.print_maze()
-                break
+                
+                # if we have explored the shortest path, then we are complete
+                if shortest:
+                    break
         
         # @todo: do speed run.
         # @todo: move forward without stopping

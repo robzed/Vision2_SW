@@ -262,7 +262,7 @@ def run_timers(port):
 # 
 # Recieved Event Functions
 # 
-def EV_UKNNOWN_RESET(port, cmd):
+def EV_UNKNOWN_RESET(port, cmd):
     print("Unknown Reset")
     recover_from_major_error()
 def EV_POWER_ON_RESET(port, cmd):
@@ -507,7 +507,7 @@ def EV_IR_FRONT_SIDE_STATE_F(port, cmd):
 # 
     
 command_handlers = {
-    0x00: EV_UKNNOWN_RESET,
+    0x00: EV_UNKNOWN_RESET,
     0x01: EV_POWER_ON_RESET,
     0x02: EV_BROWN_OUT_RESET,
     0x03: EV_WATCHDOG_RESET,

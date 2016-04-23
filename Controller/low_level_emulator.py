@@ -3,7 +3,7 @@ from collections import deque
 from maze import Maze
 import time
 
-PAUSE_ON_MOVE = True
+PAUSE_ON_MOVE = False
 
 class serial:
     class Serial:

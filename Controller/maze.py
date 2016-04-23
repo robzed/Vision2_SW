@@ -5,7 +5,7 @@ from __future__ import print_function
 class MazeFailedToRead(Exception):
     pass
 
-PRINT_MAP_USES_HOME_CURSOR = True
+PRINT_MAP_USES_HOME_CURSOR = False
 
 ANSI_HOME_CURSOR = "\x1b[H"
 ################################################################

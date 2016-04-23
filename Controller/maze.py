@@ -5,6 +5,9 @@ from __future__ import print_function
 class MazeFailedToRead(Exception):
     pass
 
+PRINT_MAP_USES_HOME_CURSOR = True
+
+ANSI_HOME_CURSOR = "\x1b[H"
 ################################################################
 # 
 # Maze Functions
@@ -134,8 +137,10 @@ class Maze(object):
         self.explored[row][column] = True
     
     def print_maze(self):
-        print("Start cell is bottom left")
-        
+        #print("Start cell is bottom left")
+        if PRINT_MAP_USES_HOME_CURSOR:
+            print(ANSI_HOME_CURSOR, end='')
+            
         # (0,0) is bottom left
         for line in range(self.size-1, -1, -1):
             

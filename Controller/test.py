@@ -800,6 +800,7 @@ def cell_one_away(m, robot_row, robot_column, unex_row, unex_column):
         return False
     
 def do_calibration(port):
+    print("Start Calibration")
     start = read_accurate_time()
     while True:
         if read_accurate_time() - start > 0.5:
@@ -815,6 +816,7 @@ def do_calibration(port):
             break
         elif key == 'B':
             break
+    print("Exit Calibration")
 
 ################################################################
 #

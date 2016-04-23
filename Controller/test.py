@@ -155,9 +155,9 @@ def send_poll_command(port):
 def send_switch_led_command(port, led, on):
     if on:
         command = 0x10 + led
-        if verbose: print("Switch LED", led, "on")
+        #if verbose: print("Switch LED", led, "on")
     else:
-        if verbose: print("Switch LED", led, "off")
+        #if verbose: print("Switch LED", led, "off")
         command = 0x00 + led
 
     send_message(port, chr(command))

@@ -264,7 +264,7 @@ def run_timers(port):
 # 
 def EV_UNKNOWN_RESET(port, cmd):
     print("Unknown Reset")
-    recover_from_major_error()
+    raise SoftReset
 def EV_POWER_ON_RESET(port, cmd):
     print("Power On Reset")
     recover_from_major_error()

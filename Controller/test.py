@@ -43,6 +43,8 @@ maze_selected = 5   # should be 5 or 16
 
 keys_in_queue = deque()
 
+calibration_mode = False
+
 ################################################################
 # 
 # Exceptions
@@ -726,6 +728,14 @@ def cell_one_away(m, robot_row, robot_column, unex_row, unex_column):
     else:
         return False
     
+def do_calibration(port):
+    while True:
+        key = get_key(port)
+        if key == "A":
+            break
+        elif key == 'B':
+            break
+
 ################################################################
 #
 # Control Loop
@@ -735,7 +745,7 @@ def cell_one_away(m, robot_row, robot_column, unex_row, unex_column):
 # LED 2 = size 16 maze selected
 # LED 3 = running
 
-# LED 4 = <unused>
+# LED 4 = flashing = Failed to Solve
 # LED 5 = shutdown running (not implemented)
 # LED 6 = slow flash if running, fast flash if battery problem (going to shutdown soon)
 
@@ -767,6 +777,9 @@ def run_program(port):
             elif maze_selected == 16:
                 send_switch_led_command(port, 1, False)
                 send_switch_led_command(port, 2, True)
+            elif calibration_mode:
+                send_switch_led_command(port, 1, True)
+                send_switch_led_command(port, 2, True)                
             else:
                 send_switch_led_command(port, 1, False)
                 send_switch_led_command(port, 2, False)
@@ -775,10 +788,13 @@ def run_program(port):
                 key = get_key(port)
                 if key == "A":
                     # @todo: we might want test mode and calibration mode here?
-                    if maze_selected == 5:
-                        maze_selected = 16
-                    else:
+                    if calibration_mode:
+                        calibration_mode = False
                         maze_selected = 5
+                    elif maze_selected == 5:
+                        maze_selected = 16
+                    else:   # maze_selected == 16
+                        calibration_mode = True
                     break
                 elif key == "B":
                     # B key without hold does nothing
@@ -789,6 +805,12 @@ def run_program(port):
                     running  = True
                     break
 
+            # let's capture it here and do calibration
+            if running and calibration_mode:
+                running = False
+                do_calibration(port)
+                calibration_mode = False
+            
         start_time = read_accurate_time()
         # start the run
         turn_on_ir(port)        # do this early so IR system has time to scan before scan_for_walls()
@@ -812,6 +834,7 @@ def run_program(port):
         search_phase = 1
         sparse_run = False
         while True:             # search/explore runs
+            
             completed = False
             while True:         # single run search
     

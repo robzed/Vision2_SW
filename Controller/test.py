@@ -1,6 +1,7 @@
 ﻿#
 #
 from __future__ import print_function
+#from operator import xor
 
 SIMULATOR = True
 if SIMULATOR:
@@ -19,6 +20,7 @@ from maze import Maze
 # 
 
 verbose = True
+print_map_in_progress = True
 
 distance_cell	= 347			# adjust these values for cell distance		
 distance_turnl90	= 112		# turn left 90deg
@@ -641,21 +643,21 @@ def wait_seconds(port, time):
     while read_accurate_time() < end_time:
         event_processor(port)
 
-def is_shortest_path_explored(m):
+def is_shortest_path_explored(m, row, column, direction):
     # do a virtual dry run
-    row = 0
-    column = 0
-    direction = 0
+    #row = 0
+    #column = 0
+    #direction = 0
     m.clear_marks()
     
     while True:
         m.set_mark(row, column)
         if m.explored[row][column] == False:
-            return False
+            return (False, row, column)
         
         headings = m.get_lowest_directions_against_heading(direction, row, column)
         if len(headings) == 0:
-            return True     # don't care, leave
+            return (True, None, None)     # don't care, leave
         heading = headings[0]
         if heading == 0:
             if direction == 0:
@@ -671,8 +673,29 @@ def is_shortest_path_explored(m):
         elif heading == 3:
             direction = 3 & (direction - 1)
         else:   # should never need to backtrack!
-            return True
+            return (True, None, None)
     
+def cell_one_away(m, robot_row, robot_column, unex_row, unex_column):
+    row_diff = abs(robot_row - unex_row)
+    column_diff = abs(robot_column - unex_column)
+    if (column_diff == 0 and row_diff == 1) or (column_diff == 1 and row_diff == 0):
+        # (diagonal is ok)
+
+        # check if there is a wall between the two...
+        if unex_row > robot_row:
+            heading = 0
+        elif unex_column > robot_column:
+            heading = 1
+        elif unex_row < robot_row:
+            heading = 2
+        else:
+            heading = 3
+        if m.get_front_wall(heading, robot_row, robot_column):
+            return False
+        
+        return True
+    else:
+        return False
     
 ################################################################
 #
@@ -757,10 +780,11 @@ def run_program(port):
         time_left = 2 - (read_accurate_time() - start_time)
         wait_seconds(port, time_left)
 
-        phase = 1
-        while True:    
+        search_phase = 1
+        sparse_run = False
+        while True:             # search/explore runs
             completed = False
-            while True:
+            while True:         # single run search
     
                 headings = m.get_lowest_directions_against_heading(robot_direction, robot_row, robot_column)
                 print(headings)
@@ -774,6 +798,12 @@ def run_program(port):
                         # can't get any better cell? Probably unsolvable?
                         completed = False
                         break
+                
+                if sparse_run:
+                    # we don't need to achieve the target IF we have explored all
+                    # cells to the target.
+                    pass
+                
                 # @todo: we should select a specific one here, but we just choose the first one at the moment
                 heading = headings[0] & 3
                 if heading == 0:
@@ -792,7 +822,11 @@ def run_program(port):
     
                     scan_for_walls(port, m, robot_direction, robot_row, robot_column)
                     m.set_explored(robot_row, robot_column)
-                    #m.print_maze()
+                    
+                    if print_map_in_progress:
+                        m.clear_marks()
+                        m.set_mark(robot_row, robot_column)
+                        m.print_maze()
                 elif heading == 1:
                     turn_off_ir(port)
                     move_right(port, distance_turnr90)
@@ -817,7 +851,7 @@ def run_program(port):
             # shut down
             turn_off_ir(port)
             turn_off_motors(port)
-    
+            
             send_switch_led_command(port, 3, False)
             if not completed:
                 print("Failed to complete")
@@ -830,33 +864,63 @@ def run_program(port):
                 send_switch_led_command(port, 4, True)
                 break
             
-            if phase == 1:
-                # Go to start then wait for keys
-                m.clear_targets()
-                m.target_start_cell()
-                m.flood_fill_all()
-                m.print_maze()
+            # we only specifically turn this on if we want it
+            sparse_run = False
+
+            if search_phase == 1:
                 print()
-                print("Got to center")
+                print("Got to target")
                 print("===========================================")
                 print()
-                phase = 2
-            elif phase == 2:
-                print()
-                print("Back at start")
-                print("===========================================")
-                print()
+                
+                # let's floodfill from start to center and see if we know enough
+                # to look for the shortest path
                 m.clear_targets()
                 m.target_normal_end_cells()
                 m.flood_fill_all()
-                shortest = is_shortest_path_explored(m)
+                shortest, unex_row, unex_column = is_shortest_path_explored(m, 0, 0, 0)
                 print("Is shortest path explored?", shortest)
                 m.print_maze()
                 
                 # if we have explored the shortest path, then we are complete
                 if shortest:
-                    break
-        
+                    # Go to start then wait for keys
+                    m.clear_targets()
+                    m.target_start_cell()
+                    m.flood_fill_all()
+                    print()
+                    print("target start")
+                    print("===========================================")
+                    print()                    
+                    search_phase = 2
+                else:
+                    # not shortest, go to unexploded cell
+                    if not cell_one_away(m, robot_row, robot_column, unex_row, unex_column):
+                        m.clear_targets()
+                        m.set_target_cell(unex_row, unex_column)
+                        m.flood_fill_all()
+                        print("Run to unexploded at", unex_row, unex_column)
+                    else:
+                        # the unexplorded is only one cell away, use a different strategy
+                        sparse_run = True
+                        m.clear_targets()
+                        m.target_normal_end_cells()
+                        m.flood_fill_all()
+
+            elif search_phase == 2:
+                print()
+                print("Back at start, wait for speed run")
+                print("===========================================")
+                print()
+                break
+
+        if completed:
+            print("We need to wait for speed run keys here?")
+            print("Then assemble and run speed run at 500?")
+        else:
+            print("Going back to start menu")
+                
+        # @todo: If shortest unexploded is only one cell away, do different strategy (target center)
         # @todo: do speed run.
         # @todo: move forward without stopping
         # @todo: curved turns

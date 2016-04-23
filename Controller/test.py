@@ -28,6 +28,8 @@ distance_turnl90	= 112		# turn left 90deg
 distance_turnr90	= 112		# turn right 90deg
 distance_turn180 = 224		# turn 180deg
 
+HOLD_KEY_TIME = 1.0     # seconds
+
 ################################################################
 # 
 # Module-level Variables
@@ -350,22 +352,48 @@ def EV_FAIL_INVALID_COMMAND(port, cmd):
 #def EV_GOT_INSTRUCTION(port, cmd):
 #    acknowledge_send()
 
+key_A_start_time = None
+key_B_start_time = None
 
 def EV_BUTTON_A_RELEASE(port, cmd):
-    # @todo: can use for held key (A+ B+)
-    pass
+    global key_A_start_time
+    if key_A_start_time == None:
+        # no press, ignore release
+        return
+    #print("KEY A TIME =", read_accurate_time() - key_A_start_time)
+    # hold key or normal key?
+    if (read_accurate_time() - key_A_start_time) > HOLD_KEY_TIME:
+        keys_in_queue.append('A+')
+        print("held A")
+    else:
+        keys_in_queue.append('A')
+        print("press A")
+        
+    key_A_start_time = None
 
 def EV_BUTTON_B_RELEASE(port, cmd):
-    # @todo: can use for held key
-    pass
+    global key_B_start_time
+    if key_B_start_time == None:
+        # no press, ignore release
+        return
+    #print("KEY B TIME =", read_accurate_time() - key_B_start_time)
+    # hold key or normal key?
+    if (read_accurate_time() - key_B_start_time) > HOLD_KEY_TIME:
+        keys_in_queue.append('B+')
+        print("held B")
+    else:
+        keys_in_queue.append('B')
+        print("press B")
+
+    key_B_start_time = None
 
 def EV_BUTTON_A_PRESS(port, cmd):
-    print("press A")
-    keys_in_queue.append('A')
-
+    global key_A_start_time
+    key_A_start_time = read_accurate_time()
+    
 def EV_BUTTON_B_PRESS(port, cmd):
-    print("press B")
-    keys_in_queue.append('B')
+    global key_B_start_time
+    key_B_start_time = read_accurate_time()
 
 got_wall_info = False
 left_wall_sense = False
@@ -753,13 +781,13 @@ def run_program(port):
                         maze_selected = 5
                     break
                 elif key == "B":
-                    # start key
-                    running = True      # should be hold
-                    break
+                    # B key without hold does nothing
+                    pass
                 elif key == "A+":
                     raise ShutdownRequest
                 elif key == "B+":
-                    print("B held key - should be start running @todo!")
+                    running  = True
+                    break
 
         start_time = read_accurate_time()
         # start the run
@@ -954,7 +982,11 @@ def main():
             send_led_pattern_command(port, 0x20)
             turn_off_ir(port)
             turn_off_motors(port)
-            os.system("sudo poweroff")
+            if not SIMULATOR:
+                os.system("sudo poweroff")
+            else:
+                print("sudo poweroff")
+                exit(1)
 
 main()
 

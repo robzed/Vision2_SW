@@ -18,29 +18,39 @@ class serial:
 
             self.maze = Maze(16)
             self.maze.load_example_maze()
-            self.start_time = time.time()
+            self.target_time = time.time() + 2
             self.timer_state = 0
             
             self.IR = False
 
 
         def do_timers(self):
-            if (time.time() - self.start_time) > 2:
+            if time.time() > self.target_time:
                 self.timer_state += 1
                 if self.timer_state == 1:
-                    self._wrdata("\x38")    # A press
+                    self.target_time = time.time() + 0.1
                 elif self.timer_state == 2:
-                    self._wrdata("\x30")    # A release
+                    self._wrdata("\x38")    # A press
+                    self.target_time = time.time() + 0.25    # quick press
                 elif self.timer_state == 3:
-                    self._wrdata("\x39")    # B press
+                    self._wrdata("\x30")    # A release
+                    self.target_time = time.time() + 1
                 elif self.timer_state == 4:
+                    self._wrdata("\x39")    # B press
+                    self.target_time = time.time() + 2  # hold
+                elif self.timer_state == 5:
                     self._wrdata("\x31")    # B release
+                    self.target_time = time.time() + 10
 
         
         def inWaiting(self):
-            return 0
+            self.do_timers()
+            return len(self.replies)
         
         def _wrdata(self, data):
+            if len(data) != 1:
+                print("Expected length 1 string - fix in _wrdata() by splitting")
+                exit(1)
             self.replies.append(data)
         
         def _paramcheck(self, cmd, params, num_params):
@@ -206,6 +216,7 @@ class serial:
             self._process_cmd(data[0], data[1:])
         
         def read(self, bytes_to_read):
+            self.do_timers()
             if bytes_to_read != 1:
                 print("bytes to read != 1")
                 exit(1)

@@ -219,6 +219,21 @@ def send_get_wall_info(port):
     if verbose: print("Get wall IR")
     send_message(port, "\x98")
 
+def get_front_level(port):
+    send_message(port, "\x9A")
+
+def get_l90_level(port):
+    send_message(port, "\x9B")
+
+def get_l45_level(port):
+    send_message(port, "\x9C")
+
+def get_r90_level(port):
+    send_message(port, "\x9D")
+
+def get_r45_level(port):
+    send_message(port, "\x9E")
+    
 
 ################################################################
 # 
@@ -310,6 +325,57 @@ def EV_BATTERY_VOLTAGE(port, cmd):
     global battery_voltage
     battery_voltage = ADC_reading * battery_voltage_conversion
     #print("Batt V", voltage, "cell:", voltage/4)
+
+ir_front_level = 0
+ir_front_level_new = False
+
+def EV_IR_FRONT_LEVEL(port, cmd):
+    global ir_front_level
+    ir_front_level = port.read(1)*256
+    ir_front_level += port.read(1)
+    print("IR Front level", ir_front_level)
+    ir_front_level_new = True
+
+ir_l90_level = 0
+ir_l90_level_new = False
+    
+def EV_L90_LEVEL(port, cmd):
+    global ir_l90_level
+    ir_l90_level = port.read(1)*256
+    ir_l90_level += port.read(1)
+    print("IR L90 level", ir_l90_level)
+    ir_l90_level_new = True
+
+ir_l45_level = 0
+ir_l45_level_new = False
+    
+def EV_L45_LEVEL(port, cmd):
+    global ir_l45_level
+    ir_l45_level = port.read(1)*256
+    ir_l45_level += port.read(1)
+    print("IR L45 level", ir_l45_level)
+    ir_l45_level_new = True
+    
+ir_r90_level = 0
+ir_r90_level_new = False
+
+def EV_R90_LEVEL(port, cmd):
+    global ir_r90_level
+    ir_r90_level = port.read(1)*256
+    ir_r90_level += port.read(1)
+    print("IR R90 level", ir_r90_level)
+    ir_r90_level_new = True
+    
+ir_r45_level = 0
+ir_r45_level_new = False
+
+def EV_R45_LEVEL(port, cmd):
+    global ir_r45_level
+    ir_r45_level = port.read(1)*256
+    ir_r45_level += port.read(1)
+    print("IR R45 level", ir_r45_level)
+    ir_r45_level_new = True
+
 
 
 def EV_FINISHED_MOVE(port, cmd):
@@ -564,6 +630,11 @@ command_handlers = {
 #    0x5E: EV_IR_45_STATE,
 #    0x5F: EV_IR_45_STATE,
 
+    0x61: EV_IR_FRONT_LEVEL,
+    0x62: EV_L90_LEVEL,
+    0x63: EV_L45_LEVEL,
+    0x64: EV_R90_LEVEL,
+    0x65: EV_R45_LEVEL,
 
     # unlocking
     0xC0: EV_UNLOCK_FROM_LOCK,
@@ -729,7 +800,16 @@ def cell_one_away(m, robot_row, robot_column, unex_row, unex_column):
         return False
     
 def do_calibration(port):
+    start = read_accurate_time()
     while True:
+        if read_accurate_time() - start > 0.5:
+            get_front_level(port)
+            get_l90_level(port)
+            get_r90_level(port)
+            get_l45_level(port)
+            get_r45_level(port)
+            start = read_accurate_time()
+            
         key = get_key(port)
         if key == "A":
             break

@@ -924,7 +924,6 @@ def run_program(port):
         else:
             print("Going back to start menu")
                 
-        # @todo: If shortest unexploded is only one cell away, do different strategy (target center)
         # @todo: do speed run.
         # @todo: move forward without stopping
         # @todo: curved turns

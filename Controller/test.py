@@ -750,6 +750,7 @@ def do_calibration(port):
 # LED 6 = slow flash if running, fast flash if battery problem (going to shutdown soon)
 
 def run_program(port):
+    global calibration_mode
     while True:
         send_unlock_command(port)
         if wait_for_unlock_to_complete(port):

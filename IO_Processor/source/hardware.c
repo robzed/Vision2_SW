@@ -67,47 +67,47 @@ void LedSwitch(int led, int state)
         if(led == 7)
         {
             //irled_90 = on;      // hack test
-            led_left = on;
+            led_left = state;
         }
         else if(led == 8)
         {
             //irled_45 = on;      // hack test
-            led_right = on;
+            led_right = state;
         }
         else
         {
             //irled_front = on;      // hack test
-            led_front = on;
+            led_front = state;
         }
     }
     else if(led > 3)
     {
         if(led == 4)
         {
-            led4 = on;
+            led4 = state;
         }
         else if(led == 5)
         {
-            led5 = on;
+            led5 = state;
         }
         else
         {
-            led6 = on;
+            led6 = state;
         }
     }
     else
     {
         if(led == 1)
         {
-            led1 = on;
+            led1 = state;
         }
         else if(led == 2)
         {
-            led2 = on;
+            led2 = state;
         }
         else
         {
-            led3 = on;
+            led3 = state;
         }
     }
 }

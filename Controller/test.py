@@ -772,15 +772,15 @@ def run_program(port):
 
         running = False
         while not running:
-            if maze_selected == 5:
+            if calibration_mode:
+                send_switch_led_command(port, 1, True)
+                send_switch_led_command(port, 2, True)                
+            elif maze_selected == 5:
                 send_switch_led_command(port, 1, True)
                 send_switch_led_command(port, 2, False)
             elif maze_selected == 16:
                 send_switch_led_command(port, 1, False)
                 send_switch_led_command(port, 2, True)
-            elif calibration_mode:
-                send_switch_led_command(port, 1, True)
-                send_switch_led_command(port, 2, True)                
             else:
                 send_switch_led_command(port, 1, False)
                 send_switch_led_command(port, 2, False)

@@ -28,7 +28,7 @@ distance_turnl90	= 112		# turn left 90deg
 distance_turnr90	= 112		# turn right 90deg
 distance_turn180 = 224		# turn 180deg
 
-HOLD_KEY_TIME = 1.0     # seconds
+HOLD_KEY_TIME = 1.5     # seconds
 
 ################################################################
 # 

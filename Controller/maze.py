@@ -492,7 +492,7 @@ class Maze(object):
                 self.parse_maz_EW(line, int(row/2))
             row -= 1
 
-    def load_example_maze(self, select=1):
+    def load_example_maze(self, select=0):
         if select == 0:
             standard_maze_89iee_maz = \
 """+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+

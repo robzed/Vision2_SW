@@ -159,12 +159,12 @@ class Maze(object):
 
                 if self.marks[line][column]:
                     if self.explored[line][column]:
-                        line_str.append("#%3s" % self.maze_cell_data[line][column])
+                        line_str.append("@%3s" % self.maze_cell_data[line][column])
                     else:
-                        line_str.append("+%3s" % self.maze_cell_data[line][column])
+                        line_str.append("x%3s" % self.maze_cell_data[line][column])
                         
                 elif self.explored[line][column]:
-                    line_str.append("*%3s" % self.maze_cell_data[line][column])
+                    line_str.append(".%3s" % self.maze_cell_data[line][column])
                     
                 else:
                     line_str.append("%4s" % self.maze_cell_data[line][column])

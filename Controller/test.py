@@ -837,7 +837,15 @@ def run_program(port):
             
             completed = False
             while True:         # single run search
-    
+
+                if keys_in_queue:
+                    # keys cancel run!
+                    print("Key aborts")
+                    while keys_in_queue:
+                        get_key(port)
+                    completed = False
+                    break
+
                 headings = m.get_lowest_directions_against_heading(robot_direction, robot_row, robot_column)
                 print(headings)
                 if len(headings) == 0:

@@ -4,7 +4,7 @@ from __future__ import print_function
 from __builtin__ import True
 #from operator import xor
 
-SIMULATOR = True
+SIMULATOR = False
 if SIMULATOR:
     from low_level_emulator import serial
 else:

@@ -3,6 +3,8 @@ from collections import deque
 from maze import Maze
 import time
 
+PAUSE_ON_MOVE = True
+
 class serial:
     class Serial:
         
@@ -115,6 +117,9 @@ class serial:
                 distance_value = ord(params[0])*256+ord(params[1])
                 print("***FORWARD!", distance_value)
                 
+                if PAUSE_ON_MOVE:
+                    time.sleep(0.5)
+
                 if self.maze.get_front_wall(self.heading, self.row, self.column):
                     print("*** CRASHED ***!")
                     exit(1)
@@ -140,18 +145,27 @@ class serial:
                 else:
                     print("***RIGHT!", distance_value)
                     self.heading = 3 & (self.heading + 1)
-                
-
+ 
+                if PAUSE_ON_MOVE:
+                    time.sleep(0.5)
+               
                 print("***Position (%d, %d) Heading %d" % (self.row, self.column, self.heading))
                 self._wrdata("\x20")
 
             elif cmd == "\xC3": # left
                 self._paramcheck(cmd, params, 2)
                 distance_value = ord(params[0])*256+ord(params[1])
-                print("***LEFT!", distance_value)
+                if distance_value > 180:
+                    print("***U-TURN!", distance_value)
+                    self.heading = 3 & (self.heading + 2)
+                else:
+                    print("***LEFT!", distance_value)
+                    self.heading = 3 & (self.heading - 1)
+
+                if PAUSE_ON_MOVE:
+                    time.sleep(0.5)
 
                 print("***Position (%d, %d) Heading %d" % (self.row, self.column, self.heading))
-                self.heading = 3 & (self.heading - 1)
 
                 self._wrdata("\x20")
                 

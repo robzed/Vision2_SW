@@ -1,6 +1,7 @@
 ﻿#
 #
 from __future__ import print_function
+from __builtin__ import True
 #from operator import xor
 
 SIMULATOR = True
@@ -802,8 +803,11 @@ def run_program(port):
                 if sparse_run:
                     # we don't need to achieve the target IF we have explored all
                     # cells to the target.
-                    pass
-                
+                    explored, unex_row, unex_column = is_shortest_path_explored(m, robot_row, robot_column, robot_direction)
+                    if explored:
+                        completed = True
+                        break
+                                        
                 # @todo: we should select a specific one here, but we just choose the first one at the moment
                 heading = headings[0] & 3
                 if heading == 0:
@@ -899,7 +903,7 @@ def run_program(port):
                         m.clear_targets()
                         m.set_target_cell(unex_row, unex_column)
                         m.flood_fill_all()
-                        print("Run to unexploded at", unex_row, unex_column)
+                        print("Run to unexplored at", unex_row, unex_column)
                     else:
                         # the unexplorded is only one cell away, use a different strategy
                         sparse_run = True

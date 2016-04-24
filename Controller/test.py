@@ -805,7 +805,7 @@ def do_calibration(port):
     print("Start Calibration")
     start = read_accurate_time()
     while True:
-        if read_accurate_time() - start > 0.5:
+        if (read_accurate_time() - start) > 0.5:
             get_front_level(port)
             get_l90_level(port)
             get_r90_level(port)
@@ -813,11 +813,12 @@ def do_calibration(port):
             get_r45_level(port)
             start = read_accurate_time()
             
-        key = get_key(port)
-        if key == "A":
-            break
-        elif key == 'B':
-            break
+        if keys_in_queue:
+            key = get_key(port)
+            if key == "A":
+                break
+            elif key == 'B':
+                break
     print("Exit Calibration")
 
 ################################################################

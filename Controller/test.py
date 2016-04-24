@@ -93,7 +93,9 @@ def send_message(port, message):
     # run one anyway 
     event_processor(port)
     
-    print(">", ml, sent_bytes_in_flight)
+    if sent_bytes_in_flight + ml > 4:
+        print(">", ml, sent_bytes_in_flight)
+        
     while (ml + sent_bytes_in_flight) > 4:
         global flight_queue_full
         flight_queue_full = True

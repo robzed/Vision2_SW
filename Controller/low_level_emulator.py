@@ -75,7 +75,7 @@ class serial:
             elif cmdv >= 0x10 and cmdv <= 0x19:
                 print("*** LED", cmdv&0x0F, "on")
             elif cmdv >= 0x00 and cmdv <= 0x09:
-                print("*** LED", cmdv&0x0F, "on")
+                print("*** LED", cmdv&0x0F, "off")
             elif cmd == "\x80":
                 self._paramcheck(cmd, params, 0)
                 self._wrdata(cmd)

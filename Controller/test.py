@@ -333,8 +333,8 @@ ir_front_level_new = False
 
 def EV_IR_FRONT_LEVEL(port, cmd):
     global ir_front_level
-    ir_front_level = port.read(1)*256
-    ir_front_level += port.read(1)
+    ir_front_level = ord(port.read(1))*256
+    ir_front_level += ord(port.read(1))
     print("IR Front level", ir_front_level)
     ir_front_level_new = True
 
@@ -343,8 +343,8 @@ ir_l90_level_new = False
     
 def EV_L90_LEVEL(port, cmd):
     global ir_l90_level
-    ir_l90_level = port.read(1)*256
-    ir_l90_level += port.read(1)
+    ir_l90_level = ord(port.read(1))*256
+    ir_l90_level += ord(port.read(1))
     print("IR L90 level", ir_l90_level)
     ir_l90_level_new = True
 
@@ -353,8 +353,8 @@ ir_l45_level_new = False
     
 def EV_L45_LEVEL(port, cmd):
     global ir_l45_level
-    ir_l45_level = port.read(1)*256
-    ir_l45_level += port.read(1)
+    ir_l45_level = ord(port.read(1))*256
+    ir_l45_level += ord(port.read(1))
     print("IR L45 level", ir_l45_level)
     ir_l45_level_new = True
     
@@ -363,8 +363,8 @@ ir_r90_level_new = False
 
 def EV_R90_LEVEL(port, cmd):
     global ir_r90_level
-    ir_r90_level = port.read(1)*256
-    ir_r90_level += port.read(1)
+    ir_r90_level = ord(port.read(1))*256
+    ir_r90_level += ord(port.read(1))
     print("IR R90 level", ir_r90_level)
     ir_r90_level_new = True
     
@@ -373,8 +373,8 @@ ir_r45_level_new = False
 
 def EV_R45_LEVEL(port, cmd):
     global ir_r45_level
-    ir_r45_level = port.read(1)*256
-    ir_r45_level += port.read(1)
+    ir_r45_level = ord(port.read(1))*256
+    ir_r45_level += ord(port.read(1))
     print("IR R45 level", ir_r45_level)
     ir_r45_level_new = True
 

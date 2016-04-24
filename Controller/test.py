@@ -1202,6 +1202,10 @@ def main():
             else:
                 print("sudo poweroff")
                 exit(1)
-
+                
+        except MajorError:
+            turn_off_motors(port)
+            exit(1)
+        
 main()
 

@@ -333,6 +333,7 @@ ir_front_level_new = False
 
 def EV_IR_FRONT_LEVEL(port, cmd):
     global ir_front_level
+    global ir_front_level_new
     ir_front_level = ord(port.read(1))*256
     ir_front_level += ord(port.read(1))
     print("IR Front level", ir_front_level)
@@ -343,6 +344,7 @@ ir_l90_level_new = False
     
 def EV_L90_LEVEL(port, cmd):
     global ir_l90_level
+    global ir_l90_level_new
     ir_l90_level = ord(port.read(1))*256
     ir_l90_level += ord(port.read(1))
     print("IR L90 level", ir_l90_level)
@@ -353,6 +355,7 @@ ir_l45_level_new = False
     
 def EV_L45_LEVEL(port, cmd):
     global ir_l45_level
+    global ir_l45_level_new
     ir_l45_level = ord(port.read(1))*256
     ir_l45_level += ord(port.read(1))
     print("IR L45 level", ir_l45_level)
@@ -363,6 +366,7 @@ ir_r90_level_new = False
 
 def EV_R90_LEVEL(port, cmd):
     global ir_r90_level
+    global ir_r90_level_new
     ir_r90_level = ord(port.read(1))*256
     ir_r90_level += ord(port.read(1))
     print("IR R90 level", ir_r90_level)
@@ -373,6 +377,7 @@ ir_r45_level_new = False
 
 def EV_R45_LEVEL(port, cmd):
     global ir_r45_level
+    global ir_r45_level_new
     ir_r45_level = ord(port.read(1))*256
     ir_r45_level += ord(port.read(1))
     print("IR R45 level", ir_r45_level)
@@ -802,24 +807,55 @@ def cell_one_away(m, robot_row, robot_column, unex_row, unex_column):
         return False
     
 def do_calibration(port):
+    global ir_front_level_new
+    global ir_l90_level_new
+    global ir_r90_level_new
+    global ir_l45_level_new
+    global ir_r45_level_new
+    global ir_front_level
+    global ir_l90_level
+    global ir_r90_level
+    global ir_l45_level
+    global ir_r45_level
+    
     print("Start Calibration")
     start = read_accurate_time()
+    turn_on_ir(port)
+    
+    state = 1
     while True:
-        if (read_accurate_time() - start) > 0.5:
-            get_front_level(port)
-            get_l90_level(port)
-            get_r90_level(port)
-            get_l45_level(port)
-            get_r45_level(port)
-            start = read_accurate_time()
+        if (read_accurate_time() - start) > 0.25:
+            if state:
+                get_front_level(port)
+                get_l90_level(port)
+                get_r90_level(port)
+            else:
+                get_l45_level(port)
+                get_r45_level(port)
+            state = 1 - state
             
+            start = read_accurate_time()
+        
+        if ir_front_level_new:
+            ir_front_level_new = False
+        if ir_l90_level_new:
+            ir_l90_level_new = False
+        if ir_r90_level_new:
+            ir_r90_level_new = False
+        if ir_l45_level_new:
+            ir_l45_level_new = False
+        if ir_r45_level_new:
+            ir_r45_level_new = False
+        
         if keys_in_queue:
             key = get_key(port)
             if key == "A":
                 break
             elif key == 'B':
                 break
+
     print("Exit Calibration")
+    turn_off_ir(port)
 
 ################################################################
 #
@@ -994,6 +1030,7 @@ def run_program(port):
                     turn_off_ir(port)
                     move_left(port, distance_turnl90)
                     wait_for_move_to_finish(port)
+                    turn_on_ir(port)
                     robot_direction -= 1
                     robot_direction &= 3
     

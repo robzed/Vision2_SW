@@ -5,6 +5,9 @@ import time
 
 PAUSE_ON_MOVE = False
 
+EMULATOR_BATTERY_CELL_VOLTAGE = 4.24 #4.25 #3.8 #3.7
+EMULATOR_BATTERY_ADC = 0x3FF & int(((4*EMULATOR_BATTERY_CELL_VOLTAGE) *1023 * 12000) / ((33000+12000) * 5 * 0.95))
+
 class serial:
     class Serial:
         
@@ -40,7 +43,11 @@ class serial:
                     self.target_time = time.time() + 2  # hold
                 elif self.timer_state == 5:
                     self._wrdata("\x31")    # B release
-                    self.target_time = time.time() + 10
+                    self.target_time = time.time() + 1
+                else:
+                    self._wrdata(chr(0x10+(EMULATOR_BATTERY_ADC>>8)))
+                    self._wrdata(chr(EMULATOR_BATTERY_ADC & 0xFF))
+                    self.target_time = time.time() + 0.3
 
         
         def inWaiting(self):

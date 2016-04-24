@@ -2,7 +2,26 @@
 #
 from __future__ import print_function
 from __builtin__ import True
-#from operator import xor
+
+################################################################
+# NORMAL MODE
+#
+# LED 1 = size 5 maze selected
+# LED 2 = size 16 maze selected
+# LED 3 = running
+
+# LED 4 = flashing = Failed to Solve
+# LED 5 = shutdown running
+# LED 6 = Slow flash if running
+#         Fast flash if battery problem (going to shutdown soon)
+#
+# Button A - select between 5, 16 and calibration
+# Hold Button B - select/start
+#
+################################################################
+# CALIBRATION MODE
+#
+
 
 SIMULATOR = False
 if SIMULATOR:
@@ -30,6 +49,12 @@ distance_turn180 = 224		# turn 180deg
 
 HOLD_KEY_TIME = 1.5     # seconds
 
+BATT_VOLTAGE_PER_CELL_WARNING = 3.8
+BATTERY_VOLTAGE_WARNING = (4 * BATT_VOLTAGE_PER_CELL_WARNING)
+BATT_VOLTAGE_PER_CELL_SHUTDOWN = 3.7
+BATTERY_VOLTAGE_SHUTDOWN = (4 * BATT_VOLTAGE_PER_CELL_SHUTDOWN)
+BATT_VOLTAGE_COUNT = 3      # scans to register level
+
 ################################################################
 # 
 # Module-level Variables
@@ -44,6 +69,9 @@ maze_selected = 5   # should be 5 or 16
 keys_in_queue = deque()
 
 calibration_mode = False
+
+battery_voltage_mode = 0 # 0 = ok, 1 = low voltage, 2 = shutdown
+battery_voltage_count = BATT_VOLTAGE_COUNT
 
 ################################################################
 # 
@@ -260,7 +288,15 @@ def run_timers(port):
     if time_now > timer_next_end_time:
         
         # notice: time slip possible here, no 'catchup' attempted.
-        timer_next_end_time = read_accurate_time()+1
+        timer_next_end_time = read_accurate_time()
+        
+        global battery_voltage_mode
+        if battery_voltage_mode == 0:
+            # no problem
+            timer_next_end_time += 1
+        else:
+            # fast flash if problem
+            timer_next_end_time += 0.125
 
         # only do this if we are not running full already...
         if not flight_queue_full:
@@ -327,6 +363,37 @@ def EV_BATTERY_VOLTAGE(port, cmd):
     global battery_voltage
     battery_voltage = ADC_reading * battery_voltage_conversion
     #print("Batt V", voltage, "cell:", voltage/4)
+    
+    
+    # figure out the warnings and 
+    global BATTERY_VOLTAGE_SHUTDOWN
+    global BATTERY_VOLTAGE_WARNING
+    global battery_voltage_mode
+    global battery_voltage_count
+    global BATT_VOLTAGE_COUNT
+
+    potential_mode = 0
+    if battery_voltage <= BATTERY_VOLTAGE_WARNING:
+        potential_mode = 1
+        if battery_voltage <= BATTERY_VOLTAGE_SHUTDOWN:
+            potential_mode = 2
+
+        # we only go one way... don't allow increases to 
+        # reset the warnings or shutdown!
+        if  potential_mode > battery_voltage_mode:
+            battery_voltage_count -= 1
+            if battery_voltage_count <= 0:
+                # become a higher mode
+                # two passes are required to reach shutdown!
+                battery_voltage_mode += 1
+                battery_voltage_count = BATT_VOLTAGE_COUNT
+                # shutdown the Raspberry Pi
+                if battery_voltage_mode == 2:
+                    raise ShutdownRequest
+        else:
+            battery_voltage_count = BATT_VOLTAGE_COUNT
+
+
 
 ir_front_level = 0
 ir_front_level_new = False
@@ -862,14 +929,6 @@ def do_calibration(port):
 # Control Loop
 #
 
-# LED 1 = size 5 maze selected
-# LED 2 = size 16 maze selected
-# LED 3 = running
-
-# LED 4 = flashing = Failed to Solve
-# LED 5 = shutdown running (not implemented)
-# LED 6 = slow flash if running, fast flash if battery problem (going to shutdown soon)
-
 def run_program(port):
     global calibration_mode
     while True:
@@ -1132,10 +1191,12 @@ def main():
             keys_in_queue = deque()
             
         except ShutdownRequest:
-            print("Need to issue RPi shutdown command")
-            send_led_pattern_command(port, 0x20)
-            turn_off_ir(port)
+            if battery_voltage_mode == 2:
+                print("Battery Shutdown")
+            print("Running RPi shutdown command")
             turn_off_motors(port)
+            turn_off_ir(port)
+            send_led_pattern_command(port, 0x20)
             if not SIMULATOR:
                 os.system("sudo poweroff")
             else:

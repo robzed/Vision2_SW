@@ -21,6 +21,22 @@ from __builtin__ import True
 ################################################################
 # CALIBRATION MODE
 #
+# LED 321 = 1 (001) = left close (1cm away)
+# LED 321 = 2 (010) = middle
+# LED 321 = 3 (011) = right close (1cm away)
+# LED 321 = 4 (100) = front same cell
+# LED 321 = 5 (101) = front long cell
+# LED 321 = 6 (110) = test
+# LED 321 = 7 (111) = test + save (save when pressed again)
+#
+# LED 4 = flashing while in test mode
+# LED 5 = shutdown running
+# LED 6 = Slow flash if running
+#         Fast flash if battery problem (going to shutdown soon)
+#
+#
+# Button A - next calibration mode
+# Button B - abort (without saving, put readings back to previous)
 
 
 SIMULATOR = False
@@ -263,7 +279,85 @@ def get_r90_level(port):
 
 def get_r45_level(port):
     send_message(port, "\x9E")
-    
+
+
+def set_steering_correction(port, distance):
+    if verbose: print("set steering correction distance", distance)
+    s = "\xC5" + chr(distance >> 8) + chr(distance & 0xff)
+    send_message(port, s)
+
+def extend_movement(port):
+    if verbose: print("extent movement")
+    send_message(port, "\xC6")
+
+def set_cell_distance(port, distance):
+    if verbose: print("set_cell_distance", distance)
+    s = "\xC7" + chr(distance >> 8) + chr(distance & 0xff)
+    send_message(port, s)
+
+def set_wall_edge_correction(port, distance):
+    if verbose: print("set_wall_edge_correction", distance)
+    s = "\xC8" + chr(distance >> 8) + chr(distance & 0xff)
+    send_message(port, s)
+
+def set_distance_to_test(port, distance):
+    if verbose: print("set_distance_to_test", distance)
+    s = "\xC9" + chr(distance >> 8) + chr(distance & 0xff)
+    send_message(port, s)
+
+
+#
+# IR commands
+#
+def set_front_long_threshold(port, threshold):
+    if verbose: print("set_front_long_threshold", threshold)
+    s = "\xD8" + chr(threshold >> 8) + chr(threshold & 0xff)
+    send_message(port, s)
+
+def set_front_short_threshold(port, threshold):
+    if verbose: print("set_front_short_threshold", threshold)
+    s = "\xD9" + chr(threshold >> 8) + chr(threshold & 0xff)
+    send_message(port, s)
+
+def set_left_side_threshold(port, threshold):
+    if verbose: print("set_left_side_threshold", threshold)
+    s = "\xDA" + chr(threshold >> 8) + chr(threshold & 0xff)
+    send_message(port, s)
+
+def set_right_side_threshold(port, threshold):
+    if verbose: print("set_right_side_threshold", threshold)
+    s = "\xDB" + chr(threshold >> 8) + chr(threshold & 0xff)
+    send_message(port, s)
+
+def set_left_45_threshold(port, threshold):
+    if verbose: print("set_left_45_threshold", threshold)
+    s = "\xDC" + chr(threshold >> 8) + chr(threshold & 0xff)
+    send_message(port, s)
+
+def set_right_45_threshold(port, threshold):
+    if verbose: print("set_right_45_threshold", threshold)
+    s = "\xDD" + chr(threshold >> 8) + chr(threshold & 0xff)
+    send_message(port, s)
+
+def set_left_45_too_close_threshold(port, threshold):
+    if verbose: print("set_left_45_too_close_threshold", threshold)
+    s = "\xDE" + chr(threshold >> 8) + chr(threshold & 0xff)
+    send_message(port, s)
+
+def set_right_45_too_close_threshold(port, threshold):
+    if verbose: print("set_right_45_too_close_threshold", threshold)
+    s = "\xDF" + chr(threshold >> 8) + chr(threshold & 0xff)
+    send_message(port, s)
+
+
+
+def set_default_distances(port):
+    #set_speed(port, speed)
+    set_steering_correction(port, 10)           # might need to fixed for higher speeds
+    set_cell_distance(port, distance_cell)      # 
+    set_wall_edge_correction(port, 230)
+    set_distance_to_test(port, 300)
+
 
 ################################################################
 # 
@@ -872,56 +966,180 @@ def cell_one_away(m, robot_row, robot_column, unex_row, unex_column):
         return True
     else:
         return False
-    
-def do_calibration(port):
+
+flashing_cal4_led = False
+def do_calibration_LEDs(port, value):
+    send_switch_led_command(port, 1, value & 1)
+    send_switch_led_command(port, 2, value & 2)
+    send_switch_led_command(port, 3, value & 3)
+    global flashing_cal4_led
+    send_switch_led_command(port, 4, flashing_cal4_led)
+    flashing_cal4_led = not flashing_cal4_led
+
+IR_threshold_defaults = {
+            "front_long_threshold":15,
+            "front_short_threshold":50,
+            "left_side_threshold":200,
+            "right_side_threshold":200,
+            "left_45_threshold":360,
+            "right_45_threshold":540,
+            "left_45_too_close_threshold":580,
+            "right_45_too_close_threshold":760,
+}
+
+def set_default_IR_thresholds(port, IR):
+    set_front_long_threshold(port, IR["front_long_threshold"])
+    set_front_short_threshold(port, IR["front_short_threshold"])
+    set_left_side_threshold(port, IR["left_side_threshold"])
+    set_right_side_threshold(port, IR["right_side_threshold"])
+    set_left_45_threshold(port, IR["left_45_threshold"])
+    set_right_45_threshold(port, IR["right_45_threshold"])
+    set_left_45_too_close_threshold(port, IR["left_45_too_close_threshold"])
+    set_right_45_too_close_threshold(port, IR["right_45_too_close_threshold"])
+
+
+temp_left_90 = 0
+temp_right_90 = 0
+temp_left_45 = 0
+temp_right_45 = 0
+
+def calibration_left_close(port):
+    return False
+
+def calibration_middle(port):
+    return False
+
+def calibration_right_close(port):
+    return False
+
+def calibration_front_same_cell(port):
+    return False
+
+def calibration_front_long_cell(port):
+    return False
+
+def calibration_test(port):
+    return False
+        if ir_front_level_new:
+            ir_front_level_new = False
+            
+        if ir_l90_level_new:
+            ir_l90_level_new = False
+            
+        if ir_r90_level_new:
+            ir_r90_level_new = False
+            
+        if ir_l45_level_new:
+            ir_l45_level_new = False
+            
+        if ir_r45_level_new:
+            ir_r45_level_new = False
+
     global ir_front_level_new
     global ir_l90_level_new
     global ir_r90_level_new
     global ir_l45_level_new
     global ir_r45_level_new
+    
     global ir_front_level
     global ir_l90_level
     global ir_r90_level
     global ir_l45_level
     global ir_r45_level
-    
+
+#def calibration_test_save(port):
+#    return False
+
+def calibration_save_and_quit(port):
+    write_config_file('calibration.txt', IR_threshold_defaults)
+    return True
+
+
+def read_config_file(filename, key_value_map):
+    try:
+        with open(filename, 'r') as f:
+            lines = f.readlines()            
+    except IOError:
+        return
+
+    for line in lines():
+        s = line.split("=", num=1)
+        key = s[0].strip()
+        if len(s) == 2 and len(key) > 0 and key in key_value_map:
+            try:
+                val = int(s[1].strip())
+            except ValueError:
+                val  = key_value_map[key]
+            
+            key_value_map[key] = val
+            
+
+def write_config_file(filename, key_value_map):
+    try:
+        with open(filename, 'w') as f:
+            for key in key_value_map:
+                f.write("%s=%d\n" % (key, key_value_map[key]))
+    except IOError:
+        pass
+
+
+def load_IR_calibration(port):
+    read_config_file('calibration.txt', IR_threshold_defaults)
+    set_default_IR_thresholds(port, IR_threshold_defaults)
+
+
+cal_dispatcher = [
+    calibration_left_close,
+    calibration_middle,
+    calibration_right_close,
+    calibration_front_same_cell,
+    calibration_front_long_cell, 
+    calibration_test,
+    #calibration_test_save,
+    calibration_save_and_quit,
+]
+
+
+def do_calibration(port):
     print("Start Calibration")
     start = read_accurate_time()
     turn_on_ir(port)
     
-    state = 1
+    update_state = 1
+    cal_state = 1
     while True:
         if (read_accurate_time() - start) > 0.25:
-            if state:
+            if update_state == 1:
                 get_front_level(port)
                 get_l90_level(port)
                 get_r90_level(port)
-            else:
+            elif update_state == 1:
                 get_l45_level(port)
                 get_r45_level(port)
-            state = 1 - state
+            else:
+                update_state = 0
+                do_calibration_LEDs(port, cal_state)
+
+            update_state += 1
             
             start = read_accurate_time()
-        
-        if ir_front_level_new:
-            ir_front_level_new = False
-        if ir_l90_level_new:
-            ir_l90_level_new = False
-        if ir_r90_level_new:
-            ir_r90_level_new = False
-        if ir_l45_level_new:
-            ir_l45_level_new = False
-        if ir_r45_level_new:
-            ir_r45_level_new = False
-        
+
+        # do the testing
+        need_exit = cal_dispatcher[cal_state](port)
+        if need_exit:
+            break            
+
         if keys_in_queue:
             key = get_key(port)
             if key == "A":
-                break
+                cal_state += 1
+                
             elif key == 'B':
+                # exit key
                 break
 
     print("Exit Calibration")
+    turn_off_all_LEDs(port)
     turn_off_ir(port)
 
 ################################################################
@@ -930,7 +1148,7 @@ def do_calibration(port):
 #
 
 def run_program(port):
-    global calibration_mode
+
     while True:
         send_unlock_command(port)
         if wait_for_unlock_to_complete(port):
@@ -941,7 +1159,11 @@ def run_program(port):
     turn_off_motors(port)
     turn_off_ir(port)
 
+    set_default_distances(port)
+    load_IR_calibration(port)
+
     global maze_selected
+    global calibration_mode
     while True:
         # let's process some events anyway
         for _ in range(1,10):
@@ -1165,6 +1387,7 @@ def run_program(port):
         else:
             print("Going back to start menu")
                 
+        # @todo: move test (similar to calibration)
         # @todo: do speed run.
         # @todo: move forward without stopping
         # @todo: curved turns

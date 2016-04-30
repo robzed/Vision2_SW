@@ -16,7 +16,7 @@ class KeyThread:
 
         #p = Popen(['myprogram.exe'], stdout=PIPE, bufsize=1, close_fds=ON_POSIX)
         self.q = Queue()
-        t = Thread(target=self.enqueue_output, args=(self))
+        t = Thread(target=self.enqueue_output)
         t.daemon = True # thread dies with the program
         t.start()
         
@@ -24,8 +24,8 @@ class KeyThread:
         while True:
             line = sys.stdin.readline()
             for c in line:
-                self.queue.put(c)
-
+                self.q.put(c)
+            
     def get_key(self):
         try:  
             key = self.q.get_nowait() # or q.get(timeout=.1)

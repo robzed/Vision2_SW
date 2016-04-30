@@ -32,6 +32,36 @@ class serial:
             
             self.timeout = timeout
             self.LEDs = [".", ".", ".", ".", ".", ".", ".", ".", "."]
+            
+            self.shift_middle()
+
+        def shift_left(self):
+            self.front = 50
+            self.ls = 100
+            self.rs = 20
+            self.l45 = 80
+            self.r45 = 10
+
+        def shift_right(self):
+            self.front = 50
+            self.ls = 20
+            self.rs = 100
+            self.l45 = 10
+            self.r45 = 80
+
+        def shift_middle(self):
+            self.front = 50
+            self.ls = 50
+            self.rs = 50
+            self.l45 = 40
+            self.r45 = 40
+
+        def shift_far(self):
+            self.front = 20
+            self.ls = 50
+            self.rs = 50
+            self.l45 = 40
+            self.r45 = 40
 
         def show_LEDs(self):
             LED7 = self.LEDs[6]
@@ -98,19 +128,26 @@ class serial:
                     self._wrdata("\x39")    # B press
                     self.key_delayed = (time.time()+2, "\x31")
                 elif key == "<":
-                    pass
-                elif key == "<":
-                    pass
-                elif key == "|":
-                    pass
+                    print("*** Mouse a bit left")
+                    self.shift_left()
+                elif key == ">":
+                    print("*** Mouse a bit right")
+                    self.shift_right()
+                #elif key == "|":
+                #    pass
                 elif key == "^":
-                    pass
+                    print("*** Mouse far away from front wall")
+                    self.shift_far()
                 elif key == "+":
-                    pass
+                    print("*** Mouse centered, in same cell as front wall")
+                    self.shift_middle()
                 elif key == "P":
                     # pause on move
                     PAUSE_ON_MOVE = not PAUSE_ON_MOVE
-
+                elif key == '\x13' or '\x10':
+                    pass
+                else:
+                    print("??? Didn't understand", key)
     
         def inWaiting(self):
             self.do_background_processes()
@@ -199,6 +236,36 @@ class serial:
                 #print("*** value", value & 0x0f)
                 
                 self._wrdata(chr(value))
+            
+            elif cmd == "\x9A": # front
+                self._paramcheck(cmd, params, 0)
+                self._wrdata("\x61")
+                self._wrdata(chr(self.front>>8))
+                self._wrdata(chr(self.front&255))
+
+            elif cmd == "\x9B": # l90
+                self._paramcheck(cmd, params, 0)
+                self._wrdata("\x62")
+                self._wrdata(chr(self.ls>>8))
+                self._wrdata(chr(self.ls&255))
+            
+            elif cmd == "\x9C": # l45
+                self._paramcheck(cmd, params, 0)
+                self._wrdata("\x63")
+                self._wrdata(chr(self.l45>>8))
+                self._wrdata(chr(self.l45&255))
+            
+            elif cmd == "\x9D": # r90
+                self._paramcheck(cmd, params, 0)
+                self._wrdata("\x64")
+                self._wrdata(chr(self.rs>>8))
+                self._wrdata(chr(self.rs&255))
+            
+            elif cmd == "\x9E": # r45
+                self._paramcheck(cmd, params, 0)
+                self._wrdata("\x65")
+                self._wrdata(chr(self.r45>>8))
+                self._wrdata(chr(self.r45&255))
             
             elif cmd == "\xC0":
                 self._paramcheck(cmd, params, 0)

@@ -39,7 +39,7 @@ from __builtin__ import True
 # Button B - abort (without saving, put readings back to previous)
 
 
-SIMULATOR = False
+SIMULATOR = True
 if SIMULATOR:
     from low_level_emulator import serial
 else:
@@ -1020,20 +1020,6 @@ def calibration_front_long_cell(port):
 
 def calibration_test(port):
     return False
-        if ir_front_level_new:
-            ir_front_level_new = False
-            
-        if ir_l90_level_new:
-            ir_l90_level_new = False
-            
-        if ir_r90_level_new:
-            ir_r90_level_new = False
-            
-        if ir_l45_level_new:
-            ir_l45_level_new = False
-            
-        if ir_r45_level_new:
-            ir_r45_level_new = False
 
     global ir_front_level_new
     global ir_l90_level_new
@@ -1046,6 +1032,23 @@ def calibration_test(port):
     global ir_r90_level
     global ir_l45_level
     global ir_r45_level
+
+    
+    if ir_front_level_new:
+        ir_front_level_new = False
+        
+    if ir_l90_level_new:
+        ir_l90_level_new = False
+        
+    if ir_r90_level_new:
+        ir_r90_level_new = False
+        
+    if ir_l45_level_new:
+        ir_l45_level_new = False
+        
+    if ir_r45_level_new:
+        ir_r45_level_new = False
+
 
 #def calibration_test_save(port):
 #    return False

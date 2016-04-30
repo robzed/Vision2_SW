@@ -599,10 +599,10 @@ def EV_BUTTON_A_RELEASE(port, cmd):
     #print("KEY A TIME =", read_accurate_time() - key_A_start_time)
     # hold key or normal key?
     if (read_accurate_time() - key_A_start_time) > HOLD_KEY_TIME:
-        keys_in_queue.append('A+')
+        keys_in_queue.append('A')
         print("held A")
     else:
-        keys_in_queue.append('A')
+        keys_in_queue.append('a')
         print("press A")
         
     key_A_start_time = None
@@ -615,10 +615,10 @@ def EV_BUTTON_B_RELEASE(port, cmd):
     #print("KEY B TIME =", read_accurate_time() - key_B_start_time)
     # hold key or normal key?
     if (read_accurate_time() - key_B_start_time) > HOLD_KEY_TIME:
-        keys_in_queue.append('B+')
+        keys_in_queue.append('B')
         print("held B")
     else:
-        keys_in_queue.append('B')
+        keys_in_queue.append('b')
         print("press B")
 
     key_B_start_time = None
@@ -1189,7 +1189,7 @@ def run_program(port):
 
             while True:
                 key = get_key(port)
-                if key == "A":
+                if key == "a":
                     # @todo: we might want test mode and calibration mode here?
                     if calibration_mode:
                         calibration_mode = False
@@ -1199,12 +1199,12 @@ def run_program(port):
                     else:   # maze_selected == 16
                         calibration_mode = True
                     break
-                elif key == "B":
+                elif key == "b":
                     # B key without hold does nothing
                     pass
-                elif key == "A+":
+                elif key == "A":
                     raise ShutdownRequest
-                elif key == "B+":
+                elif key == "B":
                     running  = True
                     break
 

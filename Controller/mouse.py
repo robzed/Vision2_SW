@@ -1116,7 +1116,7 @@ def do_calibration(port):
                 get_front_level(port)
                 get_l90_level(port)
                 get_r90_level(port)
-            elif update_state == 1:
+            elif update_state == 2:
                 get_l45_level(port)
                 get_r45_level(port)
             else:

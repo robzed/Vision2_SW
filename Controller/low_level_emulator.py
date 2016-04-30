@@ -77,6 +77,10 @@ class serial:
 
         def do_keys(self):
             if self.key_delayed is not None:
+                (end_time, data) = self.key_delayed
+                if time.time() > end_time:
+                    self._wrdata(data)
+                    self.key_delayed = None
                 return
             
             key = self.keys.get_key()
@@ -88,9 +92,11 @@ class serial:
                     self._wrdata("\x39")    # B press
                     self._wrdata("\x31")    # B release
                 elif key == 'A':
-                    pass
+                    self._wrdata("\x38")    # A press
+                    self.key_delayed = (time.time()+2, "\x30")
                 elif key == "B":
-                    pass
+                    self._wrdata("\x39")    # B press
+                    self.key_delayed = (time.time()+2, "\x31")
                 elif key == "<":
                     pass
                 elif key == "<":

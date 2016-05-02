@@ -55,7 +55,7 @@ from maze import Maze
 # Constants
 # 
 
-verbose = True
+verbose = False
 print_map_in_progress = True
 
 distance_cell	= 347			# adjust these values for cell distance		
@@ -110,6 +110,7 @@ class MajorError(Exception):
 def recover_from_major_error():
     print()
     print("Major error - aborting")
+    # @todo: some something better to recover
     raise MajorError
 
 
@@ -134,17 +135,22 @@ def send_message(port, message):
     
     ml = len(message)
 
-    # run one anyway 
-    event_processor(port)
+    # run as many as we can until we are empty
+    while port.inWaiting():
+        event_processor(port)
     
     if sent_bytes_in_flight + ml > 4:
         print(">", ml, sent_bytes_in_flight)
         
+    end_time = time.time() + 0.1
     while (ml + sent_bytes_in_flight) > 4:
         global flight_queue_full
         flight_queue_full = True
         event_processor(port)
         flight_queue_full = False
+        if time.time() > end_time:
+            print("Waited for response - we should do something")
+            end_time = time.time() + 1
 
     sent_bytes_in_flight += ml
     messages_in_flight_queue.append(ml)
@@ -393,7 +399,7 @@ def run_timers(port):
             timer_next_end_time += 0.125
 
         # only do this if we are not running full already...
-        if not flight_queue_full:
+        if not flight_queue_full and not SIMULATOR:
             # we hard code a function here, for the moment
             global execution_state_LED6
             send_switch_led_command(port, 6, execution_state_LED6)
@@ -497,7 +503,7 @@ def EV_IR_FRONT_LEVEL(port, cmd):
     global ir_front_level_new
     ir_front_level = ord(port.read(1))*256
     ir_front_level += ord(port.read(1))
-    print("IR Front level", ir_front_level)
+    if verbose: print("IR Front level", ir_front_level)
     ir_front_level_new = True
 
 ir_l90_level = 0
@@ -508,7 +514,7 @@ def EV_L90_LEVEL(port, cmd):
     global ir_l90_level_new
     ir_l90_level = ord(port.read(1))*256
     ir_l90_level += ord(port.read(1))
-    print("IR L90 level", ir_l90_level)
+    if verbose: print("IR L90 level", ir_l90_level)
     ir_l90_level_new = True
 
 ir_l45_level = 0
@@ -519,7 +525,7 @@ def EV_L45_LEVEL(port, cmd):
     global ir_l45_level_new
     ir_l45_level = ord(port.read(1))*256
     ir_l45_level += ord(port.read(1))
-    print("IR L45 level", ir_l45_level)
+    if verbose: print("IR L45 level", ir_l45_level)
     ir_l45_level_new = True
     
 ir_r90_level = 0
@@ -530,7 +536,7 @@ def EV_R90_LEVEL(port, cmd):
     global ir_r90_level_new
     ir_r90_level = ord(port.read(1))*256
     ir_r90_level += ord(port.read(1))
-    print("IR R90 level", ir_r90_level)
+    if verbose: print("IR R90 level", ir_r90_level)
     ir_r90_level_new = True
     
 ir_r45_level = 0
@@ -541,7 +547,7 @@ def EV_R45_LEVEL(port, cmd):
     global ir_r45_level_new
     ir_r45_level = ord(port.read(1))*256
     ir_r45_level += ord(port.read(1))
-    print("IR R45 level", ir_r45_level)
+    if verbose: print("IR R45 level", ir_r45_level)
     ir_r45_level_new = True
 
 
@@ -600,10 +606,10 @@ def EV_BUTTON_A_RELEASE(port, cmd):
     # hold key or normal key?
     if (read_accurate_time() - key_A_start_time) > HOLD_KEY_TIME:
         keys_in_queue.append('A')
-        print("held A")
+        if verbose: print("held A")
     else:
         keys_in_queue.append('a')
-        print("press A")
+        if verbose: print("press A")
         
     key_A_start_time = None
 
@@ -616,10 +622,10 @@ def EV_BUTTON_B_RELEASE(port, cmd):
     # hold key or normal key?
     if (read_accurate_time() - key_B_start_time) > HOLD_KEY_TIME:
         keys_in_queue.append('B')
-        print("held B")
+        if verbose: print("held B")
     else:
         keys_in_queue.append('b')
-        print("press B")
+        if verbose: print("press B")
 
     key_B_start_time = None
 
@@ -972,9 +978,12 @@ def do_calibration_LEDs(port, value):
     send_switch_led_command(port, 1, value & 1)
     send_switch_led_command(port, 2, value & 2)
     send_switch_led_command(port, 3, value & 3)
-    global flashing_cal4_led
-    send_switch_led_command(port, 4, flashing_cal4_led)
-    flashing_cal4_led = not flashing_cal4_led
+    if SIMULATOR:
+        send_switch_led_command(port, 4, True)
+    else:
+        global flashing_cal4_led
+        send_switch_led_command(port, 4, flashing_cal4_led)
+        flashing_cal4_led = not flashing_cal4_led
 
 IR_threshold_defaults = {
             "front_long_threshold":15,
@@ -998,29 +1007,7 @@ def set_default_IR_thresholds(port, IR):
     set_right_45_too_close_threshold(port, IR["right_45_too_close_threshold"])
 
 
-temp_left_90 = 0
-temp_right_90 = 0
-temp_left_45 = 0
-temp_right_45 = 0
-
-def calibration_left_close(port):
-    return False
-
-def calibration_middle(port):
-    return False
-
-def calibration_right_close(port):
-    return False
-
-def calibration_front_same_cell(port):
-    return False
-
-def calibration_front_long_cell(port):
-    return False
-
-def calibration_test(port):
-    return False
-
+def grab_values(target):
     global ir_front_level_new
     global ir_l90_level_new
     global ir_r90_level_new
@@ -1032,30 +1019,118 @@ def calibration_test(port):
     global ir_r90_level
     global ir_l45_level
     global ir_r45_level
-
     
     if ir_front_level_new:
         ir_front_level_new = False
+        if 'frmax' not in target or ir_front_level > target['frmax']:
+            target['frmax'] = ir_front_level
+        if 'frmin' not in target or ir_front_level < target['frmin']:
+            target['frmin'] = ir_front_level
+        if 'frcount' not in target:
+            target['frcount'] = 1
+        else:
+            target['frcount'] += 1
         
     if ir_l90_level_new:
         ir_l90_level_new = False
-        
+        if 'l90max' not in target or ir_l90_level > target['l90max']:
+            target['l90max'] = ir_l90_level
+        if 'l90min' not in target or ir_l90_level < target['l90min']:
+            target['l90min'] = ir_l90_level
+        if 'l90count' not in target:
+            target['l90count'] = 1
+        else:
+            target['l90count'] += 1
+
     if ir_r90_level_new:
         ir_r90_level_new = False
+        if 'r90max' not in target or ir_r90_level > target['r90max']:
+            target['r90max'] = ir_r90_level
+        if 'r90min' not in target or ir_r90_level < target['r90min']:
+            target['r90min'] = ir_r90_level
+        if 'r90count' not in target:
+            target['r90count'] = 1
+        else:
+            target['r90count'] += 1
         
     if ir_l45_level_new:
         ir_l45_level_new = False
-        
+        if 'l45max' not in target or ir_l45_level > target['l45max']:
+            target['l45max'] = ir_l45_level
+        if 'l45min' not in target or ir_l45_level < target['l45min']:
+            target['l45min'] = ir_l45_level
+        if 'l45count' not in target:
+            target['l45count'] = 1
+        else:
+            target['l45count'] += 1
+
     if ir_r45_level_new:
         ir_r45_level_new = False
+        if 'r45max' not in target or ir_r45_level > target['r45max']:
+            target['r45max'] = ir_r45_level
+        if 'r45min' not in target or ir_r45_level < target['r45min']:
+            target['r45min'] = ir_r45_level
+        if 'r45count' not in target:
+            target['r45count'] = 1
+        else:
+            target['r45count'] += 1
+
+
+left_count = 0
+right_count = 0
+middle_count = 0
+front_center = 0
+
+def calibration_left_close(port, read_data):
+    if read_data:
+        c = left_count
+        grab_values(c)
+        if c['r90count'] == 10 and c['r45count'] == 10 and c['l90count'] == 10 and c['l45count'] == 10:
+            return True
+    return False
+
+def calibration_middle(port, read_data):
+    if read_data:
+        c = middle_count
+        grab_values(c)
+        if c['r90count'] == 10 and c['r45count'] == 10 and c['l90count'] == 10 and c['l45count'] == 10:
+            return True
+    return False
+
+def calibration_right_close(port, read_data):
+    if read_data:
+        c = right_count
+        grab_values(c)
+        if c['r90count'] == 10 and c['r45count'] == 10 and c['l90count'] == 10 and c['l45count'] == 10:
+            return True
+    return False
+
+def calibration_front_same_cell(port, read_data):
+    if read_data:
+        c = right_count
+        grab_values(c)
+        if c['frcount'] == 10:
+            return True
+    return False
+
+def calibration_front_long_cell(port, read_data):
+    if read_data:
+        c = right_count
+        grab_values(c)
+        if c['frcount'] == 10:
+            return True
+    return False
+
+def calibration_test(port, read_data):
+    return True
 
 
 #def calibration_test_save(port):
 #    return False
 
-def calibration_save_and_quit(port):
+def calibration_save_and_quit(port, read_data):
     write_config_file('calibration.txt', IR_threshold_defaults)
-    return True
+    return None
 
 
 def read_config_file(filename, key_value_map):
@@ -1105,18 +1180,32 @@ cal_dispatcher = [
 
 def do_calibration(port):
     print("Start Calibration")
+
+    global ir_front_level_new
+    global ir_l90_level_new
+    global ir_r90_level_new
+    global ir_l45_level_new
+    global ir_r45_level_new
+    ir_front_level_new = False
+    ir_l90_level_new = False
+    ir_r90_level_new = False
+    ir_l45_level_new = False
+    ir_r45_level_new = False
+
     start = read_accurate_time()
     turn_on_ir(port)
     
     update_state = 1
     cal_state = 1
+    read_data = False
     while True:
-        if (read_accurate_time() - start) > 0.25:
+        if (read_accurate_time() - start) > 0.1:
             if update_state == 1:
                 get_front_level(port)
+            elif update_state == 2:
                 get_l90_level(port)
                 get_r90_level(port)
-            elif update_state == 2:
+            elif update_state == 3:
                 get_l45_level(port)
                 get_r45_level(port)
             else:
@@ -1128,14 +1217,17 @@ def do_calibration(port):
             start = read_accurate_time()
 
         # do the testing
-        need_exit = cal_dispatcher[cal_state](port)
-        if need_exit:
-            break            
+        need_step = cal_dispatcher[cal_state](port, read_data)
+        if need_step is None:
+            break
+        elif need_step:
+            read_data = False
+            cal_state += 1
 
         if keys_in_queue:
             key = get_key(port)
             if key == "A":
-                cal_state += 1
+                read_data = True
                 
             elif key == 'B':
                 # exit key
@@ -1407,7 +1499,7 @@ def main():
         try:
             run_program(port)
             
-        except SoftReset:
+        except SoftReset, MajorError:
             # @todo: Fix this to reset variables, and restart
             # @todo: Go though all variables in project, and set... maybe collate variables at top?
             reset_message_queue()
@@ -1428,10 +1520,6 @@ def main():
             else:
                 print("sudo poweroff")
                 exit(1)
-                
-        except MajorError:
-            turn_off_motors(port)
-            exit(1)
-        
+                        
 main()
 

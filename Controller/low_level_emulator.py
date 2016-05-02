@@ -32,6 +32,7 @@ class serial:
             
             self.timeout = timeout
             self.LEDs = [".", ".", ".", ".", ".", ".", ".", ".", "."]
+            self.last_LEDs = ""
             
             self.shift_middle()
 
@@ -67,8 +68,11 @@ class serial:
             LED7 = self.LEDs[6]
             LED8 = self.LEDs[7]
             LED9 = self.LEDs[8]
-            print("%s   %s< ^%s >%s" % ("".join(self.LEDs[0:6])[::-1], LED7, LED8, LED9))
-        
+            LEDs = "%s   %s< ^%s >%s" % ("".join(self.LEDs[0:6])[::-1], LED7, LED8, LED9)
+            if LEDs != self.last_LEDs:
+                print(LEDs)
+                self.last_LEDs = LEDs
+                
         def set_LED(self, num):
             self.LEDs[num-1] = "#"
         

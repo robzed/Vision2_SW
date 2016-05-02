@@ -1474,6 +1474,10 @@ def run_program(port):
                 print("Back at start, wait for speed run")
                 print("===========================================")
                 print()
+                m.clear_targets()
+                m.target_normal_end_cells()
+                m.flood_fill_all()
+                m.print_maze()
                 break
 
         if completed:

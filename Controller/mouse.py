@@ -977,7 +977,7 @@ flashing_cal4_led = False
 def do_calibration_LEDs(port, value):
     send_switch_led_command(port, 1, value & 1)
     send_switch_led_command(port, 2, value & 2)
-    send_switch_led_command(port, 3, value & 3)
+    send_switch_led_command(port, 3, value & 4)
     if SIMULATOR:
         send_switch_led_command(port, 4, True)
     else:
@@ -1076,16 +1076,17 @@ def grab_values(target):
             target['r45count'] += 1
 
 
-left_count = 0
-right_count = 0
-middle_count = 0
-front_center = 0
+left_count = {}
+right_count = {}
+middle_count = {}
+front_center = {}
+front_long_count = {}
 
 def calibration_left_close(port, read_data):
     if read_data:
         c = left_count
         grab_values(c)
-        if c['r90count'] == 10 and c['r45count'] == 10 and c['l90count'] == 10 and c['l45count'] == 10:
+        if c['r90count'] >= 10 and c['r45count'] >= 10 and c['l90count'] >= 10 and c['l45count'] >= 10:
             return True
     return False
 
@@ -1093,7 +1094,7 @@ def calibration_middle(port, read_data):
     if read_data:
         c = middle_count
         grab_values(c)
-        if c['r90count'] == 10 and c['r45count'] == 10 and c['l90count'] == 10 and c['l45count'] == 10:
+        if c['r90count'] >= 10 and c['r45count'] >= 10 and c['l90count'] >= 10 and c['l45count'] >= 10:
             return True
     return False
 
@@ -1101,32 +1102,38 @@ def calibration_right_close(port, read_data):
     if read_data:
         c = right_count
         grab_values(c)
-        if c['r90count'] == 10 and c['r45count'] == 10 and c['l90count'] == 10 and c['l45count'] == 10:
+        if c['r90count'] >= 10 and c['r45count'] >= 10 and c['l90count'] >= 10 and c['l45count'] >= 10:
             return True
     return False
 
 def calibration_front_same_cell(port, read_data):
     if read_data:
-        c = right_count
+        c = front_center
         grab_values(c)
-        if c['frcount'] == 10:
+        if c['frcount'] >= 10:
             return True
     return False
 
 def calibration_front_long_cell(port, read_data):
     if read_data:
-        c = right_count
+        c = front_long_count
         grab_values(c)
-        if c['frcount'] == 10:
+        if c['frcount'] >= 10:
             return True
     return False
 
-def calibration_test(port, read_data):
+def calculate_and_configure(port, read_data):
+    print(left_count)
+    print(right_count)
+    print(middle_count)
+    print(front_center)
+    print(front_long_count)
     return True
 
+def calibration_test(port, read_data):
+    if read_data:
+        return True
 
-#def calibration_test_save(port):
-#    return False
 
 def calibration_save_and_quit(port, read_data):
     write_config_file('calibration.txt', IR_threshold_defaults)
@@ -1172,8 +1179,8 @@ cal_dispatcher = [
     calibration_right_close,
     calibration_front_same_cell,
     calibration_front_long_cell, 
+    calculate_and_configure,
     calibration_test,
-    #calibration_test_save,
     calibration_save_and_quit,
 ]
 
@@ -1192,11 +1199,22 @@ def do_calibration(port):
     ir_l45_level_new = False
     ir_r45_level_new = False
 
+    global left_count
+    global right_count
+    global middle_count
+    global front_center
+    global front_long_count
+    left_count = {}
+    right_count = {}
+    middle_count = {}
+    front_center = {}
+    front_long_count = {}
+
     start = read_accurate_time()
     turn_on_ir(port)
     
     update_state = 1
-    cal_state = 1
+    cal_state = 0
     read_data = False
     while True:
         if (read_accurate_time() - start) > 0.1:
@@ -1226,7 +1244,7 @@ def do_calibration(port):
 
         if keys_in_queue:
             key = get_key(port)
-            if key == "A":
+            if key == "a":
                 read_data = True
                 
             elif key == 'B':

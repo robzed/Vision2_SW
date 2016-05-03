@@ -1216,8 +1216,9 @@ def do_calibration(port):
     update_state = 1
     cal_state = 0
     read_data = False
+    flash = True
     while True:
-        if (read_accurate_time() - start) > 0.1:
+        if (read_accurate_time() - start) > 0.05:
             if update_state == 1:
                 get_front_level(port)
             elif update_state == 2:
@@ -1228,7 +1229,11 @@ def do_calibration(port):
                 get_r45_level(port)
             else:
                 update_state = 0
-                do_calibration_LEDs(port, cal_state)
+                flash = not flash
+                if read_data and flash:
+                    do_calibration_LEDs(port, 0)
+                else:
+                    do_calibration_LEDs(port, cal_state+1)
 
             update_state += 1
             

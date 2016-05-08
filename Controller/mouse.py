@@ -1128,11 +1128,12 @@ def calculate_and_configure(port, read_data):
     print(middle_count)
     print(front_center)
     print(front_long_count)
+    todo fix this
     return True
 
 def calibration_test(port, read_data):
-    if read_data:
-        return True
+    # if True, then exit, otherwise just wait by returning False...
+    return read_data
 
 
 def calibration_save_and_quit(port, read_data):
@@ -1252,7 +1253,7 @@ def do_calibration(port):
             if key == "a":
                 read_data = True
                 
-            elif key == 'B':
+            elif key == 'B' or key == 'b':
                 # exit key
                 break
 

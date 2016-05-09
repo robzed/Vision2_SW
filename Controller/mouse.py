@@ -84,8 +84,6 @@ maze_selected = 5   # should be 5 or 16
 
 keys_in_queue = deque()
 
-calibration_mode = False
-
 battery_voltage_mode = 0 # 0 = ok, 1 = low voltage, 2 = shutdown
 battery_voltage_count = BATT_VOLTAGE_COUNT
 
@@ -1287,6 +1285,47 @@ def do_calibration(port):
     turn_off_all_LEDs(port)
     turn_off_ir(port)
 
+def do_test_mode(port):
+    print("Start Test")
+    start = read_accurate_time()
+    turn_on_ir(port)
+    
+    wait_to_go = None
+    flash = True
+    while True:
+        if (read_accurate_time() - start) > 0.2:
+            flash = not flash
+            if flash:
+                send_switch_led_command(port, 1, True)
+                send_switch_led_command(port, 2, True)
+            else:
+                send_switch_led_command(port, 1, False)
+                send_switch_led_command(port, 2, False)
+
+            if wait_to_go is not None:
+                wait_to_go -= 1
+                if wait_to_go == 0:
+                    wait_to_go = None
+                    
+                    move_forward(port, distance_cell)
+                    wait_for_move_to_finish(port)
+                    turn_off_motors(port)
+            
+            start = read_accurate_time()
+
+        if keys_in_queue:
+            key = get_key(port)
+            if key == "a":
+                wait_to_go = 5
+                
+            elif key == 'B' or key == 'b':
+                # exit key
+                break
+
+    turn_off_all_LEDs(port)
+    turn_off_ir(port)
+    print("End Test")
+
 ################################################################
 #
 # Control Loop
@@ -1308,7 +1347,8 @@ def run_program(port):
     load_IR_calibration(port)
 
     global maze_selected
-    global calibration_mode
+    calibration_mode = False
+    test_mode = False
     while True:
         # let's process some events anyway
         for _ in range(1,10):
@@ -1321,7 +1361,10 @@ def run_program(port):
         while not running:
             if calibration_mode:
                 send_switch_led_command(port, 1, True)
-                send_switch_led_command(port, 2, True)                
+                send_switch_led_command(port, 2, True)
+            elif test_mode:
+                send_switch_led_command(port, 1, False)
+                send_switch_led_command(port, 2, False)
             elif maze_selected == 5:
                 send_switch_led_command(port, 1, True)
                 send_switch_led_command(port, 2, False)
@@ -1329,8 +1372,8 @@ def run_program(port):
                 send_switch_led_command(port, 1, False)
                 send_switch_led_command(port, 2, True)
             else:
-                send_switch_led_command(port, 1, False)
-                send_switch_led_command(port, 2, False)
+                print("Unknown mode")
+                exit(1)
 
             while True:
                 key = get_key(port)
@@ -1338,6 +1381,9 @@ def run_program(port):
                     # @todo: we might want test mode and calibration mode here?
                     if calibration_mode:
                         calibration_mode = False
+                        test_mode = True
+                    elif test_mode:
+                        test_mode = False
                         maze_selected = 5
                     elif maze_selected == 5:
                         maze_selected = 16
@@ -1358,6 +1404,10 @@ def run_program(port):
                 running = False
                 do_calibration(port)
                 calibration_mode = False
+            if running and test_mode:
+                running = False
+                do_test_mode(port)
+                test_mode = False
             
         start_time = read_accurate_time()
         # start the run

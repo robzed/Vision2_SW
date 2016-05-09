@@ -1142,8 +1142,8 @@ def calculate_and_configure(port, read_data):
     cal_IR["right_45_too_close_threshold"] = (2 * r45_diff) + middle_count['r45min']
 
     # wall detect - detect over other side
-    cal_IR["left_side_threshold"] = right_count['r90min']
-    cal_IR["right_side_threshold"] = left_count['l90min']
+    cal_IR["left_side_threshold"] = right_count['l90min']
+    cal_IR["right_side_threshold"] = left_count['r90min']
     
     # front wall
     cal_IR["front_long_threshold"] = front_long_count['frmin']

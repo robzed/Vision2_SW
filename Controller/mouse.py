@@ -1136,8 +1136,8 @@ def calculate_and_configure(port, read_data):
     # diagonal
     # for too close we select 2/3 and for a bit close 1/3
     # between 1cm away and middle
-    l45_diff = (left_count['l45max'] - middle_count['l45min']) / 3.0
-    r45_diff = (right_count['r45max'] - middle_count['r45min']) / 3.0
+    l45_diff = int((left_count['l45max'] - middle_count['l45min']) / 3.0)
+    r45_diff = int((right_count['r45max'] - middle_count['r45min']) / 3.0)
     cal_IR["left_45_threshold"] = l45_diff + middle_count['l45min']
     cal_IR["right_45_threshold"] = r45_diff + middle_count['r45min']
     cal_IR["left_45_too_close_threshold"] = (2 * l45_diff) + middle_count['l45min']
@@ -1160,6 +1160,7 @@ def calibration_test(port, read_data):
 
 
 def calibration_save_and_quit(port, read_data):
+    print("Save calibration")
     write_config_file('calibration.txt', cal_IR)
     return None
 

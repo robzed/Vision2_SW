@@ -1081,6 +1081,7 @@ right_count = {}
 middle_count = {}
 front_center = {}
 front_long_count = {}
+cal_IR = {}
 
 def calibration_left_close(port, read_data):
     if read_data:
@@ -1123,12 +1124,34 @@ def calibration_front_long_cell(port, read_data):
     return False
 
 def calculate_and_configure(port, read_data):
-    print(left_count)
-    print(right_count)
-    print(middle_count)
-    print(front_center)
-    print(front_long_count)
-    todo fix this
+    #print(left_count)
+    #print(right_count)
+    #print(middle_count)
+    #print(front_center)
+    #print(front_long_count)
+
+    #
+    # We will need to test these on a real mouse
+    #
+    # diagonal
+    # for too close we select 2/3 and for a bit close 1/3
+    # between 1cm away and middle
+    l45_diff = (left_count['l45max'] - middle_count['l45min']) / 3.0
+    r45_diff = (right_count['r45max'] - middle_count['r45min']) / 3.0
+    cal_IR["left_45_threshold"] = l45_diff + middle_count['l45min']
+    cal_IR["right_45_threshold"] = r45_diff + middle_count['r45min']
+    cal_IR["left_45_too_close_threshold"] = (2 * l45_diff) + middle_count['l45min']
+    cal_IR["right_45_too_close_threshold"] = (2 * r45_diff) + middle_count['r45min']
+
+    # wall detect - detect over other side
+    cal_IR["left_side_threshold"] = right_count['r90min']
+    cal_IR["right_side_threshold"] = left_count['l90min']
+    
+    # front wall
+    cal_IR["front_long_threshold"] = front_long_count['frmin']
+    cal_IR["front_short_threshold"] = front_center['frmin']
+
+    set_default_IR_thresholds(port, cal_IR)
     return True
 
 def calibration_test(port, read_data):
@@ -1137,7 +1160,7 @@ def calibration_test(port, read_data):
 
 
 def calibration_save_and_quit(port, read_data):
-    write_config_file('calibration.txt', IR_threshold_defaults)
+    write_config_file('calibration.txt', cal_IR)
     return None
 
 
@@ -1254,7 +1277,9 @@ def do_calibration(port):
                 read_data = True
                 
             elif key == 'B' or key == 'b':
-                # exit key
+                # exit early key
+                # return IR to old levels
+                set_default_IR_thresholds(port, IR_threshold_defaults)
                 break
 
     print("Exit Calibration")

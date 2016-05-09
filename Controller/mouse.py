@@ -1172,8 +1172,8 @@ def read_config_file(filename, key_value_map):
     except IOError:
         return
 
-    for line in lines():
-        s = line.split("=", num=1)
+    for line in lines:
+        s = line.split("=", 1) #num=1)
         key = s[0].strip()
         if len(s) == 2 and len(key) > 0 and key in key_value_map:
             try:

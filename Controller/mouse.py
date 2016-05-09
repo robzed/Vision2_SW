@@ -1378,7 +1378,6 @@ def run_program(port):
             while True:
                 key = get_key(port)
                 if key == "a":
-                    # @todo: we might want test mode and calibration mode here?
                     if calibration_mode:
                         calibration_mode = False
                         test_mode = True

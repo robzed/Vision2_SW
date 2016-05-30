@@ -48,9 +48,9 @@ else:
     SIMULATOR = False
 
 if SIMULATOR:
-    from low_level_emulator import serial
+    from low_level_emulator import serial   #@UnusedImport
 else:
-    import serial
+    import serial   #@UnresolvedImport
 
 import time
 from collections import deque

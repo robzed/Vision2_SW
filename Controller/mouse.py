@@ -8,6 +8,8 @@ from __builtin__ import True
 #
 # LED 1 = size 5 maze selected
 # LED 2 = size 16 maze selected
+#            Both = Calibration mode
+#            None = Test mode
 # LED 3 = running
 
 # LED 4 = flashing = Failed to Solve
@@ -1197,14 +1199,14 @@ def load_IR_calibration(port):
 
 
 cal_dispatcher = [
-    calibration_left_close,
-    calibration_middle,
-    calibration_right_close,
-    calibration_front_same_cell,
-    calibration_front_long_cell, 
-    calculate_and_configure,
-    calibration_test,
-    calibration_save_and_quit,
+    (calibration_left_close, "Move to 1cm from left wall"),
+    (calibration_middle, "Move to middle between left and right walls"),
+    (calibration_right_close, "Move to 1cm from right wall"),
+    (calibration_front_same_cell, "Move to center of cell with wall in front"),
+    (calibration_front_long_cell,  "Move front of mouse to 1 cell away from front wall"),
+    (calculate_and_configure, "Calculating calibration"),
+    (calibration_test, "Test sensor LEDs now"),
+    (calibration_save_and_quit, "Saving sensor calibration"),
 ]
 
 
@@ -1238,6 +1240,7 @@ def do_calibration(port):
     
     update_state = 1
     cal_state = 0
+    print(cal_dispatcher[cal_state][1])
     read_data = False
     flash = True
     while True:
@@ -1263,12 +1266,13 @@ def do_calibration(port):
             start = read_accurate_time()
 
         # do the testing
-        need_step = cal_dispatcher[cal_state](port, read_data)
+        need_step = cal_dispatcher[cal_state][0](port, read_data)
         if need_step is None:
             break
         elif need_step:
             read_data = False
             cal_state += 1
+            print(cal_dispatcher[cal_state][1])
 
         if keys_in_queue:
             key = get_key(port)

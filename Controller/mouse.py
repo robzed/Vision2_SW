@@ -50,7 +50,7 @@ else:
 if SIMULATOR:
     from low_level_emulator import serial   #@UnusedImport
 else:
-    import serial   #@UnresolvedImport
+    import serial   #@UnresolvedImport @Reimport
 
 import time
 from collections import deque

@@ -40,13 +40,17 @@ from __builtin__ import True
 # Button A - next calibration mode
 # Button B - abort (without saving, put readings back to previous)
 
+import sys
+if len(sys.argv) == 2 and sys.argv[1] == "SIMULATOR":
+    SIMULATOR = True
+else:
+    SIMULATOR = False
 
-SIMULATOR = True
 if SIMULATOR:
     from low_level_emulator import serial
 else:
     import serial
-    
+
 import time
 from collections import deque
 import os

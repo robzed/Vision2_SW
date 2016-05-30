@@ -71,7 +71,7 @@ BATT_VOLTAGE_PER_CELL_WARNING = 3.8
 BATTERY_VOLTAGE_WARNING = (4 * BATT_VOLTAGE_PER_CELL_WARNING)
 BATT_VOLTAGE_PER_CELL_SHUTDOWN = 3.7
 BATTERY_VOLTAGE_SHUTDOWN = (4 * BATT_VOLTAGE_PER_CELL_SHUTDOWN)
-BATT_VOLTAGE_COUNT = 3      # scans to register level
+BATT_VOLTAGE_COUNT = 10      # scans to register level
 
 ################################################################
 # 
@@ -488,7 +488,9 @@ def EV_BATTERY_VOLTAGE(port, cmd):
                 battery_voltage_mode += 1
                 battery_voltage_count = BATT_VOLTAGE_COUNT
                 # shutdown the Raspberry Pi
-                if battery_voltage_mode == 2:
+                if battery_voltage_mode == 1:
+                    print("Battery Low.      Batt V", battery_voltage, "cell:", battery_voltage/4.0)
+                elif battery_voltage_mode == 2:
                     raise ShutdownRequest
         else:
             battery_voltage_count = BATT_VOLTAGE_COUNT
@@ -1617,7 +1619,7 @@ def main():
             
         except ShutdownRequest:
             if battery_voltage_mode == 2:
-                print("Battery Shutdown")
+                print("Battery Shutdown.      Batt V", battery_voltage, "cell:", battery_voltage/4.0)
             print("Running RPi shutdown command")
             turn_off_motors(port)
             turn_off_ir(port)

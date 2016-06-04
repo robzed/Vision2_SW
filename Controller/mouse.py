@@ -483,7 +483,7 @@ def EV_BATTERY_VOLTAGE(port, cmd):
     global log_battery_voltage
     global battery_voltage_array
     if log_battery_voltage:
-        battery_voltage_array.append(battery_voltage)
+        battery_voltage_array.append( (time.time(), battery_voltage) )
         if len(battery_voltage_array) == 200:
             with open("battery.txt", "a") as f:
                 for item in battery_voltage_array:
@@ -1643,7 +1643,7 @@ def main():
             if log_battery_voltage:
                 with open("battery.txt", "a") as f:
                     for item in battery_voltage_array:
-                        f.write("%s\n" % item)
+                        f.write("%f, %s\n" % (item[0], item[1]))
                 battery_voltage_array = []
 
             print("Running RPi shutdown command")

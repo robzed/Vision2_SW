@@ -72,16 +72,18 @@ distance_turn180 = 224		# turn 180deg
 
 HOLD_KEY_TIME = 1.5     # seconds
 
-BATT_VOLTAGE_PER_CELL_WARNING = 3.8
+BATT_VOLTAGE_PER_CELL_WARNING = 3.9
 BATTERY_VOLTAGE_WARNING = (4 * BATT_VOLTAGE_PER_CELL_WARNING)
-BATT_VOLTAGE_PER_CELL_SHUTDOWN = 3.7
+BATT_VOLTAGE_PER_CELL_SHUTDOWN = 3.6
 BATTERY_VOLTAGE_SHUTDOWN = (4 * BATT_VOLTAGE_PER_CELL_SHUTDOWN)
-BATT_VOLTAGE_COUNT = 10      # scans to register level
+BATT_VOLTAGE_COUNT = 30      # scans to register level
+
+log_battery_voltage = True
 
 ################################################################
 # 
 # Module-level Variables
-# 
+#
 
 #port = None
 move_finished = False
@@ -93,6 +95,8 @@ keys_in_queue = deque()
 
 battery_voltage_mode = 0 # 0 = ok, 1 = low voltage, 2 = shutdown
 battery_voltage_count = BATT_VOLTAGE_COUNT
+
+battery_voltage_array = []
 
 ################################################################
 # 
@@ -476,7 +480,15 @@ def EV_BATTERY_VOLTAGE(port, cmd):
     global battery_voltage_mode
     global battery_voltage_count
     global BATT_VOLTAGE_COUNT
-
+    global log_battery_voltage
+    global battery_voltage_array
+    if log_battery_voltage:
+        battery_voltage_array.append(battery_voltage)
+        if len(battery_voltage_array) == 200:
+            with open("battery.txt", "a") as f:
+                for item in battery_voltage_array:
+                    f.write("%s\n" % item)
+            battery_voltage_array = []
     potential_mode = 0
     if battery_voltage <= BATTERY_VOLTAGE_WARNING:
         potential_mode = 1
@@ -1625,6 +1637,15 @@ def main():
         except ShutdownRequest:
             if battery_voltage_mode == 2:
                 print("Battery Shutdown.      Batt V", battery_voltage, "cell:", battery_voltage/4.0)
+
+            global log_battery_voltage
+            global battery_voltage_array
+            if log_battery_voltage:
+                with open("battery.txt", "a") as f:
+                    for item in battery_voltage_array:
+                        f.write("%s\n" % item)
+                battery_voltage_array = []
+
             print("Running RPi shutdown command")
             turn_off_motors(port)
             turn_off_ir(port)

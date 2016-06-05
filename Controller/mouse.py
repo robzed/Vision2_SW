@@ -1652,9 +1652,8 @@ def main():
             send_led_pattern_command(port, 0x20)
             if not SIMULATOR:
                 os.system("sudo poweroff")
-            else:
-                print("sudo poweroff")
-                exit(1)
-                        
+            print("sudo poweroff")
+            exit(1)
+            
 main()
 

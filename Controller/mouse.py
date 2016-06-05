@@ -487,7 +487,7 @@ def EV_BATTERY_VOLTAGE(port, cmd):
         if len(battery_voltage_array) == 200:
             with open("battery.txt", "a") as f:
                 for item in battery_voltage_array:
-                    f.write("%s\n" % item)
+                    f.write("%f, %s\n" % (item[0], item[1]))
             battery_voltage_array = []
     potential_mode = 0
     if battery_voltage <= BATTERY_VOLTAGE_WARNING:

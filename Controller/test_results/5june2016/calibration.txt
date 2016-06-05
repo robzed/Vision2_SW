@@ -1,0 +1,8 @@
+right_side_threshold=139
+left_45_too_close_threshold=568
+front_long_threshold=15
+left_45_threshold=424
+front_short_threshold=491
+right_45_threshold=411
+right_45_too_close_threshold=577
+left_side_threshold=152

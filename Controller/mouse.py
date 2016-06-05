@@ -1396,7 +1396,7 @@ def run_program(port):
                 send_switch_led_command(port, 2, True)
             else:
                 print("Unknown mode")
-                exit(1)
+                sys.exit(1)
 
             while True:
                 key = get_key(port)
@@ -1653,7 +1653,7 @@ def main():
             if not SIMULATOR:
                 os.system("sudo poweroff")
             print("sudo poweroff")
-            exit(1)
+            sys.exit(1)
             
 main()
 

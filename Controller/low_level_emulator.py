@@ -3,6 +3,7 @@ from collections import deque
 from maze import Maze
 import time
 from keyboard_thread import KeyThread
+import sys
 
 PAUSE_ON_MOVE = False
 AUTOMATIC_KEYS = False
@@ -160,13 +161,13 @@ class serial:
         def _wrdata(self, data):
             if len(data) != 1:
                 print("Expected length 1 string - fix in _wrdata() by splitting")
-                exit(1)
+                sys.exit(1)
             self.replies.append(data)
         
         def _paramcheck(self, cmd, params, num_params):
             if len(params) != num_params:
                 print("Command", hex(ord(cmd)), "had", len(params), "parameters, not", num_params)
-                exit(1)
+                sys.exit(1)
                 
         def _process_cmd(self, cmd, params):
             cmdv = ord(cmd)
@@ -201,7 +202,7 @@ class serial:
                 
                 if self.IR == False:
                     print("Scanning IR not on - QUITTING")
-                    exit(1)
+                    sys.exit(1)
 
                 # bit 0 = front long
                 # bit 1 = front short
@@ -285,7 +286,7 @@ class serial:
 
                 if self.maze.get_front_wall(self.heading, self.row, self.column):
                     print("*** CRASHED ***!")
-                    exit(1)
+                    sys.exit(1)
                     
                 if self.heading == 0:
                     self.row += 1
@@ -414,7 +415,7 @@ class serial:
                 if params != "\xfc\xf8\xfe":
                     print("Unexpected unlock")
                     print("EXITING")
-                    exit(1)
+                    sys.exit(1)
                 if self.locked:
                     self._wrdata("\xC0")
                 else:
@@ -423,7 +424,7 @@ class serial:
             else:
                 print("Unknown command", hex(ord(cmd)))
                 print("EXITING")
-                exit(1)
+                sys.exit(1)
             self._wrdata("\xEF")
             
             self.do_background_processes()
@@ -435,7 +436,7 @@ class serial:
             self.do_background_processes()
             if bytes_to_read != 1:
                 print("bytes to read != 1")
-                exit(1)
+                sys.exit(1)
             if not self.replies:
                 return ""
             else:

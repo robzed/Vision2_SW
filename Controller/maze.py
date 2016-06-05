@@ -2,6 +2,8 @@
 #
 from __future__ import print_function
 
+import sys
+
 class MazeFailedToRead(Exception):
     pass
 
@@ -675,7 +677,7 @@ if __name__ == "__main__":
             for column in range(16):
                 if n.maze_cell_data[row][column] != m.maze_cell_data[row][column]:
                     print("Mismatch in cell data", row, column)
-                    exit(1)
+                    sys.exit(1)
 
 
     test()

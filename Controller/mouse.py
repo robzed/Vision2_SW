@@ -56,6 +56,7 @@ import time
 from collections import deque
 import os
 from maze import Maze
+import datetime
 
 ################################################################
 # 
@@ -79,6 +80,8 @@ BATTERY_VOLTAGE_SHUTDOWN = (4 * BATT_VOLTAGE_PER_CELL_SHUTDOWN)
 BATT_VOLTAGE_COUNT = 30      # scans to register level
 
 log_battery_voltage = True
+now_string = datetime.datetime.now().strftime('%Y-%m-%d-%H-%M-%S-%N')
+battery_filename = "battery_%s.txt" % now_string
 
 ################################################################
 # 
@@ -485,7 +488,7 @@ def EV_BATTERY_VOLTAGE(port, cmd):
     if log_battery_voltage:
         battery_voltage_array.append( (time.time(), battery_voltage) )
         if len(battery_voltage_array) == 200:
-            with open("battery.txt", "a") as f:
+            with open(battery_filename, "a") as f:
                 for item in battery_voltage_array:
                     f.write("%f, %s\n" % (item[0], item[1]))
             battery_voltage_array = []
@@ -1641,7 +1644,7 @@ def main():
             global log_battery_voltage
             global battery_voltage_array
             if log_battery_voltage:
-                with open("battery.txt", "a") as f:
+                with open(battery_filename, "a") as f:
                     for item in battery_voltage_array:
                         f.write("%f, %s\n" % (item[0], item[1]))
                 battery_voltage_array = []

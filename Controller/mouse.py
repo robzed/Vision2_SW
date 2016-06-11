@@ -81,7 +81,7 @@ BATTERY_VOLTAGE_SHUTDOWN = (4 * BATT_VOLTAGE_PER_CELL_SHUTDOWN)
 BATT_VOLTAGE_COUNT = 30      # scans to register level
 
 log_battery_voltage = True
-now_string = datetime.datetime.now().strftime('%Y-%m-%d-%H-%M-%S-%N')
+now_string = datetime.datetime.now().strftime('%Y-%m-%d-%H-%M-%S')
 battery_filename = "battery_%s.txt" % now_string
 
 ################################################################

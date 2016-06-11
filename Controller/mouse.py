@@ -1329,18 +1329,12 @@ def do_test_mode(port):
     while True:
         if (read_accurate_time() - start) > 0.2:
             flash = not flash
-            if flash:
-                send_switch_led_command(port, 1, True)
-                send_switch_led_command(port, 2, True)
-                if mode == 1 or mode == 3:
-                    send_switch_led_command(port, 3, True)
-                if mode == 2:
-                    send_switch_led_command(port, 4, True)
-            else:
-                send_switch_led_command(port, 1, False)
-                send_switch_led_command(port, 2, False)
-                send_switch_led_command(port, 3, False)
-                send_switch_led_command(port, 4, False)
+            send_switch_led_command(port, 1, flash)
+            send_switch_led_command(port, 2, flash)
+            if mode == 1:
+                send_switch_led_command(port, 3, flash)
+            elif mode == 2:
+                send_switch_led_command(port, 4, flash)
 
             if wait_to_go is not None:
                 wait_to_go -= 1
@@ -1370,7 +1364,7 @@ def do_test_mode(port):
                 wait_to_go = 5
             elif key == 'b':
                 mode += 1
-                if mode == 4:
+                if mode == 3:
                     mode = 0
             elif key == 'B' or key == 'b':
                 # exit key

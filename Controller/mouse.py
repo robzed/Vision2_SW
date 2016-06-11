@@ -69,7 +69,8 @@ print_map_in_progress = True
 distance_cell	= 347			# adjust these values for cell distance		
 distance_turnl90	= 112		# turn left 90deg
 distance_turnr90	= 112		# turn right 90deg
-distance_turn180 = 224		# turn 180deg
+distance_turn180 = 224		    # turn 180deg
+wall_edge_correction_factor = 162 # previously 230
 
 HOLD_KEY_TIME = 1.5     # seconds
 
@@ -373,7 +374,7 @@ def set_default_distances(port):
     #set_speed(port, speed)
     set_steering_correction(port, 10)           # might need to fixed for higher speeds
     set_cell_distance(port, distance_cell)      # 
-    set_wall_edge_correction(port, 230)
+    set_wall_edge_correction(port, wall_edge_correction_factor)
     set_distance_to_test(port, 300)
 
 

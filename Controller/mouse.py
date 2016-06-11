@@ -37,9 +37,15 @@ from __builtin__ import True
 # LED 6 = Slow flash if running
 #         Fast flash if battery problem (going to shutdown soon)
 #
-#
 # Button A - next calibration mode
 # Button B - abort (without saving, put readings back to previous)
+#
+################################################################
+# TEST MODE
+# 
+# LED1/LED2 = Flashing
+# LED3/LED4 = mode (0=straight, 3=right, 4=left)
+#
 
 import sys
 if len(sys.argv) == 2 and sys.argv[1] == "SIMULATOR":
@@ -1319,32 +1325,53 @@ def do_test_mode(port):
     
     wait_to_go = None
     flash = True
+    mode = 0
     while True:
         if (read_accurate_time() - start) > 0.2:
             flash = not flash
             if flash:
                 send_switch_led_command(port, 1, True)
                 send_switch_led_command(port, 2, True)
+                if mode == 1 or mode == 3:
+                    send_switch_led_command(port, 3, True)
+                if mode == 2:
+                    send_switch_led_command(port, 4, True)
             else:
                 send_switch_led_command(port, 1, False)
                 send_switch_led_command(port, 2, False)
+                send_switch_led_command(port, 3, False)
+                send_switch_led_command(port, 4, False)
 
             if wait_to_go is not None:
                 wait_to_go -= 1
                 if wait_to_go == 0:
                     wait_to_go = None
                     
-                    move_forward(port, distance_cell)
-                    wait_for_move_to_finish(port)
-                    turn_off_motors(port)
-            
+                    if mode == 0:
+                        move_forward(port, distance_cell)
+                        wait_for_move_to_finish(port)
+                        turn_off_motors(port)
+                    if mode == 1:
+                        turn_off_ir(port)
+                        move_right(port, distance_turnr90)
+                        wait_for_move_to_finish(port)
+                        turn_on_ir(port)
+                    if mode == 2:
+                        turn_off_ir(port)
+                        move_left(port, distance_turnr90)
+                        wait_for_move_to_finish(port)
+                        turn_on_ir(port)
+                        
             start = read_accurate_time()
 
         if keys_in_queue:
             key = get_key(port)
             if key == "a":
                 wait_to_go = 5
-                
+            elif key == 'b':
+                mode += 1
+                if mode == 4:
+                    mode = 0
             elif key == 'B' or key == 'b':
                 # exit key
                 break

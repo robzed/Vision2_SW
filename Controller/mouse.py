@@ -1349,11 +1349,13 @@ def do_test_mode(port):
                         turn_off_ir(port)
                         move_right(port, distance_turnr90)
                         wait_for_move_to_finish(port)
+                        turn_off_motors(port)
                         turn_on_ir(port)
                     if mode == 2:
                         turn_off_ir(port)
                         move_left(port, distance_turnr90)
                         wait_for_move_to_finish(port)
+                        turn_off_motors(port)
                         turn_on_ir(port)
                         
             start = read_accurate_time()

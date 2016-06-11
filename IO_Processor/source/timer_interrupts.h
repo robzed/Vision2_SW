@@ -25,6 +25,8 @@ void timer_fine_to_move_another_cell(void);
 void disable_IR_scanning(void);
 void enable_IR_scanning(void);
 
+void reset_wall_edge_flag(void);
+
 void set_cell_distance(int);	//adjust these values for cell distance		
 
 

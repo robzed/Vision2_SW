@@ -225,9 +225,12 @@ void __attribute__((__interrupt__,shadow,auto_psv))_T2Interrupt(void)
 			T4CONbits.TON=0;		//right motor timer stop
 			l_index=r_index=0;
 		}
-	if(d_t_g_flag){d_t_g+=cell;d_t_g_flag=0;} //d_t_g_flag = good to go extra cell	
-	if(wall_edge_flag&&(d_t_g<cell)){d_t_g=wall_edge_to_crt;
-								wall_edge_flag=0;}
+	if(d_t_g_flag) { d_t_g+=cell; d_t_g_flag=0; } //d_t_g_flag = good to go extra cell
+	if(wall_edge_flag)
+	{
+		if (d_t_g < cell) { d_t_g = wall_edge_to_crt; }
+		wall_edge_flag=0;
+	}
 										// front error correction
 	dist_to_test--;
 	if (dist_to_test==0) {dist_test_flag=1; dist_to_test+=cell;}
@@ -370,7 +373,12 @@ void disable_IR_scanning(void)
     T1CONbits.TON=0;
 }
 
-
+void reset_wall_edge_flag(void)
+{
+	wall_edge_flag = 0;
+	old_left_wall = 0;
+	old_right_wall = 0;
+}
 
 
 void set_cell_distance(int d)

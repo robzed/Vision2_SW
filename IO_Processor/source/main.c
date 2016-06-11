@@ -612,9 +612,11 @@ int main(int argc, char** argv)
                             {
                                 case 0: // motors off
                                     en_mot = mot_off;
+                                    reset_wall_edge_flag();
                                     break;
                                 case 1: // forward (parameter = distance)
                                     en_mot = mot_on;
+                                    reset_wall_edge_flag();
                                     fwd();
                                     timer_move(serial_get_int16(), set_speed, set_corrector);
                                     timer_running = true;

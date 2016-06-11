@@ -62,8 +62,8 @@ typedef unsigned char cmd_t;
 
 // 0xA0 unused
 // 0xB0 unused
-#define CMD_TYPE_MOVE_COMMANDS  0xC     // nnnn = 0 stop motors
-                                        // nnnn = 1 forward + 2 bytes distance
+#define CMD_TYPE_MOVE_COMMANDS  0xC     // nnnn = 0 stop motors. Also resets wall lock.
+                                        // nnnn = 1 forward + 2 bytes distance. Also resets wall lock.
                                         // nnnn = 2 right + 2 bytes distance
                                         // nnnn = 3 left + 2 bytes distance
                                         // nnnn = 4 set speed + 2 bytes distance

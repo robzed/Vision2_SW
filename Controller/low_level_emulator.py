@@ -11,10 +11,54 @@ AUTOMATIC_KEYS = False
 EMULATOR_BATTERY_CELL_VOLTAGE = 4.24 #4.25 #3.8 #3.7
 EMULATOR_BATTERY_ADC = 0x3FF & int(((4*EMULATOR_BATTERY_CELL_VOLTAGE) *1023 * 12000) / ((33000+12000) * 5 * 0.95))
 
+
+class intermediate_writer:
+    def __init__(self, dest) :
+        self.dest = dest
+        self.led_text = ""
+        self.led_print = False
+        self.led_end = time.time() + 1
+        
+    def write(self, text) :
+        if self.led_print:
+            if text == "\n":
+                self.led_text += text
+            else:
+                self.led_text = text
+            self.led_end = time.time() + 0.05
+        else:
+            if len(self.led_text):
+                self.dest.write(self.led_text)
+                self.led_text = ""
+                self.led_end = time.time() + 1
+            self.dest.write(text)
+
+    def start_led_print(self):
+        self.led_print = True
+    
+    def end_led_print(self):
+        self.led_print = False
+
+    def flush_leds(self):
+        self.end_led_print()
+        text = self.led_text
+        self.led_text = ""
+        self.write(text)
+        self.led_end = time.time() + 1
+
+    def do_delayed_LEDs(self):
+        if self.led_end < time.time():
+            self.flush_leds()
+
 class serial:
     class Serial:
         
         def __init__(self, path, baudrate = 57600, timeout = 0.1):
+            
+            #self.saved = sys.stdout
+            self.iw = intermediate_writer(sys.stdout)
+            sys.stdout = self.iw
+
             self.replies = deque()
             self.locked = True
             
@@ -71,7 +115,9 @@ class serial:
             LED9 = self.LEDs[8]
             LEDs = "%s   %s< ^%s >%s" % ("".join(self.LEDs[0:6])[::-1], LED7, LED8, LED9)
             if LEDs != self.last_LEDs:
+                self.iw.start_led_print()
                 print(LEDs)
+                self.iw.end_led_print()
                 self.last_LEDs = LEDs
                 
         def set_LED(self, num):
@@ -83,6 +129,7 @@ class serial:
         def do_background_processes(self):
             self.do_timers()
             self.do_keys()
+            self.iw.do_delayed_LEDs()
             
         def do_timers(self):
             if time.time() > self.target_time:

@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 #
 from __future__ import print_function
-from __builtin__ import True
+from __builtin__ import True, False
 
 ################################################################
 # NORMAL MODE
@@ -289,6 +289,10 @@ def set_speed(port, speed):
 def send_get_wall_info(port):
     if verbose: print("Get wall IR")
     send_message(port, "\x98")
+
+def send_get_45_sensor_info(port):
+    if verbose: print("Get 45 IR")
+    send_message(port, "\x99")
 
 def get_front_level(port):
     send_message(port, "\x9A")
@@ -688,6 +692,30 @@ def EV_IR_FRONT_SIDE_STATE(port, cmd):
     front_long_wall_sense = cmd&1
     got_wall_info = True
 
+
+got_45_info = False
+left_45_sense = False
+right_45_sense = False
+left_45_too_close_sense = False
+right_45_too_close_sense = False
+
+# define EV_IR_45_STATE          0x50        // bit 0 = left 45
+#                                           // bit 1 = right 45
+#                                           // bit 2 = left 45 too close
+#                                           // bit 3 = right 45 too close
+def EV_IR_45_STATE(port, cmd):
+    global got_45_info
+    global left_45_sense
+    global right_45_sense
+    global left_45_too_close_sense
+    global right_45_too_close_sense
+    left_45_sense = cmd & 1
+    right_45_sense = cmd & 2
+    left_45_too_close_sense = cmd & 4
+    right_45_too_close_sense = cmd & 8
+    got_45_info = True
+
+
 """
 def EV_IR_FRONT_SIDE_STATE_0(port, cmd):
     # we use short sensor for wall measurement
@@ -816,22 +844,23 @@ command_handlers = {
     0x4E: EV_IR_FRONT_SIDE_STATE,
     0x4F: EV_IR_FRONT_SIDE_STATE,
 
-#    0x50: EV_IR_45_STATE,
-#    0x51: EV_IR_45_STATE,
-#    0x52: EV_IR_45_STATE,
-#    0x53: EV_IR_45_STATE,
-#    0x54: EV_IR_45_STATE,
-#    0x55: EV_IR_45_STATE,
-#    0x56: EV_IR_45_STATE,
-#    0x57: EV_IR_45_STATE,
-#    0x58: EV_IR_45_STATE,
-#    0x59: EV_IR_45_STATE,
-#    0x5A: EV_IR_45_STATE,
-#    0x5B: EV_IR_45_STATE,
-#    0x5C: EV_IR_45_STATE,
-#    0x5D: EV_IR_45_STATE,
-#    0x5E: EV_IR_45_STATE,
-#    0x5F: EV_IR_45_STATE,
+    # not really used (except for steering, which is low level code)
+    0x50: EV_IR_45_STATE,
+    0x51: EV_IR_45_STATE,
+    0x52: EV_IR_45_STATE,
+    0x53: EV_IR_45_STATE,
+    0x54: EV_IR_45_STATE,
+    0x55: EV_IR_45_STATE,
+    0x56: EV_IR_45_STATE,
+    0x57: EV_IR_45_STATE,
+    0x58: EV_IR_45_STATE,
+    0x59: EV_IR_45_STATE,
+    0x5A: EV_IR_45_STATE,
+    0x5B: EV_IR_45_STATE,
+    0x5C: EV_IR_45_STATE,
+    0x5D: EV_IR_45_STATE,
+    0x5E: EV_IR_45_STATE,
+    0x5F: EV_IR_45_STATE,
 
     0x61: EV_IR_FRONT_LEVEL,
     0x62: EV_L90_LEVEL,
@@ -905,13 +934,6 @@ def get_key(port):
             return keys_in_queue.popleft()
 
 
-#
-got_wall_info = False
-left_wall_sense = False
-right_wall_sense = False
-front_short_wall_sense = False
-front_long_wall_sense = False
-
     
 def get_wall_info(port):
     global got_wall_info
@@ -922,6 +944,16 @@ def get_wall_info(port):
         event_processor(port)
     
     return left_wall_sense, front_short_wall_sense, right_wall_sense
+
+
+def get_45_info(port):
+    global got_45_info
+    got_45_info = False
+    
+    send_get_45_sensor_info(port)
+    while not got_45_info:
+        event_processor(port)
+
 
 def scan_for_walls(port, m, robot_direction, robot_row, robot_column):
     left, front, right = get_wall_info(port)
@@ -1288,7 +1320,7 @@ def do_calibration(port):
                 if read_data and flash:
                     do_calibration_LEDs(port, 0)
                 else:
-                    do_calibration_LEDs(port, cal_state+1)
+                    do_calibration_LEDs(port, cal_state + 1)
 
             update_state += 1
             
@@ -1330,8 +1362,9 @@ def do_test_mode(port):
         if (read_accurate_time() - start) > 0.2:
             flash = not flash
             send_switch_led_command(port, 1, flash)
-            send_switch_led_command(port, 2, flash)
-            if mode == 1:
+            if mode != 3:
+                send_switch_led_command(port, 2, flash)
+            if mode == 1 or mode == 3:
                 send_switch_led_command(port, 3, flash)
             elif mode == 2:
                 send_switch_led_command(port, 4, flash)
@@ -1345,28 +1378,57 @@ def do_test_mode(port):
                         move_forward(port, distance_cell)
                         wait_for_move_to_finish(port)
                         turn_off_motors(port)
-                    if mode == 1:
+                    elif mode == 1:
                         turn_off_ir(port)
                         move_right(port, distance_turnr90)
                         wait_for_move_to_finish(port)
                         turn_off_motors(port)
                         turn_on_ir(port)
-                    if mode == 2:
+                    elif mode == 2:
                         turn_off_ir(port)
                         move_left(port, distance_turnr90)
                         wait_for_move_to_finish(port)
                         turn_off_motors(port)
                         turn_on_ir(port)
+                    elif mode == 3:
+                        while not keys_in_queue:
+                            get_wall_info(port)
+                            get_45_info(port)
+
+                            if left_wall_sense: L = "  "
+                            else: L = "L<"
+                            if right_wall_sense: R = "  "
+                            else: R = ">R"
+                            if front_short_wall_sense: FS = "    "
+                            else: FS = "_FS_"
+                            if front_long_wall_sense: FL = "    "
+                            else: FL = "^FL^"
+
+                            if left_45_sense: L45 = "\\"
+                            else: L45 = " "
+                            if right_45_sense: R45 = "/"
+                            else: R45 = " "
+                            if left_45_too_close_sense: LS45 = "\\"
+                            else: LS45 = " "
+                            if right_45_too_close_sense: RS45 = "/"
+                            else: RS45 = " "
+                            print(L + L45 + LS45 + FS + FL + RS45 + R45 + R)
+                           
+                            wait_seconds(port, 0.3)
+
+                        # ignore this key
+                        get_key(port)
                         
             start = read_accurate_time()
 
         if keys_in_queue:
             key = get_key(port)
+            turn_off_all_LEDs(port)
             if key == "a":
                 wait_to_go = 5
             elif key == 'b':
                 mode += 1
-                if mode == 3:
+                if mode == 4:
                     mode = 0
             elif key == 'B' or key == 'b':
                 # exit key

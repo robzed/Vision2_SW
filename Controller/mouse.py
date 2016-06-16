@@ -1155,6 +1155,13 @@ def calibration_for_position(port, read_data, position_store):
     return False
 
 def calculate_and_configure(port, read_data, _):
+    global left_count
+    global right_count
+    global far_left_count
+    global far_right_count
+    global middle_count
+    global front_center
+    global front_long_count
     #print(left_count)
     #print(right_count)
     #print(middle_count)

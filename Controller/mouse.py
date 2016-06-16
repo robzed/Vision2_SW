@@ -1139,52 +1139,22 @@ def grab_values(target):
 
 left_count = {}
 right_count = {}
+far_left_count = {}
+far_right_count = {}
 middle_count = {}
 front_center = {}
 front_long_count = {}
 cal_IR = {}
 
-def calibration_left_close(port, read_data):
+def calibration_for_position(port, read_data, position_store):
     if read_data:
-        c = left_count
+        c = position_store
         grab_values(c)
-        if c['r90count'] >= 10 and c['r45count'] >= 10 and c['l90count'] >= 10 and c['l45count'] >= 10:
+        if c['r90count'] >= 10 and c['r45count'] >= 10 and c['l90count'] >= 10 and c['l45count'] >= 10 and c['frcount'] >= 10:
             return True
     return False
 
-def calibration_middle(port, read_data):
-    if read_data:
-        c = middle_count
-        grab_values(c)
-        if c['r90count'] >= 10 and c['r45count'] >= 10 and c['l90count'] >= 10 and c['l45count'] >= 10:
-            return True
-    return False
-
-def calibration_right_close(port, read_data):
-    if read_data:
-        c = right_count
-        grab_values(c)
-        if c['r90count'] >= 10 and c['r45count'] >= 10 and c['l90count'] >= 10 and c['l45count'] >= 10:
-            return True
-    return False
-
-def calibration_front_same_cell(port, read_data):
-    if read_data:
-        c = front_center
-        grab_values(c)
-        if c['frcount'] >= 10:
-            return True
-    return False
-
-def calibration_front_long_cell(port, read_data):
-    if read_data:
-        c = front_long_count
-        grab_values(c)
-        if c['frcount'] >= 10:
-            return True
-    return False
-
-def calculate_and_configure(port, read_data):
+def calculate_and_configure(port, read_data, _):
     #print(left_count)
     #print(right_count)
     #print(middle_count)
@@ -1197,16 +1167,16 @@ def calculate_and_configure(port, read_data):
     # diagonal
     # for too close we select 2/3 and for a bit close 1/3
     # between 1cm away and middle
-    l45_diff = int((left_count['l45max'] - middle_count['l45min']) / 3.0)
-    r45_diff = int((right_count['r45max'] - middle_count['r45min']) / 3.0)
-    cal_IR["left_45_threshold"] = l45_diff + middle_count['l45min']
-    cal_IR["right_45_threshold"] = r45_diff + middle_count['r45min']
-    cal_IR["left_45_too_close_threshold"] = (2 * l45_diff) + middle_count['l45min']
-    cal_IR["right_45_too_close_threshold"] = (2 * r45_diff) + middle_count['r45min']
+    l45_diff = left_count['l45max'] - middle_count['l45min']
+    r45_diff = right_count['r45max'] - middle_count['r45min']
+    cal_IR["left_45_threshold"] = int(l45_diff/ 2.0 ) + middle_count['l45min']
+    cal_IR["right_45_threshold"] = int(r45_diff / 2.0) + middle_count['r45min']
+    cal_IR["left_45_too_close_threshold"] = left_count['l45min']
+    cal_IR["right_45_too_close_threshold"] = right_count['r45min']
 
     # wall detect - detect over other side
-    cal_IR["left_side_threshold"] = right_count['l90min']
-    cal_IR["right_side_threshold"] = left_count['r90min']
+    cal_IR["left_side_threshold"] = far_right_count['l90min']
+    cal_IR["right_side_threshold"] = far_left_count['r90min']
     
     # front wall
     cal_IR["front_long_threshold"] = front_long_count['frmin']
@@ -1215,12 +1185,12 @@ def calculate_and_configure(port, read_data):
     set_default_IR_thresholds(port, cal_IR)
     return True
 
-def calibration_test(port, read_data):
+def calibration_test(port, read_data, _):
     # if True, then exit, otherwise just wait by returning False...
     return read_data
 
 
-def calibration_save_and_quit(port, read_data):
+def calibration_save_and_quit(port, read_data, _):
     print("Save calibration")
     write_config_file('calibration.txt', cal_IR)
     return None
@@ -1260,14 +1230,16 @@ def load_IR_calibration(port):
 
 
 cal_dispatcher = [
-    (calibration_left_close, "Move to 1cm from left wall"),
-    (calibration_middle, "Move to middle between left and right walls"),
-    (calibration_right_close, "Move to 1cm from right wall"),
-    (calibration_front_same_cell, "Move to center of cell with wall in front"),
-    (calibration_front_long_cell,  "Move front of mouse to 1 cell away from front wall"),
-    (calculate_and_configure, "Calculating calibration"),
-    (calibration_test, "Test sensor LEDs now"),
-    (calibration_save_and_quit, "Saving sensor calibration"),
+    (calibration_for_position, "Move to 0cm from left wall", far_left_count),
+    (calibration_for_position, "Move to 1.5cm from left wall", left_count),
+    (calibration_for_position, "Move to middle between left and right walls", middle_count),
+    (calibration_for_position, "Move to 1.5cm from right wall", right_count),
+    (calibration_for_position, "Move to 0cm from right wall", far_right_count),
+    (calibration_for_position, "Move to furthest away from front wall but most of robot in cell", front_center),
+    (calibration_for_position,  "Move front of mouse to 1 cell away from front wall", front_long_count),
+    (calculate_and_configure, "Calculating calibration", None),
+    (calibration_test, "Test sensor LEDs now", None),
+    (calibration_save_and_quit, "Saving sensor calibration", None),
 ]
 
 
@@ -1327,7 +1299,8 @@ def do_calibration(port):
             start = read_accurate_time()
 
         # do the testing
-        need_step = cal_dispatcher[cal_state][0](port, read_data)
+        entry = cal_dispatcher[cal_state]
+        need_step = entry[0](port, read_data, entry[2])
         if need_step is None:
             break
         elif need_step:

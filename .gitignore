@@ -3,3 +3,11 @@ IO_Processor/dist/
 IO_Processor/nbproject/
 IO_Processor/Makefile
 *.pyc
+*.swp
+
+# temporarily ignore some files
+test_results/
+V-r100.c
+battery*.txt
+.settings/
+

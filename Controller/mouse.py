@@ -1178,8 +1178,8 @@ def calculate_and_configure(port, read_data, _):
     r45_diff = right_count['r45max'] - middle_count['r45min']
     cal_IR["left_45_threshold"] = int(l45_diff/ 2.0 ) + middle_count['l45min']
     cal_IR["right_45_threshold"] = int(r45_diff / 2.0) + middle_count['r45min']
-    cal_IR["left_45_too_close_threshold"] = left_count['l45min']
-    cal_IR["right_45_too_close_threshold"] = right_count['r45min']
+    cal_IR["left_45_too_close_threshold"] = int(l45_diff/ 1.4 ) + middle_count['l45min']
+    cal_IR["right_45_too_close_threshold"] = int(r45_diff / 1.4) + middle_count['r45min']
 
     # wall detect - detect over other side
     cal_IR["left_side_threshold"] = far_right_count['l90min']

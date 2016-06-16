@@ -1259,6 +1259,8 @@ def do_calibration(port):
 
     global left_count
     global right_count
+    global far_left_count
+    global far_right_count
     global middle_count
     global front_center
     global front_long_count
@@ -1267,6 +1269,9 @@ def do_calibration(port):
     middle_count = {}
     front_center = {}
     front_long_count = {}
+    far_left_count = {}
+    far_right_count = {}
+
 
     start = read_accurate_time()
     turn_on_ir(port)

@@ -1236,20 +1236,6 @@ def load_IR_calibration(port):
     set_default_IR_thresholds(port, IR_threshold_defaults)
 
 
-cal_dispatcher = [
-    (calibration_for_position, "Move to 0cm from left wall", far_left_count),
-    (calibration_for_position, "Move to 1.5cm from left wall", left_count),
-    (calibration_for_position, "Move to middle between left and right walls", middle_count),
-    (calibration_for_position, "Move to 1.5cm from right wall", right_count),
-    (calibration_for_position, "Move to 0cm from right wall", far_right_count),
-    (calibration_for_position, "Move to furthest away from front wall but most of robot in cell", front_center),
-    (calibration_for_position,  "Move front of mouse to 1 cell away from front wall", front_long_count),
-    (calculate_and_configure, "Calculating calibration", None),
-    (calibration_test, "Test sensor LEDs now", None),
-    (calibration_save_and_quit, "Saving sensor calibration", None),
-]
-
-
 def do_calibration(port):
     print("Start Calibration")
 
@@ -1278,6 +1264,19 @@ def do_calibration(port):
     front_long_count = {}
     far_left_count = {}
     far_right_count = {}
+
+    cal_dispatcher = [
+        (calibration_for_position, "Move to 0cm from left wall", far_left_count),
+        (calibration_for_position, "Move to 1.5cm from left wall", left_count),
+        (calibration_for_position, "Move to middle between left and right walls", middle_count),
+        (calibration_for_position, "Move to 1.5cm from right wall", right_count),
+        (calibration_for_position, "Move to 0cm from right wall", far_right_count),
+        (calibration_for_position, "Move to furthest away from front wall but most of robot in cell", front_center),
+        (calibration_for_position,  "Move front of mouse to 1 cell away from front wall", front_long_count),
+        (calculate_and_configure, "Calculating calibration", None),
+        (calibration_test, "Test sensor LEDs now", None),
+        (calibration_save_and_quit, "Saving sensor calibration", None),
+    ]
 
 
     start = read_accurate_time()

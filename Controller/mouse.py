@@ -1752,6 +1752,8 @@ def main():
             turn_off_motors(port)
             turn_off_ir(port)
             send_led_pattern_command(port, 0x20)
+            # let everything settle
+            wait_seconds(port, 0.25)
             if not SIMULATOR:
                 os.system("sudo poweroff")
             print("sudo poweroff")

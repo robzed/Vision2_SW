@@ -1168,7 +1168,7 @@ def calculate_and_configure(port, read_data, _):
     #print(front_center)
     #print(front_long_count)
     try:
-        with open('cal_raw_data.txt', 'w') as f:
+        with open('cal_raw_data_%s.txt' % datetime.datetime.now().strftime('%Y-%m-%d-%H-%M-%S'), 'w') as f:
             f.write("\nfar left\n")
             f.write(str(far_left_count))
             f.write("left\n")

@@ -1167,7 +1167,26 @@ def calculate_and_configure(port, read_data, _):
     #print(middle_count)
     #print(front_center)
     #print(front_long_count)
+    try:
+        with open('cal_raw_data.txt', 'w') as f:
+            f.write("\nfar left\n")
+            f.write(str(far_left_count))
+            f.write("left\n")
+            f.write(str(left_count))
+            f.write("\nmiddle\n")
+            f.write(str(middle_count))
+            f.write("\nright\n")
+            f.write(str(right_count))
+            f.write("\nfar right\n")
+            f.write(str(far_right_count))
 
+            f.write("\n\nfront\n")
+            f.write(str(front_center))
+            f.write("\nfront long\n")
+            f.write(str(front_long_count))
+    except IOError:
+        pass
+    
     #
     # We will need to test these on a real mouse
     #

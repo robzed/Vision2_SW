@@ -1395,14 +1395,14 @@ def do_test_mode(port):
                             get_wall_info(port)
                             get_45_info(port)
 
-                            if left_wall_sense: L = "  "
-                            else: L = "L<"
-                            if right_wall_sense: R = "  "
-                            else: R = ">R"
-                            if front_short_wall_sense: FS = "    "
-                            else: FS = "_FS_"
-                            if front_long_wall_sense: FL = "    "
-                            else: FL = "^FL^"
+                            if left_wall_sense: L = "L<"
+                            else: L = "  "
+                            if right_wall_sense: R = ">R"
+                            else: R = "  "
+                            if front_short_wall_sense: FS = "_FS_"
+                            else: FS = "    "
+                            if front_long_wall_sense: FL = "^FL^"
+                            else: FL = "    "
 
                             if left_45_sense: L45 = "\\"
                             else: L45 = " "

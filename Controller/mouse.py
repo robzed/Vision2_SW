@@ -1397,24 +1397,34 @@ def do_test_mode(port):
 
                             if left_wall_sense: L = "L<"
                             else: L = "  "
+                            send_switch_led_command(port, 5, left_wall_sense)
                             if right_wall_sense: R = ">R"
-                            else: R = "  "
+                            else: R = "  "  
+                            send_switch_led_command(port, 2, right_wall_sense)
+
                             if front_short_wall_sense: FS = "_FS_"
                             else: FS = "    "
+                            send_switch_led_command(port, 1, front_short_wall_sense)
                             if front_long_wall_sense: FL = "^FL^"
                             else: FL = "    "
+
+                            wait_seconds(port, 0.1)
 
                             if left_45_sense: L45 = "\\"
                             else: L45 = " "
                             if right_45_sense: R45 = "/"
                             else: R45 = " "
+
                             if left_45_too_close_sense: LS45 = "\\"
                             else: LS45 = " "
+                            send_switch_led_command(port, 4, left_45_too_close_sense)
                             if right_45_too_close_sense: RS45 = "/"
                             else: RS45 = " "
+                            send_switch_led_command(port, 3, right_45_too_close_sense)
+
                             print(L + L45 + LS45 + FS + FL + RS45 + R45 + R)
                            
-                            wait_seconds(port, 0.3)
+                            wait_seconds(port, 0.2)
 
                         # ignore this key
                         get_key(port)

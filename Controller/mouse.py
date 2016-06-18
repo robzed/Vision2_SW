@@ -1782,7 +1782,9 @@ class serial_snooper:
         self.data = []
         
     def read(self, num_chars):
-        m = self.read(num_chars)
+        m = self.port.read(num_chars)
+        self.data.append(0)
+        self.data.append(time.time())
         self.data.append(m)
         return m
     
@@ -1790,12 +1792,28 @@ class serial_snooper:
         return self.port.inWaiting()
 
     def write(self, message):
+        self.data.append(1)
+        self.data.append(time.time())
+        self.data.append(message)
         return self.port.write(message)
 
     def print_all(self):
+        mode = 0
+        time = "?"
+        is_write = 0
         for e in self.data:
-            print(e.encode("hex"))
-            
+            if mode == 0:
+                is_write = e
+                mode = 1
+            elif mode == 1:
+                time = e
+                mode = 2
+            else:
+                if is_write:
+                    print(time, e.encode("hex"))
+                else:
+                    print(time, " ", e.encode("hex"))
+                mode = 0
 
 def main():
     port = serial.Serial("/dev/ttyAMA0", baudrate = 57600, timeout = 0.1)

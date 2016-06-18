@@ -514,7 +514,7 @@ int main(int argc, char** argv)
                             int right = right_speed_sample;
                             speed_sample_report = 0;
 
-                            char ev_code = EV_SPEED_SAMPLE + (left>256)?1:0 + (right>256)?2:0;
+                            char ev_code = EV_SPEED_SAMPLE + ((left>256) ? 1 : 0) + ((right>256) ? 2 : 0);
 
                             send_event(ev_code);
                             send_event(left & 0xFF);

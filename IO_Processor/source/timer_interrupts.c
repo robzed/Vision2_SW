@@ -393,7 +393,7 @@ void timer_move(int distance, unsigned int speed, int steering_corrector)
 
 bool is_timer_still_moving(void)
 {
-    return T2CONbits.TON || T4CONbits.TON;
+    return T2CONbits.TON; //  || T4CONbits.TON; // we only need to check one TxCONbits because they are both cleared at the same time
 }
 
 void timer_fine_to_move_another_cell(void)

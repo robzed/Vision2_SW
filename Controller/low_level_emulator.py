@@ -156,6 +156,10 @@ class serial:
                     self._wrdata(chr(0x10+(EMULATOR_BATTERY_ADC>>8)))
                     self._wrdata(chr(EMULATOR_BATTERY_ADC & 0xFF))
                     self.target_time = time.time() + 0.3
+                    # test for EV Speed sample
+                    #self._wrdata(chr(0x22))
+                    #self._wrdata(chr(0x02))
+                    #self._wrdata(chr(0x02))
 
         def do_keys(self):
             if self.key_delayed is not None:

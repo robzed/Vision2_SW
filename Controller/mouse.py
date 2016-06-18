@@ -831,6 +831,9 @@ def EV_SPEED_SAMPLE_11(port, cmd):
     right = ord(port.read(1))+256
     print("Speed", left, right)
 
+def EV_STEERING_TRIM_REPORT(port, cmd):
+    print("Trim", cmd&0x0F)
+    
 ################################################################
 # 
 # Event Processor 
@@ -906,6 +909,23 @@ command_handlers = {
     0x64: EV_R90_LEVEL,
     0x65: EV_R45_LEVEL,
 
+    0x70: EV_STEERING_TRIM_REPORT,
+    0x71: EV_STEERING_TRIM_REPORT,
+    0x72: EV_STEERING_TRIM_REPORT,
+    0x73: EV_STEERING_TRIM_REPORT,
+    0x74: EV_STEERING_TRIM_REPORT,
+    0x75: EV_STEERING_TRIM_REPORT,
+    0x76: EV_STEERING_TRIM_REPORT,
+    0x77: EV_STEERING_TRIM_REPORT,
+    0x78: EV_STEERING_TRIM_REPORT,
+    0x79: EV_STEERING_TRIM_REPORT,
+    0x7A: EV_STEERING_TRIM_REPORT,
+    0x7B: EV_STEERING_TRIM_REPORT,
+    0x7C: EV_STEERING_TRIM_REPORT,
+    0x7D: EV_STEERING_TRIM_REPORT,
+    0x7E: EV_STEERING_TRIM_REPORT,
+    0x7F: EV_STEERING_TRIM_REPORT,
+    
     # unlocking
     0xC0: EV_UNLOCK_FROM_LOCK,
     0xC1: EV_UNLOCK_FROM_UNLOCK,

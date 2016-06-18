@@ -158,6 +158,7 @@ typedef unsigned char cmd_t;
 
 
 #define EV_STEERING_TRIM_REPORT	0x70		// large_right:8,large_left:4, right:2, left:1
+// 0x70 to 0x7F used
 
 // unlocking
 #define EV_UNLOCK_FROM_LOCK     0xC0

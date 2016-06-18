@@ -25,9 +25,10 @@ static volatile unsigned int r_speed=50;        // maximum speed right
 
 // These trim flags communicate steering corrections between 
 // IR sensor timer interrupt and motor timer interrupt
-static unsigned int left_trim_flag=0;  // adjust left (internal)
+static volatile unsigned int left_trim_flag=0;  // adjust left (internal)
 static volatile unsigned int right_trim_flag=0; // adjust right (internal)
-static volatile unsigned int large_trim_flag=0; // large adjust required (internal)
+static volatile unsigned char large_left_trim_flag=0; // large adjust required (internal)
+static volatile unsigned char large_right_trim_flag=0; // large adjust required (internal)
 
 static unsigned int sensor_count=1;         // the IR sensor read order index (internal)
 
@@ -65,6 +66,7 @@ static int l45_threshold = 360;   // steering
 static int r45_toclose	= 760;     // gross steering
 static int l45_toclose	= 580;     // gross steering
 
+static char trim_report = 0;
 
 //***************************************************************************************
 //acceleration/deacceleration table used for left and right motor
@@ -205,8 +207,8 @@ void __attribute__((__interrupt__,shadow,auto_psv))_T2Interrupt(void)
 	
 	x=acc_table[l_index];
 	if (left_trim_flag)
-		{	if(large_trim_flag)
-				{x=(x>>1)+(x>>2);}			//reduse time to 0.75
+		{	if(large_left_trim_flag)
+				{x=(x>>1)+(x>>2);}			//reduce time to 0.75
 			else
 				{x=(x>>1)+(x>>2)+(x>>3);}	//reduce time to 0.875
 			left_trim_flag--;
@@ -244,8 +246,8 @@ void __attribute__((__interrupt__,shadow,auto_psv))_T4Interrupt(void)
 	IFS1bits.T4IF = 0;				// clear timer4 interrupt status flag
 	x=acc_table[r_index];
 	if (right_trim_flag)
-		{	if(large_trim_flag)
-				{x=(x>>1)+(x>>2);}			//reduse time to 0.75
+		{	if(large_right_trim_flag)
+				{x=(x>>1)+(x>>2);}			//reduce time to 0.75
 			else
 				{x=(x>>1)+(x>>2)+(x>>3);}	//reduce time to 0.875
 			right_trim_flag--;
@@ -276,11 +278,12 @@ void sensor_select(void)
 		}	
 	if(sensor_count==2)
 		{	read_sensor(diag);
-			large_trim_flag=0;
+			large_right_trim_flag = 0;
+			large_left_trim_flag = 0;
 			if(front_sensor<front_short_threshold)	//no steering if close to front wall	
 				{
 						if (l45_sensor>l45_threshold)
-						{	if (l45_sensor>l45_toclose)large_trim_flag=1;
+						{	if (l45_sensor>l45_toclose) large_left_trim_flag=1;
 							left_trim_flag=corrector;
 							led_left=on;
 						}
@@ -288,7 +291,7 @@ void sensor_select(void)
 						{led_left=off;}
 	
 						if (r45_sensor>r45_threshold)
-						{	if (r45_sensor>r45_toclose)large_trim_flag=1;
+						{	if (r45_sensor>r45_toclose) large_right_trim_flag=1;
 							right_trim_flag=corrector;
 							led_right=on;
 						}

@@ -1806,9 +1806,9 @@ def main():
             print("Running RPi shutdown command")
             turn_off_motors(port)
             turn_off_ir(port)
-            send_led_pattern_command(port, 0x20)
+            send_led_pattern_command(port, 0x10)    # LED 5 on = shutdown
             # let everything settle
-            wait_seconds(port, 0.25)
+            wait_seconds(port, 0.1)
             if not SIMULATOR:
                 os.system("sudo poweroff")
             print("sudo poweroff")

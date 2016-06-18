@@ -459,6 +459,7 @@ def EV_UNKNOWN_RESET(port, cmd):
     raise SoftReset
 def EV_POWER_ON_RESET(port, cmd):
     print("Power On Reset")
+    port.print_all()
     recover_from_major_error()
 def EV_BROWN_OUT_RESET(port, cmd):
     print("Brown Out Reset")
@@ -1775,8 +1776,30 @@ def run_program(port):
 
         # loop back to top to do keys again
 
+class serial_snooper:
+    def __init__(self, port):
+        self.port = port
+        self.data = []
+        
+    def read(self, num_chars):
+        m = self.read(num_chars)
+        self.data.append(m)
+        return m
+    
+    def inWaiting(self):
+        return self.port.inWaiting()
+
+    def write(self, message):
+        return self.port.write(message)
+
+    def print_all(self):
+        for e in self.data:
+            print(e.encode("hex"))
+            
+
 def main():
     port = serial.Serial("/dev/ttyAMA0", baudrate = 57600, timeout = 0.1)
+    port = serial_snooper(port)
     time.sleep(0.05)
     bytes_waiting = port.inWaiting()
     if bytes_waiting != 0:

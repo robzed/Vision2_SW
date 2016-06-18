@@ -1757,9 +1757,12 @@ def run_program(port):
 
 def main():
     port = serial.Serial("/dev/ttyAMA0", baudrate = 57600, timeout = 0.1)
+    time.sleep(0.05)
     bytes_waiting = port.inWaiting()
     if bytes_waiting != 0:
         print("Bytes Waiting = ", bytes_waiting)
+        port.read(bytes_waiting)
+        print("Flushed bytes")
 
     while True:
         try:

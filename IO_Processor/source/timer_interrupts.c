@@ -294,7 +294,9 @@ void sensor_select(void)
 			 else led_front=off;
 		}	
 	if(sensor_count==2)
-		{	read_sensor(diag);
+		{	
+            int temp_trim_report = 0;
+            read_sensor(diag);
 			large_right_trim_flag = 0;
 			large_left_trim_flag = 0;
 			if(front_sensor<front_short_threshold)	//no steering if close to front wall	
@@ -303,10 +305,10 @@ void sensor_select(void)
 						{	if (l45_sensor>l45_toclose)
 							{
 								large_left_trim_flag=1;
-								trim_report |= 4;
+								temp_trim_report |= 4;
 							}
 							left_trim_flag=corrector;
-							trim_report |= 1;
+							temp_trim_report |= 1;
 							led_left=on;
 						}
 						else
@@ -316,14 +318,20 @@ void sensor_select(void)
 						{	if (r45_sensor>r45_toclose)
 							{
 								large_right_trim_flag=1;
-								trim_report |= 8;
+								temp_trim_report |= 8;
 							}
 							right_trim_flag=corrector;
-							trim_report |= 2;
+							temp_trim_report |= 2;
 							led_right=on;
 						}
 						else
 						{led_right=off;	}
+                 
+                        // only update trim report, if previous one updated
+                        if(trim_report == 0)
+                        {
+                            trim_report = temp_trim_report;
+                        }
 				}			
 		}
 	if(sensor_count==3)
@@ -383,9 +391,9 @@ void timer_move(int distance, unsigned int speed, int steering_corrector)
     T2CONbits.TON=1;		//left motor timer enable
 }
 
-bool is_timer_finished_move(void)
+bool is_timer_still_moving(void)
 {
-    return T2CONbits.TON;
+    return T2CONbits.TON || T4CONbits.TON;
 }
 
 void timer_fine_to_move_another_cell(void)

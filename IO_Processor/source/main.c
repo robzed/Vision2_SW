@@ -500,10 +500,32 @@ int main(int argc, char** argv)
                 }
                 if(timer_running)
                 {
-                    if(!is_timer_finished_move())
+                    if(!is_timer_still_moving())
                     {
                         send_event(EV_FINISHED_MOVE);
                         timer_running = false;
+                    }
+                    else
+                    {
+                        // some reports are only sent when we are moving
+                        if(speed_sample_report)
+                        {
+                            int left = left_speed_sample;
+                            int right = right_speed_sample;
+                            speed_sample_report = 0;
+
+                            char ev_code = EV_SPEED_SAMPLE + (left>256)?1:0 + (right>256)?2:0;
+
+                            send_event(ev_code);
+                            send_event(left & 0xFF);
+                            send_event(right & 0xFF);
+                        }
+
+                        if(trim_report)
+                        {
+                            send_event(EV_STEERING_TRIM_REPORT + trim_report);
+                            trim_report = 0;
+                        }
                     }
                 }
                 
@@ -526,24 +548,6 @@ int main(int argc, char** argv)
                     send_event(EV_IR_FRONT_SIDE_STATE + get_ir_front_side_bitmap());
                 }
                 
-                if(trim_report)
-                {
-                	send_event(EV_STEERING_TRIM_REPORT + trim_report);
-                	trim_report = 0;
-                }
-
-                if(speed_sample_report)
-                {
-                	int left = left_speed_sample;
-                	int right = right_speed_sample;
-                	speed_sample_report = 0;
-
-                	char ev_code = EV_SPEED_SAMPLE + (left>256)?1:0 + (right>256)?2:0;
-
-                	send_event(ev_code);
-                	send_event(left & 0xFF);
-                	send_event(right & 0xFF);
-                }
                 // -----------------------------------------------------
                 //
                 // process commands
@@ -638,18 +642,28 @@ int main(int argc, char** argv)
                                     fwd();
                                     timer_move(serial_get_int16(), set_speed, set_corrector);
                                     timer_running = true;
+                                    // make sure we don't get stale data
+                                    trim_report = 0;
+                                    speed_sample_report = 0;
                                     break;
+                                    
                                 case 2: // right (parameter = distance)
                                     en_mot = mot_on;
                                     turnr();
                                     timer_move(serial_get_int16(), set_speed, set_corrector);
                                     timer_running = true;
+                                    // make sure we don't get stale data
+                                    trim_report = 0;
+                                    speed_sample_report = 0;
                                     break;
                                 case 3: // left (parameter = distance)
                                     en_mot = mot_on;
                                     turnl();
                                     timer_move(serial_get_int16(), set_speed, set_corrector);
                                     timer_running = true;
+                                    // make sure we don't get stale data
+                                    trim_report = 0;
+                                    speed_sample_report = 0;
                                     break;
                                 case 4: // set speed
                                     set_speed = serial_get_uint16();

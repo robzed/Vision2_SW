@@ -49,6 +49,14 @@ int get_ir_45_bitmap(void);
 void set_distance_to_test(int distance);
 int get_distance_test_flag(void);
 
+// report data available as external variables
+extern volatile char trim_report;
+
+extern volatile int left_speed_sample;
+extern volatile int right_speed_sample;
+extern volatile char speed_sample_report;
+
+
 #ifdef	__cplusplus
 }
 #endif

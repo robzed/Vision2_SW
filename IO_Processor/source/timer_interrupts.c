@@ -66,7 +66,13 @@ static int l45_threshold = 360;   // steering
 static int r45_toclose	= 760;     // gross steering
 static int l45_toclose	= 580;     // gross steering
 
-static char trim_report = 0;
+volatile char trim_report = 0;				// 1 = trim report available
+
+volatile int left_speed_sample = 0;
+volatile int right_speed_sample = 0;
+volatile char speed_sample_report = 0;
+
+char sample_alternates = 0;			// do we sample battery or speed?
 
 //***************************************************************************************
 //acceleration/deacceleration table used for left and right motor
@@ -193,7 +199,18 @@ void __attribute__((__interrupt__,auto_psv))_T1Interrupt(void)
 void __attribute__((__interrupt__,auto_psv))_T3Interrupt(void)
 {	
 	IFS0bits.T3IF = 0; 		// clear timer3 interrupt status flag
-	battery_check();
+
+	if(sample_alternates)
+	{
+		battery_check();
+	}
+	else if(speed_sample_report == 0)	// don't overwrite if not sent yet
+	{
+		left_speed_sample = l_index;
+		right_speed_sample = r_index;
+		speed_sample_report = 1;
+	}
+	sample_alternates = 1 - sample_alternates;
     key_scan();
 }
 
@@ -283,16 +300,26 @@ void sensor_select(void)
 			if(front_sensor<front_short_threshold)	//no steering if close to front wall	
 				{
 						if (l45_sensor>l45_threshold)
-						{	if (l45_sensor>l45_toclose) large_left_trim_flag=1;
+						{	if (l45_sensor>l45_toclose)
+							{
+								large_left_trim_flag=1;
+								trim_report |= 4;
+							}
 							left_trim_flag=corrector;
+							trim_report |= 1;
 							led_left=on;
 						}
 						else
 						{led_left=off;}
 	
 						if (r45_sensor>r45_threshold)
-						{	if (r45_sensor>r45_toclose) large_right_trim_flag=1;
+						{	if (r45_sensor>r45_toclose)
+							{
+								large_right_trim_flag=1;
+								trim_report |= 8;
+							}
 							right_trim_flag=corrector;
+							trim_report |= 2;
 							led_right=on;
 						}
 						else
@@ -474,3 +501,4 @@ int get_distance_test_flag(void)
     dist_test_flag = 0;
     return flag;
 }
+

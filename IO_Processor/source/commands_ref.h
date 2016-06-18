@@ -125,8 +125,17 @@ typedef unsigned char cmd_t;
 #define EV_EXCEPTION_RESET		0x06
 
 #define EV_BATTERY_VOLTAGE      0x10        // bit 0 and bit 1 plus extra byte
+//0x11, 0x12, 0x13 also used.
+
 #define EV_FINISHED_MOVE        0x20        // single command
 #define EV_TEST_DISTANCE        0x21        // single command (but always followed immediately by EV_IR_FRONT_SIDE_STATE)
+
+#define EV_SPEED_SAMPLE	0x22		// periodic sample of the speed ... 2 bytes follow
+// Also 0x23, 0x24, 0x25 used.
+// Decode:
+//   left = bit0 cmd as bit8 + byte 1
+//  right = bit1 cmd as bit8 + byte 2
+
 
 #define EV_BUTTON_A_RELEASE     0x30
 #define EV_BUTTON_B_RELEASE     0x31
@@ -147,6 +156,8 @@ typedef unsigned char cmd_t;
 #define EV_R90_LEVEL            0x64
 #define EV_R45_LEVEL            0x65
 
+
+#define EV_STEERING_TRIM_REPORT	0x70		// large_right:8,large_left:4, right:2, left:1
 
 // unlocking
 #define EV_UNLOCK_FROM_LOCK     0xC0

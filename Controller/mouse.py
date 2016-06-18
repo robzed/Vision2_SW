@@ -808,11 +808,34 @@ def EV_IR_FRONT_SIDE_STATE_F(port, cmd):
     return True, True, True, True  # cmd&4, cmd&2, cmd&8, cmd&1
 """
 
+def EV_TEST_DISTANCE(port, cmd):
+    print("Test Distance")
+    
+def EV_SPEED_SAMPLE_00(port, cmd):
+    left = ord(port.read(1))
+    right = ord(port.read(1))
+    print("Speed", left, right)
+
+def EV_SPEED_SAMPLE_01(port, cmd):
+    left = ord(port.read(1))+256
+    right = ord(port.read(1))
+    print("Speed", left, right)
+
+def EV_SPEED_SAMPLE_10(port, cmd):
+    left = ord(port.read(1))
+    right = ord(port.read(1))+256
+    print("Speed", left, right)
+
+def EV_SPEED_SAMPLE_11(port, cmd):
+    left = ord(port.read(1))+256
+    right = ord(port.read(1))+256
+    print("Speed", left, right)
+
 ################################################################
 # 
 # Event Processor 
 # 
-    
+
 command_handlers = {
     0x00: EV_UNKNOWN_RESET,
     0x01: EV_POWER_ON_RESET,
@@ -829,8 +852,13 @@ command_handlers = {
     
     0x20: EV_FINISHED_MOVE,
     
-#    0x21: EV_TEST_DISTANCE,    # single command (but always followed immediately by EV_IR_FRONT_SIDE_STATE)
+    0x21: EV_TEST_DISTANCE,    # single command (but always followed immediately by EV_IR_FRONT_SIDE_STATE)
 
+    0x22: EV_SPEED_SAMPLE_00,
+    0x23: EV_SPEED_SAMPLE_01,
+    0x24: EV_SPEED_SAMPLE_10,
+    0x25: EV_SPEED_SAMPLE_11,
+    
     0x30: EV_BUTTON_A_RELEASE,
     0x31: EV_BUTTON_B_RELEASE,
     0x38: EV_BUTTON_A_PRESS,

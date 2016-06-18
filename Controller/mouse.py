@@ -137,6 +137,22 @@ def recover_from_major_error():
 # Need to test time.time against datetime.utcnow() or date.now() on RPi
 read_accurate_time = time.time
 
+# This function manages the saving of battery data
+def save_battery_data(flush_all_data, battery_voltage):
+    global log_battery_voltage
+    global battery_voltage_array
+
+    if log_battery_voltage:
+        
+        if battery_voltage is not None:
+            battery_voltage_array.append( (time.time(), battery_voltage) )
+
+        if flush_all_data or len(battery_voltage_array) >= 200:
+            with open(battery_filename, "a") as f:
+                for item in battery_voltage_array:
+                    f.write("%f, %s\n" % (item[0], item[1]))
+            battery_voltage_array = []
+
 
 ################################################################
 # 
@@ -494,15 +510,9 @@ def EV_BATTERY_VOLTAGE(port, cmd):
     global battery_voltage_mode
     global battery_voltage_count
     global BATT_VOLTAGE_COUNT
-    global log_battery_voltage
-    global battery_voltage_array
-    if log_battery_voltage:
-        battery_voltage_array.append( (time.time(), battery_voltage) )
-        if len(battery_voltage_array) == 200:
-            with open(battery_filename, "a") as f:
-                for item in battery_voltage_array:
-                    f.write("%f, %s\n" % (item[0], item[1]))
-            battery_voltage_array = []
+    
+    save_battery_data(False, battery_voltage)
+    
     potential_mode = 0
     if battery_voltage <= BATTERY_VOLTAGE_WARNING:
         potential_mode = 1
@@ -1740,13 +1750,7 @@ def main():
             if battery_voltage_mode == 2:
                 print("Battery Shutdown.      Batt V", battery_voltage, "cell:", battery_voltage/4.0)
 
-            global log_battery_voltage
-            global battery_voltage_array
-            if log_battery_voltage:
-                with open(battery_filename, "a") as f:
-                    for item in battery_voltage_array:
-                        f.write("%f, %s\n" % (item[0], item[1]))
-                battery_voltage_array = []
+            save_battery_data(True, None)
 
             print("Running RPi shutdown command")
             turn_off_motors(port)

@@ -71,6 +71,7 @@ import datetime
 
 verbose = False
 print_map_in_progress = True
+snoop_serial_data = True        # good but slow
 
 distance_cell	= 347			# adjust these values for cell distance		
 distance_turnl90	= 112		# turn left 90deg
@@ -459,7 +460,8 @@ def EV_UNKNOWN_RESET(port, cmd):
     raise SoftReset
 def EV_POWER_ON_RESET(port, cmd):
     print("Power On Reset")
-    port.print_all()
+    if snoop_serial_data:
+        port.print_all()
     recover_from_major_error()
 def EV_BROWN_OUT_RESET(port, cmd):
     print("Brown Out Reset")
@@ -1534,6 +1536,9 @@ def run_program(port):
     calibration_mode = False
     test_mode = False
     while True:
+        if snoop_serial_data:
+            port.save_all()
+
         # let's process some events anyway
         for _ in range(1,10):
             event_processor(port)
@@ -1814,10 +1819,35 @@ class serial_snooper:
                 else:
                     print(time, " ", e.encode("hex"))
                 mode = 0
+        self.data = []
+                
+    def save_all(self):
+        now = datetime.datetime.now().strftime('%Y-%m-%d-%H-%M-%S')
+        serial_snoop_filename = "serial_snoop_%s.txt" % now
+        with open(serial_snoop_filename, "a") as f:
+            mode = 0
+            time = "?"
+            is_write = 0
+            for e in self.data:
+                if mode == 0:
+                    is_write = e
+                    mode = 1
+                elif mode == 1:
+                    time = e
+                    mode = 2
+                else:
+                    if is_write:
+                        f.write(str(time)+" tx:"+e.encode("hex")+"\n")
+                    else:
+                        f.write(str(time)+"       rx:"+e.encode("hex")+"\n")
+                    mode = 0
+            self.data = []
+
 
 def main():
     port = serial.Serial("/dev/ttyAMA0", baudrate = 57600, timeout = 0.1)
-    port = serial_snooper(port)
+    if snoop_serial_data:
+        port = serial_snooper(port)
     time.sleep(0.05)
     bytes_waiting = port.inWaiting()
     if bytes_waiting != 0:

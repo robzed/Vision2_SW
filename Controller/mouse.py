@@ -1638,7 +1638,7 @@ def run_program(port):
                     break
 
                 headings = m.get_lowest_directions_against_heading(robot_direction, robot_row, robot_column)
-                print(headings)
+                print(time.time(), "Best Headings:", headings)
                 if len(headings) == 0:
                     current_cell_value = m.get_cell_value(robot_row, robot_column)
                     if current_cell_value == 0:

@@ -1060,17 +1060,18 @@ def wait_for_move_to_finish_reading_sensors(port):
     if verbose: print("Wait for move finished (reading sensors)")
     global move_finished
     st = time.time()
+    state = 0
     while not move_finished:
         event_processor(port)
         
-        #
         time_diff = time.time() - st
-        if time_diff > 0.05:
-            if time_diff < 0.1:
-                get_l45_level(port)
-            else:
+        if time_diff > 0.1:
+            if state == 0:
                 get_r45_level(port)
-                st = time.time()
+            else:
+                get_l45_level(port)
+            st = time.time()
+            state = 1 - state
 
         global ir_l45_level_new
         global ir_r45_level_new

@@ -1,3 +1,8 @@
+# -*- coding: utf-8 -*-
+#
+# Copyright 2016 Rob Probin.
+# All original work.
+#
 from __future__ import print_function
 from collections import deque
 from maze import Maze

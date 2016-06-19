@@ -1,5 +1,8 @@
 # Maze related class
 #
+# Copyright 2016 Rob Probin.
+# All original work.
+#
 from __future__ import print_function
 
 import sys

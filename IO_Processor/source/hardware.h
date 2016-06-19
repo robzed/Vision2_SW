@@ -1,6 +1,6 @@
 /* 
  * File:   hardware.h
- * Author: rob
+ * Author: Rob Probin
  *
  * Created on 27 June 2014, 21:29
  */

@@ -1,7 +1,6 @@
 /* 
  * File:   timer_interrupts.h
  * Author: Rob Probin
- * Mostly copied from V_r100.c, created by Barry Grubb
  *
  * Created on April 10, 2016, 9:45 AM
  */

@@ -1,10 +1,12 @@
 /*
  * File:   hardware.c
- * Author: rob
+ * Author: Rob Probin
  *
  * Created on 27 June 2014, 21:29
  * 
  * Init routines like Ratty2 V-r100.c by Barry Grub 30/12/2009
+ * Original work otherwise.
+ *
  */
 
 #include "hardware.h"

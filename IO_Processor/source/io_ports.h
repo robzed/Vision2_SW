@@ -1,6 +1,6 @@
 /* 
  * File:   io_ports.h
- * Author: rob
+ * Author: Rob Probin
  *
  * Created on 29 June 2014, 11:16
  */

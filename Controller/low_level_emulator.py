@@ -220,6 +220,10 @@ class serial:
                 sys.exit(1)
             self.replies.append(data)
         
+        def _wrdata_int16(self, data):
+            self._wrdata(chr(data>>8))
+            self._wrdata(chr(data&255))
+            
         def _paramcheck(self, cmd, params, num_params):
             if len(params) != num_params:
                 print("Command", hex(ord(cmd)), "had", len(params), "parameters, not", num_params)
@@ -395,7 +399,8 @@ class serial:
             
             elif cmd == "\xC5":
                 self._paramcheck(cmd, params, 2)
-                print("***Set Steering correction to", ord(params[0])*256+ord(params[1]))
+                self.steering_correction = ord(params[0])*256+ord(params[1])
+                print("***Set Steering correction to", self.steering_correction)
 
             elif cmd == "\xC6":
                 self._paramcheck(cmd, params, 0)
@@ -403,17 +408,33 @@ class serial:
                 
             elif cmd == "\xC7":
                 self._paramcheck(cmd, params, 2)
-                print("***Set Cell distance to", ord(params[0])*256+ord(params[1]))
+                self.cell_distance = ord(params[0])*256+ord(params[1])
+                print("***Set Cell distance to", self.cell_distance)
 
             elif cmd == "\xC8":
                 self._paramcheck(cmd, params, 2)
-                print("***Set Wall edge correction to", ord(params[0])*256+ord(params[1]))
+                self.wall_correction = ord(params[0])*256+ord(params[1])
+                print("***Set Wall edge correction to", self.wall_correction)
 
             elif cmd == "\xC9":
                 self._paramcheck(cmd, params, 2)
                 self.distance_to_test = ord(params[0])*256+ord(params[1])
                 print("***Set distance test to", self.distance_to_test)
                 print("*** >>>>Not complete yet! <<<<")
+
+            elif cmd == "\xCF":
+                self._paramcheck(cmd, params, 1)
+                subcmd = ord(params[0])
+                self._wrdata(str(cmd))
+                self._wrdata(params[0])
+                if subcmd == 0xC5:
+                    self._wrdata_int16(self.steering_correction)
+                elif subcmd == 0xC7:
+                    self._wrdata_int16(self.cell_distance)
+                elif subcmd == 0xC8:
+                    self._wrdata_int16(self.wall_correction)
+                elif subcmd == 0xC9:
+                    self._wrdata_int16(self.distance_to_test)
                 
             elif cmd == "\xD0":
                 self._paramcheck(cmd, params, 0)

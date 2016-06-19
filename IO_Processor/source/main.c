@@ -686,7 +686,7 @@ int main(int argc, char** argv)
                                     
                                 case 0x0F:
                                     cmd = serial_get_byte();
-                                    send_event(EV_SET_STATUS_REPORT);
+                                    send_event(EV_CONFIG_PARAMETER_VALUE);
                                     send_event(cmd);
                                     switch(cmd)
                                     {

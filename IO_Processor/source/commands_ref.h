@@ -173,7 +173,7 @@ typedef unsigned char cmd_t;
 #define EV_LOCK_BY_TIMER        0xC2
 #define EV_LOCK_BY_COMMAND      0xC3
 
-#define EV_SET_STATUS_REPORT 0xCF
+#define EV_CONFIG_PARAMETER_VALUE 0xCF
         // followed by C5, C7, C8 or C9 and then 2 bytes. See 0xCF command
 
 

@@ -683,6 +683,30 @@ int main(int argc, char** argv)
                                 case 9: // set distance to test (+2 bytes)
                                     set_distance_to_test(serial_get_int16());
                                     break;
+                                    
+                                case 0x0F:
+                                    cmd = serial_get_byte();
+                                    send_event(EV_SET_STATUS_REPORT);
+                                    send_event(cmd);
+                                    switch(cmd)
+                                    {
+                                    case 0xC5: // set steering correction   
+                                        serial_write_int16(set_corrector);
+                                        break;
+                                    case 0xC7: // set cell distance (+2 bytes)
+                                        serial_write_int16(get_cell_distance());
+                                        break;
+                                    case 0xC8: // set correction distance (+2 bytes)
+                                        serial_write_int16(get_wall_edge_to_crt_distance());
+                                        break;
+                                    case 0xC9: // set distance to test (+2 bytes)
+                                        serial_write_int16(get_distance_to_test());
+                                        break;
+                                    default:
+                                        break;
+                                    }
+                                    break;
+                                    
                                 default:
                                     break;
                             }

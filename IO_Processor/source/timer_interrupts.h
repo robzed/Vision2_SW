@@ -27,11 +27,12 @@ void enable_IR_scanning(void);
 void reset_wall_edge_flag(void);
 
 void set_cell_distance(int);	//adjust these values for cell distance		
-
+int get_cell_distance();
 
 void set_wall_edge_to_crt_distance(int); //front error correction value
 								//should equal distance from wall edge to
 								//centre of square 
+int get_wall_edge_to_crt_distance();
 
 void set_front_long_threshold(int);		// is there a wall far away - used for moving ahead on explore
 void set_front_short_threshold(int);     // front wall detection (also stops steering problems on turn)
@@ -46,6 +47,7 @@ int get_ir_front_side_bitmap();
 int get_ir_45_bitmap(void);
 
 void set_distance_to_test(int distance);
+int get_distance_to_test();
 int get_distance_test_flag(void);
 
 // report data available as external variables

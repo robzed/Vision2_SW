@@ -399,14 +399,70 @@ def set_right_45_too_close_threshold(port, threshold):
     s = "\xDF" + chr(threshold >> 8) + chr(threshold & 0xff)
     send_message(port, s)
 
+def get_steering_correction(port):
+    if verbose: print("get steering correction distance")
+    clear_CF_result(0xC5)
+    s = "\xCF\xC5"
+    send_message(port, s)
+    return get_CF_result(port, 0xC5)
 
+def get_cell_distance(port):
+    if verbose: print("get_cell_distance")
+    clear_CF_result(0xC7)
+    s = "\xCF\xC7"
+    send_message(port, s)
+    return get_CF_result(port, 0xC7)
+
+def get_wall_edge_correction(port):
+    if verbose: print("get_wall_edge_correction")
+    clear_CF_result(0xC8)
+    s = "\xCF\xC8"
+    send_message(port, s)
+    return get_CF_result(port, 0xC8)
+
+def get_distance_to_test(port):
+    if verbose: print("get_distance_to_test")
+    clear_CF_result(0xC9)
+    s = "\xCF\xC9"
+    send_message(port, s)
+    return get_CF_result(port, 0xC9)
+
+
+steering_correction_value = 10
+distance_to_test_value = 300
+
+def check_distances_are_set_correctly(port):
+    if get_steering_correction(port) != steering_correction_value:
+        print("get_steering_correction() didn't return expected value")
+        return False
+    if get_cell_distance(port) != distance_cell:
+        print("get_cell_distance() didn't return expected value")
+        return False
+    if get_wall_edge_correction(port) != wall_edge_correction_factor:
+        print("get_wall_edge_correction() didn't return expected value")
+        return False
+    if get_distance_to_test(port) != distance_to_test_value:
+        print("get_distance_to_test() didn't return expected value")
+        return False
+    
+    return True
 
 def set_default_distances(port):
+    
+    success = False
+    for _ in range(10):
     #set_speed(port, speed)
-    set_steering_correction(port, 10)           # might need to fixed for higher speeds
-    set_cell_distance(port, distance_cell)      # 
-    set_wall_edge_correction(port, wall_edge_correction_factor)
-    set_distance_to_test(port, 300)
+        set_steering_correction(port, steering_correction_value)           # might need to fixed for higher speeds
+        set_cell_distance(port, distance_cell)      # 
+        set_wall_edge_correction(port, wall_edge_correction_factor)
+        set_distance_to_test(port, distance_to_test_value)
+
+        if check_distances_are_set_correctly(port):
+            success = True
+            break
+    
+    if not success:
+        print("Failed to set values 10 times :-(")
 
 
 ################################################################
@@ -844,6 +900,30 @@ def EV_SPEED_SAMPLE_11(port, cmd):
 
 def EV_STEERING_TRIM_REPORT(port, cmd):
     print("Trim", cmd&0x0F)
+
+config_parameter_read_values = {
+                                0xC5:None,
+                                0xC7:None,
+                                0xC8:None,
+                                0xC9:None,
+                                }
+def EV_CONFIG_PARAMETER_VALUE(port, cmd):
+    subcmd = ord(port.read(1))
+    if subcmd not in config_parameter_read_values:
+        print("INVALID CONFIG PARAMETER VALUE")
+    else:
+        config_parameter_read_values[subcmd] = ord(port.read(1))*256 + ord(port.read(1))
+
+def get_CF_result(port, subcmd_type):
+    while config_parameter_read_values[subcmd_type] is None:
+        # @todo: Add timeout here (and other wait locations)
+        event_processor(port)
+    
+    return config_parameter_read_values[subcmd_type]
+
+
+def clear_CF_result(subcmd_type):
+    config_parameter_read_values[subcmd_type] = None
     
 ################################################################
 # 
@@ -943,6 +1023,8 @@ command_handlers = {
     0xC2: EV_LOCK_BY_TIMER,
     0xC3: EV_LOCK_BY_COMMAND,
 
+    0xCF: EV_CONFIG_PARAMETER_VALUE,
+    
     0x80: EV_POLL_REPLY,
 
     0xE2: EV_FAIL_INVALID_COMMAND,

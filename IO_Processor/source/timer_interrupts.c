@@ -423,10 +423,18 @@ void set_cell_distance(int d)
 {
     cell = d;
 }
+int get_cell_distance()
+{
+    return cell;
+}
 
 void set_wall_edge_to_crt_distance(int d)
 {
     wall_edge_to_crt = d;
+}
+int get_wall_edge_to_crt_distance()
+{
+    return wall_edge_to_crt;
 }
 
 void set_front_long_threshold(int t)
@@ -501,6 +509,10 @@ void set_distance_to_test(int distance)
 {
     dist_to_test = distance;
     dist_test_flag = 0;
+}
+int  get_distance_to_test()
+{
+    return dist_to_test;
 }
 
 int get_distance_test_flag(void)

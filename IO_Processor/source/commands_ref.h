@@ -60,6 +60,7 @@ typedef unsigned char cmd_t;
                                             //nnnn=13 R90 level
                                             //nnnn=14 R45 level
 
+
 // 0xA0 unused
 // 0xB0 unused
 #define CMD_TYPE_MOVE_COMMANDS  0xC     // nnnn = 0 stop motors. Also resets wall lock.
@@ -72,6 +73,12 @@ typedef unsigned char cmd_t;
                                         // nnnn = 7 set cell distance + 2 bytes distance
                                         // nnnn = 8 wall edge correction + 2 bytes distance
                                         // nnnn = 9 set distance to test + 2 bytes distance
+
+                                        // 0xCF ...followed by byte above to get rather than set that value.
+                                        /// 0xCF 0xC5 get steering correction (returns 0xCF 0xC5 then 2 bytes distance)
+                                        /// 0xCF 0xC7 get cell distance (returns 0xCF 0xC7 then 2 bytes distance)
+                                        /// 0xCF 0xC8 get wall edge correction (returns 0xCF 0xC8 then 2 bytes distance)
+                                        /// 0xCF 0xC9 get distance to test (returns 0xCF 0xC9 then 2 bytes distance)
 
 #define CMD_TYPE_IR_CONTROL     0xD     // bits 1-3=0, bit 0=1, turn on IR timers, bit 0=0, turn off IR timers.
                                         // bits 0-3 =  8 set_front_long_threshold (+2 bytes)
@@ -165,6 +172,10 @@ typedef unsigned char cmd_t;
 #define EV_UNLOCK_FROM_UNLOCK   0xC1
 #define EV_LOCK_BY_TIMER        0xC2
 #define EV_LOCK_BY_COMMAND      0xC3
+
+#define EV_SET_STATUS_REPORT 0xCF
+        // followed by C5, C7, C8 or C9 and then 2 bytes. See 0xCF command
+
 
 #define EV_POLL_REPLY           0x80
 

@@ -99,6 +99,7 @@ battery_filename = "battery_%s.txt" % now_string
 #port = None
 move_finished = False
 battery_voltage = 17
+minimum_battery_voltage = battery_voltage
 
 maze_selected = 5   # should be 5 or 16
 
@@ -446,9 +447,10 @@ def run_timers(port):
             execution_state_LED6 = not execution_state_LED6
 
         global battery_count
+        global minimum_battery_voltage
         battery_count -= 1
         if battery_count <= 0:
-                print("Batt V", battery_voltage, "cell:", battery_voltage/4.0)
+                print("Batt V", battery_voltage, "cell:", battery_voltage/4.0, "min:", minimum_battery_voltage)
                 battery_count = 10
 
 ################################################################
@@ -513,9 +515,12 @@ def EV_BATTERY_VOLTAGE(port, cmd):
     global battery_voltage_mode
     global battery_voltage_count
     global BATT_VOLTAGE_COUNT
+    global minimum_battery_voltage
     
     save_battery_data(False, battery_voltage)
-    
+    if battery_voltage < minimum_battery_voltage:
+        minimum_battery_voltage = battery_voltage
+        
     potential_mode = 0
     if battery_voltage <= BATTERY_VOLTAGE_WARNING:
         potential_mode = 1

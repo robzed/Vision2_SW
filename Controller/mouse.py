@@ -1055,7 +1055,37 @@ def wait_for_move_to_finish(port):
     while not move_finished:
         event_processor(port)
     move_finished = False
-    
+
+def wait_for_move_to_finish_reading_sensors(port):
+    if verbose: print("Wait for move finished (reading sensors)")
+    global move_finished
+    st = time.time()
+    while not move_finished:
+        event_processor(port)
+        
+        #
+        time_diff = time.time() - st
+        if time_diff > 0.05:
+            if time_diff < 0.1:
+                get_l45_level(port)
+            else:
+                get_r45_level(port)
+                st = time.time()
+
+        global ir_l45_level_new
+        global ir_r45_level_new
+        global ir_l45_level
+        global ir_r45_level
+        if ir_l45_level_new:
+            ir_l45_level_new = False
+            print("L45 =", ir_l45_level)
+        if ir_r45_level_new:
+            ir_r45_level_new = False
+            print("R45 =", ir_r45_level)
+
+    move_finished = False
+
+
 
 def wait_for_unlock_to_complete(port):
     if verbose: print("Waiting for unlock to complete")
@@ -1748,8 +1778,9 @@ def run_program(port):
                 if heading == 0:
                     turn_on_ir(port)
                     move_forward(port, distance_cell)
-                    wait_for_move_to_finish(port)
-    
+                    #wait_for_move_to_finish(port)
+                    wait_for_move_to_finish_reading_sensors(port)
+                    
                     if robot_direction == 0:
                         robot_row += 1
                     elif robot_direction == 1:

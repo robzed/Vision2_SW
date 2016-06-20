@@ -140,6 +140,7 @@ typedef unsigned char cmd_t;
 // Decode:
 //   left = bit0 cmd as bit8 + byte 1
 //  right = bit1 cmd as bit8 + byte 2
+#define EV_TICKS_PER_MOTOR  0x26        // 4 bytes on complete, 2 left, 2 right
 
 
 #define EV_BUTTON_A_RELEASE     0x30

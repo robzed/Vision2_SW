@@ -403,6 +403,7 @@ static int battery_count = BATTERY_TRANSMIT_ANYWAY_COUNT;
 static unsigned int set_speed = 50;
 static int set_corrector = 10;
 bool timer_running = false;
+bool ticks_per_motor_enabled = true;       // @todo: make this turn on/off-able
 
 /*
  * This is the main program for the IO_Processor, which in the case of 
@@ -504,6 +505,15 @@ int main(int argc, char** argv)
                     {
                         send_event(EV_FINISHED_MOVE);
                         timer_running = false;
+                        
+                        if(ticks_per_motor_enabled)
+                        {
+                            send_event(EV_TICKS_PER_MOTOR);
+                            serial_write_int16((ticks_left > 0xFFFF)?0xFFFF:ticks_left);
+                            serial_write_int16((ticks_right > 0xFFFF)?0xFFFF:ticks_right);
+                            ticks_left = 0;
+                            ticks_right = 0;
+                        }
                     }
                     else
                     {

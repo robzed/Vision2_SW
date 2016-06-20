@@ -74,6 +74,9 @@ volatile char speed_sample_report = 0;
 
 char sample_alternates = 0;			// do we sample battery or speed?
 
+int ticks_left = 0;
+int ticks_right = 0;
+
 //***************************************************************************************
 //acceleration/deacceleration table used for left and right motor
 //***************************************************************************************
@@ -254,6 +257,7 @@ void __attribute__((__interrupt__,shadow,auto_psv))_T2Interrupt(void)
 	dist_to_test--;
 	if (dist_to_test==0) {dist_test_flag=1; dist_to_test+=cell;}
 										//carry on if walls both sides
+    ticks_left ++;
 }
 //**************************************************************************************************
 //Right motor interrupt
@@ -277,6 +281,8 @@ void __attribute__((__interrupt__,shadow,auto_psv))_T4Interrupt(void)
 	clk_r=1;
 	for(x=0 ; x<10; x++);
 	clk_r=0;
+    
+    ticks_right ++;
 }
 //************************************************************************************************
 

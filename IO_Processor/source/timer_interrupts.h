@@ -57,6 +57,8 @@ extern volatile int left_speed_sample;
 extern volatile int right_speed_sample;
 extern volatile char speed_sample_report;
 
+extern int ticks_left;
+extern int ticks_right;
 
 #ifdef	__cplusplus
 }

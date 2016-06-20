@@ -660,7 +660,10 @@ def EV_R45_LEVEL(port, cmd):
     if verbose: print("IR R45 level", ir_r45_level)
     ir_r45_level_new = True
 
-
+def EV_TICKS_PER_MOTOR(port, cmd):
+    left_ticks = ord(port.read(1))*256 + ord(port.read(1))
+    right_ticks = ord(port.read(1))*256 + ord(port.read(1))
+    print("Left Motor Ticks =", left_ticks, " Right Motor Ticks =", right_ticks)
 
 def EV_FINISHED_MOVE(port, cmd):
     global move_finished
@@ -952,6 +955,7 @@ command_handlers = {
     0x23: EV_SPEED_SAMPLE_01,
     0x24: EV_SPEED_SAMPLE_10,
     0x25: EV_SPEED_SAMPLE_11,
+    0x26: EV_TICKS_PER_MOTOR,
     
     0x30: EV_BUTTON_A_RELEASE,
     0x31: EV_BUTTON_B_RELEASE,

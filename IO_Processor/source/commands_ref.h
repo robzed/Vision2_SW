@@ -43,6 +43,7 @@ typedef unsigned char cmd_t;
 #define CMD_DISABLE_SERIAL          0x5        // Start of “Uncompressing Linux…”
 #define CMD_DISABLE_SERIAL2         0x6        // Start of “Uncompressing Linux…”
 // 0x70 unused (ASCII range)
+
 #define CMD_TYPE_POLL           0x8        // bottom 4 bytes ignored / reflected(?) (To be confirmed)
 #define CMD_TYPE_REQUEST_STATE  0x9        // nnnn=0 all state <not implemented>(in the following order)
                                             //nnnn=1 LED state <not implemented>
@@ -97,9 +98,6 @@ typedef unsigned char cmd_t;
 //
 // individual commands
 //
-
-
-#define CMD_POLL            0x80
 
 //#define CMD_ASCII_UNLOCK    '+'            // +++ is unlock
 #define CMD_BINARY_UNLOCK1  0xFE         // unlock sequence is 1231. How to ensure not in sequence? Send poll command first. 

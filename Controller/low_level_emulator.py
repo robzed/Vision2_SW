@@ -85,6 +85,8 @@ class serial:
             self.last_LEDs = ""
             
             self.shift_middle()
+            
+            self.accel_table = [0]*512
 
         def shift_left(self):
             self.front = 50
@@ -486,6 +488,24 @@ class serial:
                 self.l45_close = ord(params[0])*256+ord(params[1])
                 print("***Set l45 close to", self.l45_close)
 
+                
+            elif cmd == "\xf9":
+                # write to acceleration table
+                self._paramcheck(cmd, params, 3)
+                addr = ord(params[0])
+                data = ord(params[1])*256+ord(params[2])
+                self.accel_table[addr] = data
+                self._wrdata("\xCE")
+                self._wrdata_int16(self.accel_table[addr])
+
+            elif cmd == "\xfA":
+                # write to acceleration table
+                self._paramcheck(cmd, params, 3)
+                addr = ord(params[0])+256
+                data = ord(params[1])*256+ord(params[2])
+                self.accel_table[addr] = data
+                self._wrdata("\xCE")
+                self._wrdata_int16(self.accel_table[addr])
                 
             elif cmd == "\xfe":
                 self._paramcheck(cmd, params, 3)

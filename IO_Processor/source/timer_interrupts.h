@@ -50,6 +50,9 @@ void set_distance_to_test(int distance);
 int get_distance_to_test();
 int get_distance_test_flag(void);
 
+void write_acceleration_value(int address, int data);
+int get_acceleration_value(int address);
+
 // report data available as external variables
 extern volatile char trim_report;
 

@@ -94,10 +94,14 @@ typedef unsigned char cmd_t;
 // 0xE0 unused
 #define CMD_TYPE_SYS_REQUESTS   0xF
 
-
 //
 // individual commands
 //
+#define CMD_SWITCH_OPTIONS 0xF0 // bit 0=off/on, bit2:3 0=ticks/motor, 1=trim report, 2=speed_sample
+// uses F1, F2, F3, F4, F5
+
+#define CMD_WRITE_TO_ACCEL0 0xF9    // for addresses 0-256. params: address 1 byte, int16 data. return EV_VALUE_FOR_ACCEL
+#define CMD_WRITE_TO_ACCEL1 0xFA    // for addresses 0-512, address 1 byte, int16 data. returns EV_VALUE_FOR_ACCEL
 
 //#define CMD_ASCII_UNLOCK    '+'            // +++ is unlock
 #define CMD_BINARY_UNLOCK1  0xFE         // unlock sequence is 1231. How to ensure not in sequence? Send poll command first. 
@@ -166,17 +170,19 @@ typedef unsigned char cmd_t;
 #define EV_STEERING_TRIM_REPORT	0x70		// large_right:8,large_left:4, right:2, left:1
 // 0x70 to 0x7F used
 
+#define EV_POLL_REPLY           0x80
+
 // unlocking
 #define EV_UNLOCK_FROM_LOCK     0xC0
 #define EV_UNLOCK_FROM_UNLOCK   0xC1
 #define EV_LOCK_BY_TIMER        0xC2
 #define EV_LOCK_BY_COMMAND      0xC3
 
+#define EV_VALUE_FOR_ACCEL      0xCE // followed by 2 bytes for last write
+
 #define EV_CONFIG_PARAMETER_VALUE 0xCF
         // followed by C5, C7, C8 or C9 and then 2 bytes. See 0xCF command
-
-
-#define EV_POLL_REPLY           0x80
+    
 
 // general command / system message 0xEx
 #define EV_FAIL_INVALID_COMMAND 0xE2

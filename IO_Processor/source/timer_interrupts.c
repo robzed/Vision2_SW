@@ -81,7 +81,10 @@ int ticks_right = 0;
 //acceleration/deacceleration table used for left and right motor
 //***************************************************************************************
 
-int acc_table[512] __attribute__((space(auto_psv)))=
+#define SIZE_OF_ACC_TABLE 512
+int acc_table[SIZE_OF_ACC_TABLE];
+
+int init_acc_table[SIZE_OF_ACC_TABLE] __attribute__((space(auto_psv)))=
 {
 0x77FC,0x31B3,0x2622,0x2026,0x1C53,0x199B,0x178C,0x15EB,0x1496,0x1378,
 0x1284,0x11B1,0x10F8,0x1054,0x0FC1,0x0F3D,0x0EC5,0x0E57,0x0DF3,0x0D96,
@@ -311,10 +314,10 @@ void sensor_select(void)
 						{	if (l45_sensor>l45_toclose)
 							{
 								large_left_trim_flag=1;
-								temp_trim_report |= 4;
+								temp_trim_report += 4;
 							}
 							left_trim_flag=corrector;
-							temp_trim_report |= 1;
+							temp_trim_report += 1;
 							led_left=on;
 						}
 						else
@@ -324,10 +327,10 @@ void sensor_select(void)
 						{	if (r45_sensor>r45_toclose)
 							{
 								large_right_trim_flag=1;
-								temp_trim_report |= 8;
+								temp_trim_report += 8;
 							}
 							right_trim_flag=corrector;
-							temp_trim_report |= 2;
+							temp_trim_report += 2;
 							led_right=on;
 						}
 						else
@@ -372,9 +375,32 @@ void sensor_select(void)
 		
 }	
 
+void write_acceleration_value(int address, int data)
+{
+    if(address >= SIZE_OF_ACC_TABLE || address < 0)
+    {
+        return;
+    }
+    acc_table[address] = data;
+}
+
+int get_acceleration_value(int address)
+{
+    if(address >= SIZE_OF_ACC_TABLE || address < 0)
+    {
+        return 0;
+    }
+    return acc_table[address];
+}
 
 void init_timer_subsystems(void)
 {
+    int i;
+    for(i = 0; i < SIZE_OF_ACC_TABLE; i++)
+    {
+        acc_table[i] = init_acc_table[i];
+    }
+    
     // this was the setting the original code
     sensor_count = 2;
 

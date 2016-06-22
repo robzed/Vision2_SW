@@ -403,7 +403,9 @@ static int battery_count = BATTERY_TRANSMIT_ANYWAY_COUNT;
 static unsigned int set_speed = 50;
 static int set_corrector = 10;
 bool timer_running = false;
-bool ticks_per_motor_enabled = true;       // @todo: make this turn on/off-able
+bool ticks_per_motor_enabled = false;
+bool trim_report_enabled = false;
+bool speed_sample_report_enabled = false;
 
 /*
  * This is the main program for the IO_Processor, which in the case of 
@@ -518,7 +520,7 @@ int main(int argc, char** argv)
                     else
                     {
                         // some reports are only sent when we are moving
-                        if(speed_sample_report)
+                        if(speed_sample_report_enabled && speed_sample_report)
                         {
                             int left = left_speed_sample;
                             int right = right_speed_sample;
@@ -531,7 +533,7 @@ int main(int argc, char** argv)
                             send_event(right & 0xFF);
                         }
 
-                        if(trim_report)
+                        if(trim_report_enabled && trim_report)
                         {
                             send_event(EV_STEERING_TRIM_REPORT + trim_report);
                             trim_report = 0;
@@ -697,7 +699,6 @@ int main(int argc, char** argv)
                                 case 0x0F:
                                     cmd = serial_get_byte();
                                     send_event(EV_CONFIG_PARAMETER_VALUE);
-                                    send_event(cmd);
                                     switch(cmd)
                                     {
                                     case 0xC5: // set steering correction   
@@ -760,8 +761,51 @@ int main(int argc, char** argv)
                             }
                             break;
                         case CMD_TYPE_SYS_REQUESTS: 
-                            // for the moment, assume all unlock requests
-                            send_event(EV_UNLOCK_FROM_UNLOCK);
+                            if(cmd == CMD_WRITE_TO_ACCEL0)
+                            {
+                                int addr = serial_get_byte();
+                                write_acceleration_value(addr, serial_get_int16());
+                                send_event(EV_VALUE_FOR_ACCEL);
+                                serial_write_int16(get_acceleration_value(addr));
+                                break;
+                            }
+                            else if(cmd == CMD_WRITE_TO_ACCEL1)
+                            {
+                                int addr = serial_get_byte()+256;
+                                write_acceleration_value(addr, serial_get_int16());
+                                send_event(EV_VALUE_FOR_ACCEL);
+                                serial_write_int16(get_acceleration_value(addr));
+                                break;
+                            }
+                            else if(cmd == CMD_SWITCH_OPTIONS)
+                            {
+                                ticks_per_motor_enabled = false;
+                            }
+                            else if(cmd == CMD_SWITCH_OPTIONS+1)
+                            {
+                                ticks_per_motor_enabled = true;
+                            }
+                            else if(cmd == CMD_SWITCH_OPTIONS+2)
+                            {
+                                trim_report_enabled = false;
+                            }
+                            else if(cmd == CMD_SWITCH_OPTIONS+3)
+                            {
+                                trim_report_enabled = true;
+                            }
+                            else if(cmd == CMD_SWITCH_OPTIONS+4)
+                            {
+                                speed_sample_report_enabled = false;
+                            }
+                            else if(cmd == CMD_SWITCH_OPTIONS+5)
+                            {
+                                speed_sample_report_enabled = true;
+                            }
+                            else
+                            {
+                                // for the moment, assume all unlock requests
+                                send_event(EV_UNLOCK_FROM_UNLOCK);
+                            }
                             break;
                         default:
                             send_event(EV_FAIL_INVALID_COMMAND);

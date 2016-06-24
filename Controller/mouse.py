@@ -94,7 +94,7 @@ search_speed = 100
 speed_run_speed = 500
 
 
-log_battery_voltage = True
+log_battery_voltage = False
 now_string = datetime.datetime.now().strftime('%Y-%m-%d-%H-%M-%S')
 battery_filename = "battery_%s.txt" % now_string
 

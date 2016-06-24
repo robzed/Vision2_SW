@@ -76,11 +76,28 @@ verbose = False
 print_map_in_progress = True
 snoop_serial_data = True        # good but slow
 
-distance_cell	= 347			# adjust these values for cell distance		
-distance_turnl90	= 112		# turn left 90deg
-distance_turnr90	= 112		# turn right 90deg
-distance_turn180 = 224		    # turn 180deg
-wall_edge_correction_factor = 162 # previously 230
+step_mode = 2           # valid values are 1, 2, 4, 8
+
+if step_mode == 1:
+    distance_cell	= 347			# adjust these values for cell distance		
+    distance_turnl90	= 112		# turn left 90deg
+    distance_turnr90	= 112		# turn right 90deg
+    distance_turn180 = 224		    # turn 180deg
+    wall_edge_correction_factor = 162 # previously 230
+    
+    search_speed = 100
+    speed_run_speed = 500
+elif step_mode == 2:
+    distance_cell    = 2*347            # adjust these values for cell distance        
+    distance_turnl90    = 2*112        # turn left 90deg
+    distance_turnr90    = 2*112        # turn right 90deg
+    distance_turn180 = 2*224            # turn 180deg
+    wall_edge_correction_factor = 2*162 # previously 230
+    
+    search_speed = 200
+    speed_run_speed = 500           # max speed 512, can't double
+else:
+    print("Haven't done other step modes yet")
 
 HOLD_KEY_TIME = 1.5     # seconds
 
@@ -90,8 +107,6 @@ BATT_VOLTAGE_PER_CELL_SHUTDOWN = 3.3
 BATTERY_VOLTAGE_SHUTDOWN = (4 * BATT_VOLTAGE_PER_CELL_SHUTDOWN)
 BATT_VOLTAGE_COUNT = 30      # scans to register level
 
-search_speed = 100
-speed_run_speed = 500
 
 
 log_battery_voltage = False

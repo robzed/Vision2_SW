@@ -90,6 +90,10 @@ BATT_VOLTAGE_PER_CELL_SHUTDOWN = 3.3
 BATTERY_VOLTAGE_SHUTDOWN = (4 * BATT_VOLTAGE_PER_CELL_SHUTDOWN)
 BATT_VOLTAGE_COUNT = 30      # scans to register level
 
+search_speed = 100
+speed_run_speed = 500
+
+
 log_battery_voltage = True
 now_string = datetime.datetime.now().strftime('%Y-%m-%d-%H-%M-%S')
 battery_filename = "battery_%s.txt" % now_string
@@ -1644,6 +1648,7 @@ def do_calibration(port):
 def do_test_mode(port):
     print("Start Test")
     start = read_accurate_time()
+    set_speed(port, search_speed)    # normal search speed
     turn_on_ir(port)
     
     wait_to_go = None
@@ -1830,7 +1835,7 @@ def run_program(port):
         # start the run
         turn_on_ir(port)        # do this early so IR system has time to scan before scan_for_walls()
         send_switch_led_command(port, 3, True)
-        set_speed(port, 100)    # normal search speed
+        set_speed(port, search_speed)    # normal search speed
         m = Maze(maze_selected)
         m.target_normal_end_cells()
         m.flood_fill_all()

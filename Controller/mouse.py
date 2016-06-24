@@ -897,9 +897,18 @@ def EV_IR_FRONT_SIDE_STATE_F(port, cmd):
     return True, True, True, True  # cmd&4, cmd&2, cmd&8, cmd&1
 """
 
+test_distance_flag = True
+
 def EV_TEST_DISTANCE(port, cmd):
-    print("Test Distance")
-    
+    #print("Test Distance")
+    ir_state = ord(port.read(1))
+    if ir_state > 0x40 and ir_state < 0x4f:
+        test_distance_flag = True
+        EV_IR_FRONT_SIDE_STATE(port, ir_state)
+    else:
+        print("Test distance without EV_IR_FRONT_SIDE_STATE")
+        raise MajorError
+        
 def EV_SPEED_SAMPLE_00(port, cmd):
     left = ord(port.read(1))
     right = ord(port.read(1))
@@ -1906,26 +1915,35 @@ def run_program(port):
                 heading = headings[0] & 3
                 if heading == 0:
                     turn_on_ir(port)
+                    test_distance_flag = False
                     move_forward(port, distance_cell)
-                    #wait_for_move_to_finish(port)
-                    wait_for_move_to_finish_reading_sensors(port)
-                    
-                    if robot_direction == 0:
-                        robot_row += 1
-                    elif robot_direction == 1:
-                        robot_column += 1
-                    elif robot_direction == 2:
-                        robot_row -= 1
+                    wait_for_move_to_finish(port)
+                    #wait_for_move_to_finish_reading_sensors(port)
+                    #finished = wait_for_move_finish_or_test_distance()
+                    finished = True
+                    if finished:
+    #                    def wait_for_move_finish_or_test_distance
+    #                        test_distance_flag
+                        if robot_direction == 0:
+                            robot_row += 1
+                        elif robot_direction == 1:
+                            robot_column += 1
+                        elif robot_direction == 2:
+                            robot_row -= 1
+                        else:
+                            robot_column -= 1
+        
+                        scan_for_walls(port, m, robot_direction, robot_row, robot_column)
+                        m.set_explored(robot_row, robot_column)
+                        
+                        if print_map_in_progress:
+                            m.clear_marks()
+                            m.set_mark(robot_row, robot_column)
+                            m.print_maze()
                     else:
-                        robot_column -= 1
-    
-                    scan_for_walls(port, m, robot_direction, robot_row, robot_column)
-                    m.set_explored(robot_row, robot_column)
+                        # we've had a distance test flag - so we can scan walls and see if we want to.
+                        pass
                     
-                    if print_map_in_progress:
-                        m.clear_marks()
-                        m.set_mark(robot_row, robot_column)
-                        m.print_maze()
                 elif heading == 1:
                     turn_off_ir(port)
                     move_right(port, distance_turnr90)

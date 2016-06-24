@@ -242,7 +242,7 @@ void __attribute__((__interrupt__,shadow,auto_psv))_T2Interrupt(void)
 	else if (l_index>l_speed) l_index--;
 	else if (l_index<l_speed)l_index++;		//speed up
 	clk_l=1;
-	for(x=0 ; x<10; x++);					//short delay for motor pulse
+	for(x=0 ; x<20; x++);					//short delay for motor pulse
 	clk_l=0;
 	d_t_g--;								//decrement distance to go
 		if (d_t_g==0)
@@ -282,7 +282,7 @@ void __attribute__((__interrupt__,shadow,auto_psv))_T4Interrupt(void)
 	else if (r_index>r_speed) r_index--;
 	else if (r_index<r_speed)r_index++;
 	clk_r=1;
-	for(x=0 ; x<10; x++);
+	for(x=0 ; x<20; x++);
 	clk_r=0;
     
     ticks_right ++;

@@ -2030,12 +2030,58 @@ def run_program(port):
                 print("Back at start, wait for speed run")
                 print("===========================================")
                 print()
+                set_speed(port, speed_run_speed)    # normal search speed
+
                 m.clear_targets()
                 m.target_normal_end_cells()
                 m.flood_fill_all()
                 m.print_maze()
-                break
 
+                #
+                # turn around now back at start
+                #
+                turn_off_ir(port)
+                move_left(port, distance_turn180)
+                wait_for_move_to_finish(port)
+                turn_on_ir(port)
+                robot_direction -= 1
+                robot_direction &= 3
+
+                # wait before speed run
+                led_toggle = True
+                for _ in range(6):
+                    send_switch_led_command(port, 1, led_toggle)
+                    wait_seconds(port, 0.25)
+                    led_toggle = not led_toggle
+                    if keys_in_queue:
+                        # keys cancel run!
+                        print("Key aborts")
+                        while keys_in_queue:
+                            get_key(port)
+                        completed = False
+                        break
+
+                #key = get_key(port)
+                #if key == "A":
+                #    raise ShutdownRequest
+
+                search_phase = 3
+
+            elif search_phase == 3:
+                m.clear_targets()
+                m.target_start_cell()
+                m.flood_fill_all()
+                print()
+                print("target start")
+                print("===========================================")
+                print()                    
+                search_phase = 4
+            
+            elif search_phase == 4:
+                print("Finished")
+                break;
+
+        <<Add in key restart>>
         if completed:
             print("We need to wait for speed run keys here?")
             print("Then assemble and run speed run at 500?")

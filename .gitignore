@@ -10,4 +10,4 @@ test_results/
 V-r100.c
 battery*.txt
 .settings/
-
+Controller/serial_snoop*.txt

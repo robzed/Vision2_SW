@@ -1,6 +1,10 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 #
+# Main Control file for Vision2 Micromouse Robot.
+# Intended to run on a Raspberry Pi on the actual robot.
+# Also runs on a Mac with the simulator (low_level_emulator).
+#
 # Copyright 2016 Rob Probin.
 # All original work.
 #
@@ -19,7 +23,7 @@
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #
 from __future__ import print_function
-from __builtin__ import True, False
+#from __builtin__ import True, False
 
 ################################################################
 # NORMAL MODE
@@ -2095,7 +2099,7 @@ def run_program(port):
                 print("Finished")
                 break;
 
-        <<Add in key restart>>
+        print("<<Add in key restart>>")
         if completed:
             print("We need to wait for speed run keys here?")
             print("Then assemble and run speed run at 500?")

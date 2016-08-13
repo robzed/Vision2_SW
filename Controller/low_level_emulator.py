@@ -1,5 +1,8 @@
 # -*- coding: utf-8 -*-
 #
+# This file acts as a simulator (or low level emulation environment)
+# for mouse.py. This allows it to be run on a standard computer
+# without he I/O controller running.
 # Copyright 2016 Rob Probin.
 # All original work.
 #
@@ -235,7 +238,12 @@ class serial:
             return len(self.replies)
         
         def _wrdata(self, data):
-            if len(data) != 1:
+            if type(data) is int:
+                if data > 255 or data < 0:
+                    print("Expected byte value - breakpoint in _wrdata()")
+                    sys.exit(1)
+                data = chr(data)
+            elif len(data) != 1:
                 print("Expected length 1 string - fix in _wrdata() by splitting")
                 sys.exit(1)
             self.replies.append(data)
@@ -244,17 +252,17 @@ class serial:
             self._wrdata(chr(data>>8))
             self._wrdata(chr(data&255))
             
-        def _paramcheck(self, cmd, params, num_params):
+        def _paramcheck(self, cmdv, params, num_params):
             if len(params) != num_params:
-                print("Command", hex(ord(cmd)), "had", len(params), "parameters, not", num_params)
+                print("Command", hex(cmdv), "had", len(params), "parameters, not", num_params)
                 sys.exit(1)
                 
-        def _process_cmd(self, cmd, params):
-            cmdv = ord(cmd)
-            if cmd == "\x20" or cmd == "\x21":
-                self._paramcheck(cmd, params, 1)
+        def _process_cmd(self, cmdv, params):
+
+            if cmdv == 0x20 or cmdv == 0x21:
+                self._paramcheck(cmdv, params, 1)
                 LEDmask = ord(params[0])
-                if cmd == "\x21": LEDmask += 512
+                if cmdv == 0x21: LEDmask += 512
                 print("***ALL LEDS:", hex(LEDmask))
                 for n in range(1,10):
                     if LEDmask&1:
@@ -273,12 +281,12 @@ class serial:
                 #print("*** LED", LEDnum, "off")
                 self.clear_LED(LEDnum)
                 self.show_LEDs()
-            elif cmd == "\x80":
-                self._paramcheck(cmd, params, 0)
-                self._wrdata(cmd)
+            elif cmdv == 0x80:
+                self._paramcheck(cmdv, params, 0)
+                self._wrdata(cmdv)
                 
-            elif cmd == "\x98":
-                self._paramcheck(cmd, params, 0)
+            elif cmdv == 0x98:
+                self._paramcheck(cmdv, params, 0)
                 
                 if self.IR == False:
                     print("Scanning IR not on - QUITTING")
@@ -322,42 +330,42 @@ class serial:
                 
                 self._wrdata(chr(value))
             
-            elif cmd == "\x9A": # front
-                self._paramcheck(cmd, params, 0)
+            elif cmdv == 0x9A: # front
+                self._paramcheck(cmdv, params, 0)
                 self._wrdata("\x61")
                 self._wrdata(chr(self.front>>8))
                 self._wrdata(chr(self.front&255))
 
-            elif cmd == "\x9B": # l90
-                self._paramcheck(cmd, params, 0)
+            elif cmdv == 0x9B: # l90
+                self._paramcheck(cmdv, params, 0)
                 self._wrdata("\x62")
                 self._wrdata(chr(self.ls>>8))
                 self._wrdata(chr(self.ls&255))
             
-            elif cmd == "\x9C": # l45
-                self._paramcheck(cmd, params, 0)
+            elif cmdv == 0x9C: # l45
+                self._paramcheck(cmdv, params, 0)
                 self._wrdata("\x63")
                 self._wrdata(chr(self.l45>>8))
                 self._wrdata(chr(self.l45&255))
             
-            elif cmd == "\x9D": # r90
-                self._paramcheck(cmd, params, 0)
+            elif cmdv == 0x9D: # r90
+                self._paramcheck(cmdv, params, 0)
                 self._wrdata("\x64")
                 self._wrdata(chr(self.rs>>8))
                 self._wrdata(chr(self.rs&255))
             
-            elif cmd == "\x9E": # r45
-                self._paramcheck(cmd, params, 0)
+            elif cmdv == 0x9E: # r45
+                self._paramcheck(cmdv, params, 0)
                 self._wrdata("\x65")
                 self._wrdata(chr(self.r45>>8))
                 self._wrdata(chr(self.r45&255))
             
-            elif cmd == "\xC0":
-                self._paramcheck(cmd, params, 0)
+            elif cmdv == 0xC0:
+                self._paramcheck(cmdv, params, 0)
                 print("***STOP MOTORS")
 
-            elif cmd == "\xC1":
-                self._paramcheck(cmd, params, 2)
+            elif cmdv == 0xC1:
+                self._paramcheck(cmdv, params, 2)
                 distance_value = ord(params[0])*256+ord(params[1])
                 print("***FORWARD!", distance_value)
                 
@@ -380,8 +388,8 @@ class serial:
                 print("***Position (%d, %d) Heading %d" % (self.row, self.column, self.heading))
                 self._wrdata("\x20")
 
-            elif cmd == "\xC2": # right
-                self._paramcheck(cmd, params, 2)
+            elif cmdv == 0xC2: # right
+                self._paramcheck(cmdv, params, 2)
                 distance_value = ord(params[0])*256+ord(params[1])
                 if distance_value > 180:
                     print("***U-TURN!", distance_value)
@@ -396,8 +404,8 @@ class serial:
                 print("***Position (%d, %d) Heading %d" % (self.row, self.column, self.heading))
                 self._wrdata("\x20")
 
-            elif cmd == "\xC3": # left
-                self._paramcheck(cmd, params, 2)
+            elif cmdv == 0xC3: # left
+                self._paramcheck(cmdv, params, 2)
                 distance_value = ord(params[0])*256+ord(params[1])
                 if distance_value > 180:
                     print("***U-TURN!", distance_value)
@@ -413,39 +421,39 @@ class serial:
 
                 self._wrdata("\x20")
                 
-            elif cmd == "\xC4":
-                self._paramcheck(cmd, params, 2)
+            elif cmdv == 0xC4:
+                self._paramcheck(cmdv, params, 2)
                 print("***Set speed to", ord(params[0])*256+ord(params[1]))
             
-            elif cmd == "\xC5":
-                self._paramcheck(cmd, params, 2)
+            elif cmdv == 0xC5:
+                self._paramcheck(cmdv, params, 2)
                 self.steering_correction = ord(params[0])*256+ord(params[1])
                 print("***Set Steering correction to", self.steering_correction)
 
-            elif cmd == "\xC6":
-                self._paramcheck(cmd, params, 0)
+            elif cmdv == 0xC6:
+                self._paramcheck(cmdv, params, 0)
                 print("***Extend Movement!")
                 
-            elif cmd == "\xC7":
-                self._paramcheck(cmd, params, 2)
+            elif cmdv == 0xC7:
+                self._paramcheck(cmdv, params, 2)
                 self.cell_distance = ord(params[0])*256+ord(params[1])
                 print("***Set Cell distance to", self.cell_distance)
 
-            elif cmd == "\xC8":
-                self._paramcheck(cmd, params, 2)
+            elif cmdv == 0xC8:
+                self._paramcheck(cmdv, params, 2)
                 self.wall_correction = ord(params[0])*256+ord(params[1])
                 print("***Set Wall edge correction to", self.wall_correction)
 
-            elif cmd == "\xC9":
-                self._paramcheck(cmd, params, 2)
+            elif cmdv == 0xC9:
+                self._paramcheck(cmdv, params, 2)
                 self.distance_to_test = ord(params[0])*256+ord(params[1])
                 print("***Set distance test to", self.distance_to_test)
                 print("*** >>>>Not complete yet! <<<<")
 
-            elif cmd == "\xCF":
-                self._paramcheck(cmd, params, 1)
+            elif cmdv == 0xCF:
+                self._paramcheck(cmdv, params, 1)
                 subcmd = ord(params[0])
-                self._wrdata(str(cmd))
+                self._wrdata(cmdv)
                 self._wrdata(params[0])
                 if subcmd == 0xC5:
                     self._wrdata_int16(self.steering_correction)
@@ -456,77 +464,77 @@ class serial:
                 elif subcmd == 0xC9:
                     self._wrdata_int16(self.distance_to_test)
                 
-            elif cmd == "\xD0":
-                self._paramcheck(cmd, params, 0)
+            elif cmdv == 0xD0:
+                self._paramcheck(cmdv, params, 0)
                 print("*** TURN OFF IR***")
                 self.IR = False
 
-            elif cmd == "\xD1":
-                self._paramcheck(cmd, params, 0)
+            elif cmdv == 0xD1:
+                self._paramcheck(cmdv, params, 0)
                 print("*** TURN ON IR***")
                 self.IR = True
 
-            elif cmd == "\xD8":
-                self._paramcheck(cmd, params, 2)
+            elif cmdv == 0xD8:
+                self._paramcheck(cmdv, params, 2)
                 self.front_long = ord(params[0])*256+ord(params[1])
                 print("***Set front long to", self.front_long)
 
-            elif cmd == "\xD9":
-                self._paramcheck(cmd, params, 2)
+            elif cmdv == 0xD9:
+                self._paramcheck(cmdv, params, 2)
                 self.front_short = ord(params[0])*256+ord(params[1])
                 print("***Set front short to", self.front_short)
 
-            elif cmd == "\xDA":
-                self._paramcheck(cmd, params, 2)
+            elif cmdv == 0xDA:
+                self._paramcheck(cmdv, params, 2)
                 self.left_side = ord(params[0])*256+ord(params[1])
                 print("***Set left side to", self.left_side)
 
-            elif cmd == "\xDB":
-                self._paramcheck(cmd, params, 2)
+            elif cmdv == 0xDB:
+                self._paramcheck(cmdv, params, 2)
                 self.right_side = ord(params[0])*256+ord(params[1])
                 print("***Set right side to", self.right_side)
 
-            elif cmd == "\xDC":
-                self._paramcheck(cmd, params, 2)
+            elif cmdv == 0xDC:
+                self._paramcheck(cmdv, params, 2)
                 self.left_45 = ord(params[0])*256+ord(params[1])
                 print("***Set left 45 to", self.left_45)
 
-            elif cmd == "\xDD":
-                self._paramcheck(cmd, params, 2)
+            elif cmdv == 0xDD:
+                self._paramcheck(cmdv, params, 2)
                 self.right_45 = ord(params[0])*256+ord(params[1])
                 print("***Set right 45 to", self.right_45)
 
-            elif cmd == "\xDE":
-                self._paramcheck(cmd, params, 2)
+            elif cmdv == 0xDE:
+                self._paramcheck(cmdv, params, 2)
                 self.r45_close = ord(params[0])*256+ord(params[1])
                 print("***Set r45 close to", self.r45_close)
 
-            elif cmd == "\xDF":
-                self._paramcheck(cmd, params, 2)
+            elif cmdv == 0xDF:
+                self._paramcheck(cmdv, params, 2)
                 self.l45_close = ord(params[0])*256+ord(params[1])
                 print("***Set l45 close to", self.l45_close)
 
                 
-            elif cmd == "\xf9":
+            elif cmdv == 0xf9:
                 # write to acceleration table
-                self._paramcheck(cmd, params, 3)
+                self._paramcheck(cmdv, params, 3)
                 addr = ord(params[0])
                 data = ord(params[1])*256+ord(params[2])
                 self.accel_table[addr] = data
                 self._wrdata("\xCE")
                 self._wrdata_int16(self.accel_table[addr])
 
-            elif cmd == "\xfA":
+            elif cmdv == 0xfA:
                 # write to acceleration table
-                self._paramcheck(cmd, params, 3)
+                self._paramcheck(cmdv, params, 3)
                 addr = ord(params[0])+256
                 data = ord(params[1])*256+ord(params[2])
                 self.accel_table[addr] = data
                 self._wrdata("\xCE")
                 self._wrdata_int16(self.accel_table[addr])
                 
-            elif cmd == "\xfe":
-                self._paramcheck(cmd, params, 3)
+            elif cmdv == 0xfe:
+                self._paramcheck(cmdv, params, 3)
                 if params != "\xfc\xf8\xfe":
                     print("Unexpected unlock")
                     print("EXITING")
@@ -537,7 +545,7 @@ class serial:
                     self._wrdata("\xC1")
                     
             else:
-                print("Unknown command", hex(ord(cmd)))
+                print("Unknown command", hex(cmdv))
                 print("EXITING")
                 sys.exit(1)
             self._wrdata("\xEF")
@@ -545,7 +553,11 @@ class serial:
             self.do_background_processes()
             
         def write(self, data):
-            self._process_cmd(data[0], data[1:])
+            cmdv = data[0]
+            # fix for Python 2
+            if type(cmdv) is str:
+                cmdv = ord(cmdv)
+            self._process_cmd(cmdv, data[1:])
         
         def read(self, bytes_to_read):
             self.do_background_processes()

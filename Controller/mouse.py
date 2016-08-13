@@ -2191,7 +2191,7 @@ def main():
         try:
             run_program(port)
             
-        except SoftReset, MajorError:
+        except (SoftReset, MajorError):
             print("Error recovery?")
             # @todo: Fix this to reset variables, and restart
             # @todo: Go though all variables in project, and set... maybe collate variables at top?

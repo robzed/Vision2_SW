@@ -221,6 +221,10 @@ class serial:
                 elif key == "P":
                     # pause on move
                     PAUSE_ON_MOVE = not PAUSE_ON_MOVE
+                elif key == "?":
+                    print("Emulated Mouse Status")
+                    _direction = ["north", "east", "south", "west"] [self.heading]
+                    print(" %s (%d, %d)" % (str(_direction), self.row, self.column))    # ●○
                 elif key == '\x13' or '\x10':
                     pass
                 else:

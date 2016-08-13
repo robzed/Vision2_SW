@@ -1,10 +1,11 @@
 # Vision2_SW
 
-This is the code for my Stepper-based mouse Micromouse, which solves 5x5 and 16x16 mazes. 
+This is the code for my Stepper-based mouse Micromouse, which solves 5x5 and 16x16 mazes.
 
 The base hardware was originally built by Ken Hewitt, I've added a Raspberry Pi and a camera to this 
 design, and made various minor modications.
 
+Vision2 was the working title, Dizzy was the name of the actual mouse when I was running in Minos2016. 
 
 ## Architecture
 
@@ -17,6 +18,11 @@ between the two microprocessors.
 All timing less than 10ms is done by the dsPIC and no attempt has been made yet to do any 
 real-time work on the Raspberry Pi.
 
+
+### Presentation in Minos about my plans for Vision2/Dizzy
+
+* Summary: http://www.micromouseonline.com/2014/05/02/minos-2014-report/#rob_probin
+* Presentation http://www.micromouseonline.com/wp/wp-content/uploads/2014/04/Vision2-v1_4f.pdf
 
 ## License
 

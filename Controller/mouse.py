@@ -2218,5 +2218,6 @@ def main():
             print("sudo poweroff")
             sys.exit(1)
             
-main()
+if __name__ == "__main__":
+    main()
 

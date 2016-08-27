@@ -3,6 +3,17 @@
 # This file acts as a simulator (or low level emulation environment)
 # for mouse.py. This allows it to be run on a standard computer
 # without he I/O controller running.
+#
+# This operates in two modes: 
+#    (1) text mode.
+#    (2) graphical mode when called from graphic_emulator.
+#
+# In the second case we disable text output from this file, and
+# route output to the graphic_emulator GUI shell. One advantage
+# to this approach is that all text to stdout is generated from
+# mouse.py - so you can see what it 'thinks', without
+# extra text from simulated environment getting in the way.
+#
 # Copyright 2016 Rob Probin.
 # All original work.
 #
@@ -565,7 +576,7 @@ class serial:
                 print("bytes to read != 1")
                 sys.exit(1)
             if not self.replies:
-                return ""
+                return b""
             else:
                 return self.replies.popleft()
             

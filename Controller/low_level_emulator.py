@@ -44,6 +44,23 @@ AUTOMATIC_KEYS = False
 EMULATOR_BATTERY_CELL_VOLTAGE = 4.24 #4.25 #3.8 #3.7
 EMULATOR_BATTERY_ADC = 0x3FF & int(((4*EMULATOR_BATTERY_CELL_VOLTAGE) *1023 * 12000) / ((33000+12000) * 5 * 0.95))
 
+if len(sys.argv) >= 2 and sys.argv[1] == "TEXT_SIMULATOR":
+    TEXT_SIMULATOR = True
+else:
+    TEXT_SIMULATOR = False
+
+def lleprint(*args, **kargs):
+    if TEXT_SIMULATOR:
+        sep  = kargs.get('sep', ' ')            # Keyword arg defaults
+        end  = kargs.get('end', '\n')
+        _file = kargs.get('file', sys.stdout)
+        output = ''
+        first  = True
+        for arg in args:
+            output += ('' if first else sep) + str(arg)
+            first = False
+        _file.write(output + end)
+
 
 class intermediate_writer:
     def __init__(self, dest) :
@@ -148,10 +165,10 @@ class serial:
             LED7 = self.LEDs[6]
             LED8 = self.LEDs[7]
             LED9 = self.LEDs[8]
-            LEDs = "%s   %s< ^%s >%s" % ("".join(self.LEDs[0:6])[::-1], LED7, LED8, LED9)
+            LEDs = "***%s   %s< ^%s >%s" % ("".join(self.LEDs[0:6])[::-1], LED7, LED8, LED9)
             if LEDs != self.last_LEDs:
                 self.iw.start_led_print()
-                print(LEDs)
+                lleprint(LEDs)
                 self.iw.end_led_print()
                 self.last_LEDs = LEDs
                 
@@ -219,30 +236,30 @@ class serial:
                     self._wrdata("\x39")    # B press
                     self.key_delayed = (time.time()+2, "\x31")
                 elif key == "<":
-                    print("*** Mouse a bit left")
+                    lleprint("*** Mouse a bit left")
                     self.shift_left()
                 elif key == ">":
-                    print("*** Mouse a bit right")
+                    lleprint("*** Mouse a bit right")
                     self.shift_right()
                 #elif key == "|":
                 #    pass
                 elif key == "^":
-                    print("*** Mouse far away from front wall")
+                    lleprint("*** Mouse far away from front wall")
                     self.shift_far()
                 elif key == "+":
-                    print("*** Mouse centered, in same cell as front wall")
+                    lleprint("*** Mouse centered, in same cell as front wall")
                     self.shift_middle()
                 elif key == "P":
                     # pause on move
                     PAUSE_ON_MOVE = not PAUSE_ON_MOVE
                 elif key == "?":
-                    print("Emulated Mouse Status")
+                    lleprint("***Emulated Mouse Status")
                     _direction = ["north", "east", "south", "west"] [self.heading]
-                    print(" %s (%d, %d)" % (str(_direction), self.row, self.column))    # ●○
+                    lleprint("*** %s (%d, %d)" % (str(_direction), self.row, self.column))    # ●○
                 elif key == '\x13' or '\x10':
                     pass
                 else:
-                    print("??? Didn't understand", key)
+                    lleprint("***??? Didn't understand", key)
     
         def inWaiting(self):
             self.do_background_processes()
@@ -274,7 +291,7 @@ class serial:
                 self._paramcheck(cmdv, params, 1)
                 LEDmask = ord(params[0])
                 if cmdv == 0x21: LEDmask += 512
-                print("***ALL LEDS:", hex(LEDmask))
+                lleprint("***ALL LEDS:", hex(LEDmask))
                 for n in range(1,10):
                     if LEDmask&1:
                         self.set_LED(n)
@@ -284,12 +301,12 @@ class serial:
                 
             elif cmdv >= 0x10 and cmdv <= 0x19:
                 LEDnum = cmdv&0x0F
-                #print("*** LED", LEDnum, "on")
+                #lleprint("*** LED", LEDnum, "on")
                 self.set_LED(LEDnum)
                 self.show_LEDs()
             elif cmdv >= 0x00 and cmdv <= 0x09:
                 LEDnum = cmdv&0x0F
-                #print("*** LED", LEDnum, "off")
+                #lleprint("*** LED", LEDnum, "off")
                 self.clear_LED(LEDnum)
                 self.show_LEDs()
             elif cmdv == 0x80:
@@ -310,7 +327,7 @@ class serial:
                 value = 0x40
                 if self.maze.get_front_wall(self.heading, self.row, self.column):
                     value += 3
-                    print("       ___")
+                    lleprint("***       ___")
                 else:
                     nrow = self.row
                     ncolumn = self.column
@@ -328,16 +345,16 @@ class serial:
                         value += 1
                 if self.maze.get_left_wall(self.heading, self.row, self.column):
                     value += 0x04
-                    print("       |", end="")
+                    lleprint("***       |", end="")
                 else:
-                    print("        ", end="")
+                    lleprint("***        ", end="")
                 if self.maze.get_right_wall(self.heading, self.row, self.column):
                     value += 0x08
-                    print("  |")
+                    lleprint("  |")
                 else:
-                    print(" ")
+                    lleprint(" ")
                 
-                #print("*** value", value & 0x0f)
+                #lleprint("*** value", value & 0x0f)
                 
                 self._wrdata(chr(value))
             
@@ -373,12 +390,12 @@ class serial:
             
             elif cmdv == 0xC0:
                 self._paramcheck(cmdv, params, 0)
-                print("***STOP MOTORS")
+                lleprint("***STOP MOTORS")
 
             elif cmdv == 0xC1:
                 self._paramcheck(cmdv, params, 2)
                 distance_value = ord(params[0])*256+ord(params[1])
-                print("***FORWARD!", distance_value)
+                lleprint("***FORWARD!", distance_value)
                 
                 if PAUSE_ON_MOVE:
                     time.sleep(0.5)
@@ -396,70 +413,70 @@ class serial:
                 else:
                     self.column -= 1
                 
-                print("***Position (%d, %d) Heading %d" % (self.row, self.column, self.heading))
+                lleprint("***Position (%d, %d) Heading %d" % (self.row, self.column, self.heading))
                 self._wrdata("\x20")
 
             elif cmdv == 0xC2: # right
                 self._paramcheck(cmdv, params, 2)
                 distance_value = ord(params[0])*256+ord(params[1])
                 if distance_value > 180:
-                    print("***U-TURN!", distance_value)
+                    lleprint("***U-TURN!", distance_value)
                     self.heading = 3 & (self.heading + 2)
                 else:
-                    print("***RIGHT!", distance_value)
+                    lleprint("***RIGHT!", distance_value)
                     self.heading = 3 & (self.heading + 1)
  
                 if PAUSE_ON_MOVE:
                     time.sleep(0.5)
                
-                print("***Position (%d, %d) Heading %d" % (self.row, self.column, self.heading))
+                lleprint("***Position (%d, %d) Heading %d" % (self.row, self.column, self.heading))
                 self._wrdata("\x20")
 
             elif cmdv == 0xC3: # left
                 self._paramcheck(cmdv, params, 2)
                 distance_value = ord(params[0])*256+ord(params[1])
                 if distance_value > 180:
-                    print("***U-TURN!", distance_value)
+                    lleprint("***U-TURN!", distance_value)
                     self.heading = 3 & (self.heading + 2)
                 else:
-                    print("***LEFT!", distance_value)
+                    lleprint("***LEFT!", distance_value)
                     self.heading = 3 & (self.heading - 1)
 
                 if PAUSE_ON_MOVE:
                     time.sleep(0.5)
 
-                print("***Position (%d, %d) Heading %d" % (self.row, self.column, self.heading))
+                lleprint("***Position (%d, %d) Heading %d" % (self.row, self.column, self.heading))
 
                 self._wrdata("\x20")
                 
             elif cmdv == 0xC4:
                 self._paramcheck(cmdv, params, 2)
-                print("***Set speed to", ord(params[0])*256+ord(params[1]))
+                lleprint("***Set speed to", ord(params[0])*256+ord(params[1]))
             
             elif cmdv == 0xC5:
                 self._paramcheck(cmdv, params, 2)
                 self.steering_correction = ord(params[0])*256+ord(params[1])
-                print("***Set Steering correction to", self.steering_correction)
+                lleprint("***Set Steering correction to", self.steering_correction)
 
             elif cmdv == 0xC6:
                 self._paramcheck(cmdv, params, 0)
-                print("***Extend Movement!")
+                lleprint("***Extend Movement!")
                 
             elif cmdv == 0xC7:
                 self._paramcheck(cmdv, params, 2)
                 self.cell_distance = ord(params[0])*256+ord(params[1])
-                print("***Set Cell distance to", self.cell_distance)
+                lleprint("***Set Cell distance to", self.cell_distance)
 
             elif cmdv == 0xC8:
                 self._paramcheck(cmdv, params, 2)
                 self.wall_correction = ord(params[0])*256+ord(params[1])
-                print("***Set Wall edge correction to", self.wall_correction)
+                lleprint("***Set Wall edge correction to", self.wall_correction)
 
             elif cmdv == 0xC9:
                 self._paramcheck(cmdv, params, 2)
                 self.distance_to_test = ord(params[0])*256+ord(params[1])
-                print("***Set distance test to", self.distance_to_test)
-                print("*** >>>>Not complete yet! <<<<")
+                lleprint("***Set distance test to", self.distance_to_test)
+                lleprint("*** >>>>Not complete yet! <<<<")
 
             elif cmdv == 0xCF:
                 self._paramcheck(cmdv, params, 1)
@@ -477,53 +494,53 @@ class serial:
                 
             elif cmdv == 0xD0:
                 self._paramcheck(cmdv, params, 0)
-                print("*** TURN OFF IR***")
+                lleprint("*** TURN OFF IR***")
                 self.IR = False
 
             elif cmdv == 0xD1:
                 self._paramcheck(cmdv, params, 0)
-                print("*** TURN ON IR***")
+                lleprint("*** TURN ON IR***")
                 self.IR = True
 
             elif cmdv == 0xD8:
                 self._paramcheck(cmdv, params, 2)
                 self.front_long = ord(params[0])*256+ord(params[1])
-                print("***Set front long to", self.front_long)
+                lleprint("***Set front long to", self.front_long)
 
             elif cmdv == 0xD9:
                 self._paramcheck(cmdv, params, 2)
                 self.front_short = ord(params[0])*256+ord(params[1])
-                print("***Set front short to", self.front_short)
+                lleprint("***Set front short to", self.front_short)
 
             elif cmdv == 0xDA:
                 self._paramcheck(cmdv, params, 2)
                 self.left_side = ord(params[0])*256+ord(params[1])
-                print("***Set left side to", self.left_side)
+                lleprint("***Set left side to", self.left_side)
 
             elif cmdv == 0xDB:
                 self._paramcheck(cmdv, params, 2)
                 self.right_side = ord(params[0])*256+ord(params[1])
-                print("***Set right side to", self.right_side)
+                lleprint("***Set right side to", self.right_side)
 
             elif cmdv == 0xDC:
                 self._paramcheck(cmdv, params, 2)
                 self.left_45 = ord(params[0])*256+ord(params[1])
-                print("***Set left 45 to", self.left_45)
+                lleprint("***Set left 45 to", self.left_45)
 
             elif cmdv == 0xDD:
                 self._paramcheck(cmdv, params, 2)
                 self.right_45 = ord(params[0])*256+ord(params[1])
-                print("***Set right 45 to", self.right_45)
+                lleprint("***Set right 45 to", self.right_45)
 
             elif cmdv == 0xDE:
                 self._paramcheck(cmdv, params, 2)
                 self.r45_close = ord(params[0])*256+ord(params[1])
-                print("***Set r45 close to", self.r45_close)
+                lleprint("***Set r45 close to", self.r45_close)
 
             elif cmdv == 0xDF:
                 self._paramcheck(cmdv, params, 2)
                 self.l45_close = ord(params[0])*256+ord(params[1])
-                print("***Set l45 close to", self.l45_close)
+                lleprint("***Set l45 close to", self.l45_close)
 
                 
             elif cmdv == 0xf9:

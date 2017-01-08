@@ -69,10 +69,22 @@ from __future__ import print_function
 #
 
 import sys
-if len(sys.argv) == 2 and sys.argv[1] == "SIMULATOR":
-    SIMULATOR = True
+if len(sys.argv) >= 2:
+    if sys.argv[1] == "TEXT_SIMULATOR":
+        SIMULATOR = True
+        TEXT_SIMULATOR = True
+        GUI_SIMULATOR = False
+    elif sys.argv[1] == "GUI_SIMULATOR":
+        SIMULATOR = True
+        TEXT_SIMULATOR = False
+        GUI_SIMULATOR = True
+    else:
+        print("Unknown command line argument")
+        sys.exit(-201)
 else:
     SIMULATOR = False
+    TEXT_SIMULATOR = False
+    GUI_SIMULATOR = False
 
 if SIMULATOR:
     from low_level_emulator import serial   #@UnusedImport
@@ -536,7 +548,7 @@ def run_timers(port):
             timer_next_end_time += 0.125
 
         # only do this if we are not running full already...
-        if not flight_queue_full and not SIMULATOR:
+        if not flight_queue_full and not TEXT_SIMULATOR:
             # we hard code a function here, for the moment
             global execution_state_LED6
             send_switch_led_command(port, 6, execution_state_LED6)
@@ -1373,7 +1385,7 @@ def do_calibration_LEDs(port, value):
     send_switch_led_command(port, 1, value & 1)
     send_switch_led_command(port, 2, value & 2)
     send_switch_led_command(port, 3, value & 4)
-    if SIMULATOR:
+    if TEXT_SIMULATOR:
         send_switch_led_command(port, 4, True)
     else:
         global flashing_cal4_led

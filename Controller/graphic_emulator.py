@@ -22,7 +22,14 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #
-# Requires Python 3
+# Requires Python 3   (It doesn't ... problems with the mouse code mean this is still Python 2 at the moment)
+#
+# NOTES:
+# 
+#  * It would be nice if the mouse used asyncio for the serial, and tkinter run loop handled with this. But it doesn't at the moment.
+#  * To avoid the problem that mouse.py has it's own control loop and tkinter also requires it's own control loop, we use a second thread.
+#   - Co-routines would solve this extra thread problem, but currently Python generators are not flexible enbough.
+#
 from __future__ import print_function
 
 # Basic Tkinter
@@ -181,9 +188,9 @@ class GUI_App(object):
                 else:
                     self.canvas.itemconfig(self.flash_id, text="o")
                     self.front_led.off()
-                self.root.after(500, task)  # reschedule event in 2 seconds
+                self.root.after(50, task)  # reschedule event in 2 seconds
             
-            self.root.after(500, task)
+            self.root.after(50, task)
             
             self.root.mainloop()
             #mainloop()

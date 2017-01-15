@@ -125,7 +125,8 @@ class serial:
             self.timer_state = 0
             
             self.IR = False
-            self.keys = KeyThread()
+            if TEXT_SIMULATOR:
+                self.keys = KeyThread()
             self.key_delayed = None
             
             self.timeout = timeout
@@ -135,6 +136,10 @@ class serial:
             self.shift_middle()
             
             self.accel_table = [0]*512
+
+        def set_gui(self, gui):
+            self.gui = gui
+            self.keys = gui
 
         def shift_left(self):
             self.front = 50

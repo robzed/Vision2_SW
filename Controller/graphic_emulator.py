@@ -33,6 +33,8 @@
 from __future__ import print_function
 import sys
 
+import mouse
+
 # Basic Tkinter
 if sys.version_info.major == 3:
     from tkinter import *
@@ -62,6 +64,14 @@ else:
 # http://effbot.org/zone/tkinter-geometry.htm
 # http://www.python-course.eu/tkinter_layout_management.php
 # http://effbot.org/tkinterbook/pack.htm
+
+from threading  import Thread
+
+try:
+        from Queue import Queue, Empty
+except ImportError:
+        from queue import Queue, Empty  # python 3.x
+
 
 class LED(Label):
     LED_font = "not set"
@@ -180,9 +190,19 @@ class GUI_App(object):
             label2.pack(side=TOP)
             label3 = Label(self.root, text="Battery = 0.0v")
             label3.pack(side=TOP)
-            
-            
+                    
         def run(self):
+            self.key_q = Queue()
+            self.gui_q = Queue()
+
+            def mm():
+                mouse.main(self)
+
+            mm()
+            
+            t = Thread(target=mm)
+            t.daemon = True # thread dies with the program
+            t.start()
             
             def task():
                 self.state = not self.state
@@ -198,6 +218,14 @@ class GUI_App(object):
             
             self.root.mainloop()
             #mainloop()
+
+        def get_key(self):
+            try:
+                key = self.key_q.get_nowait()
+            except Empty:
+                return None
+            else:
+                return key
 
 if __name__ == "__main__":
     gui = GUI_App()

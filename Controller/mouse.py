@@ -2188,8 +2188,10 @@ class serial_snooper:
             self.data = []
 
 
-def main():
+def main(gui_bridge=None):
     port = serial.Serial("/dev/ttyAMA0", baudrate = 57600, timeout = 0.1)
+    if gui_bridge is not None:
+        port.set_gui(gui_bridge)
     if snoop_serial_data:
         port = serial_snooper(port)
     time.sleep(0.05)

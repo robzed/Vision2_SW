@@ -68,8 +68,11 @@ class intermediate_writer:
         self.led_text = ""
         self.led_print = False
         self.led_end = time.time() + 1
+
+    def flush(self):
+        self.dest.flush()
         
-    def write(self, text) :
+    def write(self, text):
         if self.led_print:
             if text == "\n":
                 self.led_text += text

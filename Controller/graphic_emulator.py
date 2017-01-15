@@ -5,7 +5,7 @@
 # This is a graphical view for the low_level_emulator.py. 
 # For more details see that file.
 #
-# Copyright 2016 Rob Probin.
+# Copyright 2016-2017 Rob Probin.
 # All original work.
 #
 # This program is free software; you can redistribute it and/or
@@ -31,11 +31,15 @@
 #   - Co-routines would solve this extra thread problem, but currently Python generators are not flexible enbough.
 #
 from __future__ import print_function
+import sys
 
 # Basic Tkinter
-#from tkinter import *
-from Tkinter import *       # could have used impot Tkinter as tk
-import tkFont
+if sys.version_info.major == 3:
+    from tkinter import *
+    import tkinter.font as tkFont
+else:
+    from Tkinter import *       # could have used impot Tkinter as tk
+    import tkFont
 
 # Python 3 version
 #from tkinter import ttk

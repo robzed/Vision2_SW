@@ -104,7 +104,7 @@ import datetime
 
 verbose = False
 print_map_in_progress = True
-snoop_serial_data = True        # good but slow
+snoop_serial_data = False        # good but slow
 
 step_mode = 2           # valid values are 1, 2, 4, 8
 
@@ -301,14 +301,14 @@ def send_switch_led_command(port, led, on):
         #if verbose: print("Switch LED", led, "off")
         command = 0x00 + led
 
-    send_message(port, chr(command))
+    send_message(port, bytes([command]))
 
 
 def send_led_pattern_command(port, led_states):
     # 0x20 = CMD_TYPE_ALL_LEDS - extra byte (leds 1-8, led 9-bit 0 of cmd byte)
-    leds_1to8 = chr(led_states & 0xFF)
-    cmd_and_led_9 = chr(0x20 + ((led_states >> 8) & 1))
-    send_message(port, cmd_and_led_9 + leds_1to8)
+    leds_1to8 = led_states & 0xFF
+    cmd_and_led_9 = 0x20 + ((led_states >> 8) & 1)
+    send_message(port, bytes([cmd_and_led_9, leds_1to8]))
 
 def turn_off_all_LEDs(port):
     send_led_pattern_command(port, 0);
@@ -316,14 +316,14 @@ def turn_off_all_LEDs(port):
     
 def turn_off_motors(port):
     if verbose: print("Turn off motors")
-    send_message(port, "\xC0")
+    send_message(port, b"\xC0")
 
 def move_forward(port, distance):
     global move_finished
     move_finished = False
     
     if verbose: print("Forward")
-    s = "\xC1" + chr(distance >> 8) + chr(distance & 0xff)
+    s = bytes([0xC1, distance >> 8, distance & 0xff])
     send_message(port, s)
 
 def move_right(port, distance):
@@ -331,7 +331,7 @@ def move_right(port, distance):
     move_finished = False
     
     if verbose: print("right")
-    s = "\xC2" + chr(distance >> 8) + chr(distance & 0xff)
+    s = bytes([0xC2, distance >> 8, distance & 0xff])
     send_message(port, s)
 
 def move_left(port, distance):
@@ -339,16 +339,16 @@ def move_left(port, distance):
     move_finished = False
     
     if verbose: print("left")
-    s = "\xC3" + chr(distance >> 8) + chr(distance & 0xff)
+    s = bytes([0xC3, distance >> 8, distance & 0xff])
     send_message(port, s)
 
 def turn_on_ir(port):
     if verbose: print("IR on")
-    send_message(port, "\xD1")
+    send_message(port, b"\xD1")
     
 def turn_off_ir(port):
     if verbose: print("IR off")
-    send_message(port, "\xD0")
+    send_message(port, b"\xD0")
 
 
 def set_speed(port, speed):

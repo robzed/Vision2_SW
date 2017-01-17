@@ -198,28 +198,28 @@ class serial:
                     self.target_time = time.time() + 0.1
                 elif self.timer_state == 2:
                     if AUTOMATIC_KEYS: 
-                        self._wrdata("\x38")    # A press
+                        self._wrdata(b"\x38")    # A press
                     self.target_time = time.time() + 0.25    # quick press
                 elif self.timer_state == 3:
                     if AUTOMATIC_KEYS: 
-                        self._wrdata("\x30")    # A release
+                        self._wrdata(b"\x30")    # A release
                     self.target_time = time.time() + 1
                 elif self.timer_state == 4:
                     if AUTOMATIC_KEYS: 
-                        self._wrdata("\x39")    # B press
+                        self._wrdata(b"\x39")    # B press
                     self.target_time = time.time() + 2  # hold
                 elif self.timer_state == 5:
                     if AUTOMATIC_KEYS: 
-                        self._wrdata("\x31")    # B release
+                        self._wrdata(b"\x31")    # B release
                     self.target_time = time.time() + 1
                 else:
-                    self._wrdata(chr(0x10+(EMULATOR_BATTERY_ADC>>8)))
-                    self._wrdata(chr(EMULATOR_BATTERY_ADC & 0xFF))
+                    self._wrdata(0x10+(EMULATOR_BATTERY_ADC>>8))
+                    self._wrdata(EMULATOR_BATTERY_ADC & 0xFF)
                     self.target_time = time.time() + 0.3
                     # test for EV Speed sample
-                    #self._wrdata(chr(0x22))
-                    #self._wrdata(chr(0x02))
-                    #self._wrdata(chr(0x02))
+                    #self._wrdata(0x22)
+                    #self._wrdata(0x02)
+                    #self._wrdata(0x02)
 
         def do_keys(self):
             if self.key_delayed is not None:
@@ -232,16 +232,16 @@ class serial:
             key = self.keys.get_key()
             if key is not None:
                 if key == 'a':
-                    self._wrdata("\x38")    # A press
-                    self._wrdata("\x30")    # A release
+                    self._wrdata(b"\x38")    # A press
+                    self._wrdata(b"\x30")    # A release
                 elif key == 'b':
-                    self._wrdata("\x39")    # B press
-                    self._wrdata("\x31")    # B release
+                    self._wrdata(b"\x39")    # B press
+                    self._wrdata(b"\x31")    # B release
                 elif key == 'A':
-                    self._wrdata("\x38")    # A press
+                    self._wrdata(b"\x38")    # A press
                     self.key_delayed = (time.time()+2, "\x30")
                 elif key == "B":
-                    self._wrdata("\x39")    # B press
+                    self._wrdata(b"\x39")    # B press
                     self.key_delayed = (time.time()+2, "\x31")
                 elif key == "<":
                     lleprint("*** Mouse a bit left")
@@ -278,15 +278,17 @@ class serial:
                 if data > 255 or data < 0:
                     print("Expected byte value - breakpoint in _wrdata()")
                     sys.exit(1)
-                data = chr(data)
+                data = bytes([data])
             elif len(data) != 1:
                 print("Expected length 1 string - fix in _wrdata() by splitting")
                 sys.exit(1)
+            if type(data) != bytes:
+                raise("Return data not bytes!!")
             self.replies.append(data)
         
         def _wrdata_int16(self, data):
-            self._wrdata(chr(data>>8))
-            self._wrdata(chr(data&255))
+            self._wrdata(data>>8)
+            self._wrdata(data&255)
             
         def _paramcheck(self, cmdv, params, num_params):
             if len(params) != num_params:
@@ -364,37 +366,37 @@ class serial:
                 
                 #lleprint("*** value", value & 0x0f)
                 
-                self._wrdata(chr(value))
+                self._wrdata(value)
             
             elif cmdv == 0x9A: # front
                 self._paramcheck(cmdv, params, 0)
-                self._wrdata("\x61")
-                self._wrdata(chr(self.front>>8))
-                self._wrdata(chr(self.front&255))
+                self._wrdata(b"\x61")
+                self._wrdata(self.front>>8)
+                self._wrdata(self.front&255)
 
             elif cmdv == 0x9B: # l90
                 self._paramcheck(cmdv, params, 0)
-                self._wrdata("\x62")
-                self._wrdata(chr(self.ls>>8))
-                self._wrdata(chr(self.ls&255))
+                self._wrdata(b"\x62")
+                self._wrdata(self.ls>>8)
+                self._wrdata(self.ls&255)
             
             elif cmdv == 0x9C: # l45
                 self._paramcheck(cmdv, params, 0)
-                self._wrdata("\x63")
-                self._wrdata(chr(self.l45>>8))
-                self._wrdata(chr(self.l45&255))
+                self._wrdata(b"\x63")
+                self._wrdata(self.l45>>8)
+                self._wrdata(self.l45&255)
             
             elif cmdv == 0x9D: # r90
                 self._paramcheck(cmdv, params, 0)
-                self._wrdata("\x64")
-                self._wrdata(chr(self.rs>>8))
-                self._wrdata(chr(self.rs&255))
+                self._wrdata(b"\x64")
+                self._wrdata(self.rs>>8)
+                self._wrdata(self.rs&255)
             
             elif cmdv == 0x9E: # r45
                 self._paramcheck(cmdv, params, 0)
-                self._wrdata("\x65")
-                self._wrdata(chr(self.r45>>8))
-                self._wrdata(chr(self.r45&255))
+                self._wrdata(b"\x65")
+                self._wrdata(self.r45>>8)
+                self._wrdata(self.r45&255)
             
             elif cmdv == 0xC0:
                 self._paramcheck(cmdv, params, 0)
@@ -422,7 +424,7 @@ class serial:
                     self.column -= 1
                 
                 lleprint("***Position (%d, %d) Heading %d" % (self.row, self.column, self.heading))
-                self._wrdata("\x20")
+                self._wrdata(b"\x20")
 
             elif cmdv == 0xC2: # right
                 self._paramcheck(cmdv, params, 2)
@@ -438,7 +440,7 @@ class serial:
                     time.sleep(0.5)
                
                 lleprint("***Position (%d, %d) Heading %d" % (self.row, self.column, self.heading))
-                self._wrdata("\x20")
+                self._wrdata(b"\x20")
 
             elif cmdv == 0xC3: # left
                 self._paramcheck(cmdv, params, 2)
@@ -455,7 +457,7 @@ class serial:
 
                 lleprint("***Position (%d, %d) Heading %d" % (self.row, self.column, self.heading))
 
-                self._wrdata("\x20")
+                self._wrdata(b"\x20")
                 
             elif cmdv == 0xC4:
                 self._paramcheck(cmdv, params, 2)
@@ -557,7 +559,7 @@ class serial:
                 addr = ord(params[0])
                 data = ord(params[1])*256+ord(params[2])
                 self.accel_table[addr] = data
-                self._wrdata("\xCE")
+                self._wrdata(b"\xCE")
                 self._wrdata_int16(self.accel_table[addr])
 
             elif cmdv == 0xfA:
@@ -566,29 +568,32 @@ class serial:
                 addr = ord(params[0])+256
                 data = ord(params[1])*256+ord(params[2])
                 self.accel_table[addr] = data
-                self._wrdata("\xCE")
+                self._wrdata(b"\xCE")
                 self._wrdata_int16(self.accel_table[addr])
                 
             elif cmdv == 0xfe:
                 self._paramcheck(cmdv, params, 3)
-                if params != "\xfc\xf8\xfe":
+                if params != b"\xfc\xf8\xfe":
                     print("Unexpected unlock")
                     print("EXITING")
                     sys.exit(1)
                 if self.locked:
-                    self._wrdata("\xC0")
+                    self._wrdata(b"\xC0")
                 else:
-                    self._wrdata("\xC1")
+                    self._wrdata(b"\xC1")
                     
             else:
                 print("Unknown command", hex(cmdv))
                 print("EXITING")
                 sys.exit(1)
-            self._wrdata("\xEF")
+            self._wrdata(b"\xEF")
             
             self.do_background_processes()
             
         def write(self, data):
+            if type(data) != bytes:
+                raise("Outgoing data not bytes!!")
+
             cmdv = data[0]
             # fix for Python 2
             if type(cmdv) is str:

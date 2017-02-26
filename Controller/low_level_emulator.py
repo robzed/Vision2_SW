@@ -299,7 +299,8 @@ class serial:
 
             if cmdv == 0x20 or cmdv == 0x21:
                 self._paramcheck(cmdv, params, 1)
-                LEDmask = ord(params[0])
+                LEDmask = params[0]
+                #LEDmask = ord(params[0])
                 if cmdv == 0x21: LEDmask += 512
                 lleprint("***ALL LEDS:", hex(LEDmask))
                 for n in range(1,10):

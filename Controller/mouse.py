@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 #
 # Main Control file for Vision2 Micromouse Robot.
@@ -353,55 +353,55 @@ def turn_off_ir(port):
 
 def set_speed(port, speed):
     if verbose: print("set speed", speed)
-    s = "\xC4" + chr(speed >> 8) + chr(speed & 0xff)
+    s = bytes([0xC4, speed >> 8, speed & 0xff])
     send_message(port, s)
 
 def send_get_wall_info(port):
     if verbose: print("Get wall IR")
-    send_message(port, "\x98")
+    send_message(port, b"\x98")
 
 def send_get_45_sensor_info(port):
     if verbose: print("Get 45 IR")
-    send_message(port, "\x99")
+    send_message(port, b"\x99")
 
 def get_front_level(port):
-    send_message(port, "\x9A")
+    send_message(port, b"\x9A")
 
 def get_l90_level(port):
-    send_message(port, "\x9B")
+    send_message(port, b"\x9B")
 
 def get_l45_level(port):
-    send_message(port, "\x9C")
+    send_message(port, b"\x9C")
 
 def get_r90_level(port):
-    send_message(port, "\x9D")
+    send_message(port, b"\x9D")
 
 def get_r45_level(port):
-    send_message(port, "\x9E")
+    send_message(port, b"\x9E")
 
 
 def set_steering_correction(port, distance):
     if verbose: print("set steering correction distance", distance)
-    s = "\xC5" + chr(distance >> 8) + chr(distance & 0xff)
+    s = bytes([0xC5, distance >> 8, distance & 0xff])
     send_message(port, s)
 
 def extend_movement(port):
     if verbose: print("extent movement")
-    send_message(port, "\xC6")
+    send_message(port, "b\xC6")
 
 def set_cell_distance(port, distance):
     if verbose: print("set_cell_distance", distance)
-    s = "\xC7" + chr(distance >> 8) + chr(distance & 0xff)
+    s = bytes([0xC7, distance >> 8, distance & 0xff])
     send_message(port, s)
 
 def set_wall_edge_correction(port, distance):
     if verbose: print("set_wall_edge_correction", distance)
-    s = "\xC8" + chr(distance >> 8) + chr(distance & 0xff)
+    s = bytes([0xC8, distance >> 8, distance & 0xff])
     send_message(port, s)
 
 def set_distance_to_test(port, distance):
     if verbose: print("set_distance_to_test", distance)
-    s = "\xC9" + chr(distance >> 8) + chr(distance & 0xff)
+    s = bytes([0xC9, distance >> 8, distance & 0xff])
     send_message(port, s)
 
 
@@ -410,69 +410,69 @@ def set_distance_to_test(port, distance):
 #
 def set_front_long_threshold(port, threshold):
     if verbose: print("set_front_long_threshold", threshold)
-    s = "\xD8" + chr(threshold >> 8) + chr(threshold & 0xff)
+    s = bytes([0xD8, threshold >> 8, threshold & 0xff])
     send_message(port, s)
 
 def set_front_short_threshold(port, threshold):
     if verbose: print("set_front_short_threshold", threshold)
-    s = "\xD9" + chr(threshold >> 8) + chr(threshold & 0xff)
+    s = bytes([0xD9, threshold >> 8, threshold & 0xff])
     send_message(port, s)
 
 def set_left_side_threshold(port, threshold):
     if verbose: print("set_left_side_threshold", threshold)
-    s = "\xDA" + chr(threshold >> 8) + chr(threshold & 0xff)
+    s = bytes([0xDA, threshold >> 8, threshold & 0xff])
     send_message(port, s)
 
 def set_right_side_threshold(port, threshold):
     if verbose: print("set_right_side_threshold", threshold)
-    s = "\xDB" + chr(threshold >> 8) + chr(threshold & 0xff)
+    s = bytes([0xDB, threshold >> 8, threshold & 0xff])
     send_message(port, s)
 
 def set_left_45_threshold(port, threshold):
     if verbose: print("set_left_45_threshold", threshold)
-    s = "\xDC" + chr(threshold >> 8) + chr(threshold & 0xff)
+    s = bytes([0xDC, threshold >> 8, threshold & 0xff])
     send_message(port, s)
 
 def set_right_45_threshold(port, threshold):
     if verbose: print("set_right_45_threshold", threshold)
-    s = "\xDD" + chr(threshold >> 8) + chr(threshold & 0xff)
+    s = bytes([0xDD, threshold >> 8, threshold & 0xff])
     send_message(port, s)
 
 def set_left_45_too_close_threshold(port, threshold):
     if verbose: print("set_left_45_too_close_threshold", threshold)
-    s = "\xDE" + chr(threshold >> 8) + chr(threshold & 0xff)
+    s = bytes([0xDE, threshold >> 8, threshold & 0xff])
     send_message(port, s)
 
 def set_right_45_too_close_threshold(port, threshold):
     if verbose: print("set_right_45_too_close_threshold", threshold)
-    s = "\xDF" + chr(threshold >> 8) + chr(threshold & 0xff)
+    s = bytes([0xDF, threshold >> 8, threshold & 0xff])
     send_message(port, s)
 
 def get_steering_correction(port):
     if verbose: print("get steering correction distance")
     clear_CF_result(0xC5)
-    s = "\xCF\xC5"
+    s = b"\xCF\xC5"
     send_message(port, s)
     return get_CF_result(port, 0xC5)
 
 def get_cell_distance(port):
     if verbose: print("get_cell_distance")
     clear_CF_result(0xC7)
-    s = "\xCF\xC7"
+    s = b"\xCF\xC7"
     send_message(port, s)
     return get_CF_result(port, 0xC7)
 
 def get_wall_edge_correction(port):
     if verbose: print("get_wall_edge_correction")
     clear_CF_result(0xC8)
-    s = "\xCF\xC8"
+    s = b"\xCF\xC8"
     send_message(port, s)
     return get_CF_result(port, 0xC8)
 
 def get_distance_to_test(port):
     if verbose: print("get_distance_to_test")
     clear_CF_result(0xC9)
-    s = "\xCF\xC9"
+    s = b"\xCF\xC9"
     send_message(port, s)
     return get_CF_result(port, 0xC9)
 
@@ -1106,6 +1106,7 @@ command_handlers = {
 def event_processor(port):
     cmd = port.read(1)
     if len(cmd) != 0:
+        print(cmd, type(cmd))
         cmd = ord(cmd)
         if cmd in command_handlers:
             command_handlers[cmd](port, cmd)

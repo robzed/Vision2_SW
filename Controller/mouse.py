@@ -91,6 +91,8 @@ if SIMULATOR:
 else:
     import serial   #@UnresolvedImport @Reimport
 
+#print(serial.VERSION)
+    
 import time
 from collections import deque
 import os
@@ -244,6 +246,7 @@ def send_message(port, message):
     sent_bytes_in_flight += ml
     messages_in_flight_queue.append(ml)
     port.write(message)
+    # @todo: should we check number of bytes written?
 
 
 def acknowledge_send(port, cmd):
@@ -601,12 +604,13 @@ battery_voltage_conversion = Aref_voltage * (33000+12000) / 12000 / 1023
 def EV_BATTERY_VOLTAGE(port, cmd):
     ADC_reading = port.read(1)
     ADClen = len(ADC_reading)
-    if ADClen == 0:
-        print("Didn't get second byte of battery voltage")
-        recover_from_major_error()
-    elif ADClen > 1:
-        print("More than one byte in voltage")
-        recover_from_major_error()
+    if ADClen != 1:
+        if ADClen == 0:
+            print("Didn't get second byte of battery voltage")
+            recover_from_major_error()
+        else:
+            print("More than one byte in voltage")
+            recover_from_major_error()
 
     ADC_reading = ord(ADC_reading) + 256 * (cmd & 0x03)
 
@@ -1106,7 +1110,11 @@ command_handlers = {
 def event_processor(port):
     cmd = port.read(1)
     if len(cmd) != 0:
-        print(cmd, type(cmd))
+        # test port.read(1) is ok
+        if len(cmd) != 1:
+            print("event_processor read not len 1 ERROR")
+            sys.exit(1)
+        #print(cmd, type(cmd))
         cmd = ord(cmd)
         if cmd in command_handlers:
             command_handlers[cmd](port, cmd)

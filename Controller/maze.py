@@ -21,6 +21,7 @@
 from __future__ import print_function
 
 import sys
+assert sys.version_info >= (3,0)
 
 class MazeFailedToRead(Exception):
     pass

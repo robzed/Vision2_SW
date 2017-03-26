@@ -272,7 +272,7 @@ def reset_message_queue():
 # 
 
 def message_into_hex(s):
-    return ":".join("{:02x}".format(ord(c)) for c in s)
+    return ":".join("{:02x}".format(c) for c in s)
 
 def send_unlock_command(port):
     if verbose: print("Send Unlock")

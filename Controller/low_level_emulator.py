@@ -104,6 +104,7 @@ class intermediate_writer:
             self.flush_leds()
 
 class serial:
+    VERSION = "low_level_emulator"
     class Serial:
         
         def __init__(self, path, baudrate = 57600, timeout = 0.1):
@@ -239,10 +240,10 @@ class serial:
                     self._wrdata(b"\x31")    # B release
                 elif key == 'A':
                     self._wrdata(b"\x38")    # A press
-                    self.key_delayed = (time.time()+2, "\x30")
+                    self.key_delayed = (time.time()+2, b"\x30")
                 elif key == "B":
                     self._wrdata(b"\x39")    # B press
-                    self.key_delayed = (time.time()+2, "\x31")
+                    self.key_delayed = (time.time()+2, b"\x31")
                 elif key == "<":
                     lleprint("*** Mouse a bit left")
                     self.shift_left()
@@ -405,7 +406,7 @@ class serial:
 
             elif cmdv == 0xC1:
                 self._paramcheck(cmdv, params, 2)
-                distance_value = ord(params[0])*256+ord(params[1])
+                distance_value = params[0] * 256 + params[1]
                 lleprint("***FORWARD!", distance_value)
                 
                 if PAUSE_ON_MOVE:
@@ -429,7 +430,7 @@ class serial:
 
             elif cmdv == 0xC2: # right
                 self._paramcheck(cmdv, params, 2)
-                distance_value = ord(params[0])*256+ord(params[1])
+                distance_value = params[0] * 256 + params[1]
                 if distance_value > 180:
                     lleprint("***U-TURN!", distance_value)
                     self.heading = 3 & (self.heading + 2)
@@ -445,7 +446,7 @@ class serial:
 
             elif cmdv == 0xC3: # left
                 self._paramcheck(cmdv, params, 2)
-                distance_value = ord(params[0])*256+ord(params[1])
+                distance_value = params[0] * 256 + params[1]
                 if distance_value > 180:
                     lleprint("***U-TURN!", distance_value)
                     self.heading = 3 & (self.heading + 2)
@@ -462,11 +463,11 @@ class serial:
                 
             elif cmdv == 0xC4:
                 self._paramcheck(cmdv, params, 2)
-                lleprint("***Set speed to", ord(params[0])*256+ord(params[1]))
+                lleprint("***Set speed to", params[0] * 256 + params[1])
             
             elif cmdv == 0xC5:
                 self._paramcheck(cmdv, params, 2)
-                self.steering_correction = ord(params[0])*256+ord(params[1])
+                self.steering_correction = params[0] * 256 + params[1]
                 lleprint("***Set Steering correction to", self.steering_correction)
 
             elif cmdv == 0xC6:
@@ -475,23 +476,23 @@ class serial:
                 
             elif cmdv == 0xC7:
                 self._paramcheck(cmdv, params, 2)
-                self.cell_distance = ord(params[0])*256+ord(params[1])
+                self.cell_distance = params[0] * 256 + params[1]
                 lleprint("***Set Cell distance to", self.cell_distance)
 
             elif cmdv == 0xC8:
                 self._paramcheck(cmdv, params, 2)
-                self.wall_correction = ord(params[0])*256+ord(params[1])
+                self.wall_correction = params[0] * 256 + params[1]
                 lleprint("***Set Wall edge correction to", self.wall_correction)
 
             elif cmdv == 0xC9:
                 self._paramcheck(cmdv, params, 2)
-                self.distance_to_test = ord(params[0])*256+ord(params[1])
+                self.distance_to_test = params[0] * 256 + params[1]
                 lleprint("***Set distance test to", self.distance_to_test)
                 lleprint("*** >>>>Not complete yet! <<<<")
 
             elif cmdv == 0xCF:
                 self._paramcheck(cmdv, params, 1)
-                subcmd = ord(params[0])
+                subcmd = params[0]
                 self._wrdata(cmdv)
                 self._wrdata(params[0])
                 if subcmd == 0xC5:
@@ -515,50 +516,50 @@ class serial:
 
             elif cmdv == 0xD8:
                 self._paramcheck(cmdv, params, 2)
-                self.front_long = ord(params[0])*256+ord(params[1])
+                self.front_long = params[0] * 256 + params[1]
                 lleprint("***Set front long to", self.front_long)
 
             elif cmdv == 0xD9:
                 self._paramcheck(cmdv, params, 2)
-                self.front_short = ord(params[0])*256+ord(params[1])
+                self.front_short = params[0] * 256 + params[1]
                 lleprint("***Set front short to", self.front_short)
 
             elif cmdv == 0xDA:
                 self._paramcheck(cmdv, params, 2)
-                self.left_side = ord(params[0])*256+ord(params[1])
+                self.left_side = params[0] * 256 + params[1]
                 lleprint("***Set left side to", self.left_side)
 
             elif cmdv == 0xDB:
                 self._paramcheck(cmdv, params, 2)
-                self.right_side = ord(params[0])*256+ord(params[1])
+                self.right_side = params[0] * 256 + params[1]
                 lleprint("***Set right side to", self.right_side)
 
             elif cmdv == 0xDC:
                 self._paramcheck(cmdv, params, 2)
-                self.left_45 = ord(params[0])*256+ord(params[1])
+                self.left_45 = params[0] * 256 + params[1]
                 lleprint("***Set left 45 to", self.left_45)
 
             elif cmdv == 0xDD:
                 self._paramcheck(cmdv, params, 2)
-                self.right_45 = ord(params[0])*256+ord(params[1])
+                self.right_45 = params[0] * 256 + params[1]
                 lleprint("***Set right 45 to", self.right_45)
 
             elif cmdv == 0xDE:
                 self._paramcheck(cmdv, params, 2)
-                self.r45_close = ord(params[0])*256+ord(params[1])
+                self.r45_close = params[0] * 256 + params[1]
                 lleprint("***Set r45 close to", self.r45_close)
 
             elif cmdv == 0xDF:
                 self._paramcheck(cmdv, params, 2)
-                self.l45_close = ord(params[0])*256+ord(params[1])
+                self.l45_close = params[0] * 256 + params[1]
                 lleprint("***Set l45 close to", self.l45_close)
 
                 
             elif cmdv == 0xf9:
                 # write to acceleration table
                 self._paramcheck(cmdv, params, 3)
-                addr = ord(params[0])
-                data = ord(params[1])*256+ord(params[2])
+                addr = params[0]
+                data = params[1]*256+params[2]
                 self.accel_table[addr] = data
                 self._wrdata(b"\xCE")
                 self._wrdata_int16(self.accel_table[addr])
@@ -566,8 +567,8 @@ class serial:
             elif cmdv == 0xfA:
                 # write to acceleration table
                 self._paramcheck(cmdv, params, 3)
-                addr = ord(params[0])+256
-                data = ord(params[1])*256+ord(params[2])
+                addr = params[0]+256
+                data = params[1]*256+params[2]
                 self.accel_table[addr] = data
                 self._wrdata(b"\xCE")
                 self._wrdata_int16(self.accel_table[addr])
@@ -592,13 +593,15 @@ class serial:
             self.do_background_processes()
             
         def write(self, data):
-            if type(data) != bytes:
-                raise("Outgoing data not bytes!!")
+            if type(data) != bytes and type(data) != bytearray:
+                raise("Outgoing data not bytes or bytearray!! in write() in low_level_emulator")
 
             cmdv = data[0]
-            # fix for Python 2
+            # originally fix for Python 2
             if type(cmdv) is str:
                 cmdv = ord(cmdv)
+                print("Unexpected string in write")
+                sys.exit(2)
             self._process_cmd(cmdv, data[1:])
         
         def read(self, bytes_to_read):
@@ -609,7 +612,10 @@ class serial:
             if not self.replies:
                 return b""
             else:
-                return self.replies.popleft()
-            
+                return_data = self.replies.popleft()
+                if type(return_data) != bytes and type(return_data) != bytearray:
+                    print("Unexpected data in read() in low_level_emulator")
+                    sys.exit(1)
+                return return_data
             
             

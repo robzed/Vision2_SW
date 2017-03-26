@@ -1186,14 +1186,14 @@ def write_acceleration_table(port, table_to_write):
     addr = 0
     while True:
         if addr < 256:
-            s = "\xF9"
+            s = b"\xF9"
         else:
-            s = "\xFA"
+            s = b"\xFA"
 
         global acceleration_value
         acceleration_value = None
         data = table_to_write[addr]
-        s += chr(addr & 0xff) + chr(data >> 8) + chr(data & 0xff)
+        s += bytes([addr & 0xff, data >> 8, data & 0xff])
         send_message(port, s)
         
         while acceleration_value == None:

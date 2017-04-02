@@ -40,8 +40,10 @@ if sys.version_info.major == 3:
     from tkinter import *
     import tkinter.font as tkFont
 else:
-    from Tkinter import *       # could have used impot Tkinter as tk
-    import tkFont
+    print("Python 2 not supported")
+    sys.exit(1)
+    #from Tkinter import *       # could have used impot Tkinter as tk
+    #import tkFont
 
 # Python 3 version
 #from tkinter import ttk

@@ -202,9 +202,9 @@ class GUI_App(object):
 
             #mm()
             
-            #t = Thread(target=mm)
-            #t.daemon = True # thread dies with the program
-            #t.start()
+            t = Thread(target=mm)
+            t.daemon = True # thread dies with the program
+            t.start()
             
             def task():
                 self.state = not self.state

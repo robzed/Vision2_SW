@@ -30,7 +30,7 @@
 #  * To avoid the problem that mouse.py has it's own control loop and tkinter also requires it's own control loop, we use a second thread.
 #   - Co-routines would solve this extra thread problem, but currently Python generators are not flexible enbough.
 #
-from __future__ import print_function
+#from __future__ import print_function
 import sys
 
 import mouse
@@ -180,11 +180,21 @@ class GUI_App(object):
             label = Label(self.root, text="Buttons")
             label.pack()
             button_frame = Frame(self.root)
-            button_reset=Button(button_frame, text="Reset").pack(side=LEFT)
-            button_a=Button(button_frame, text="short [a]").pack(side=LEFT)
-            button_A=Button(button_frame, text="Long [A]").pack(side=LEFT)
-            button_b=Button(button_frame, text="short [b]").pack(side=LEFT)
-            button_B=Button(button_frame, text="Long [B]").pack(side=LEFT)
+            def reset_button():
+                print("RESET", self)
+            def short_a_button():
+                self.key_q.put("a")
+            def long_A_button():
+                self.key_q.put("A")
+            def short_b_button():
+                self.key_q.put("b")
+            def long_B_button():
+                self.key_q.put("B")
+            self.button_reset=Button(button_frame, text="Reset", command=reset_button).pack(side=LEFT)
+            self.button_a=Button(button_frame, text="short [a]", command=short_a_button).pack(side=LEFT)
+            self.button_A=Button(button_frame, text="Long [A]", command=long_A_button).pack(side=LEFT)
+            self.button_b=Button(button_frame, text="short [b]", command=short_b_button).pack(side=LEFT)
+            self.button_B=Button(button_frame, text="Long [B]", command=long_B_button).pack(side=LEFT)
             button_frame.pack()
             
             ######################################################

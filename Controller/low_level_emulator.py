@@ -126,8 +126,10 @@ class serial:
             self.timer_state = 0
             
             self.IR = False
+
             if TEXT_SIMULATOR:
                 self.keys = KeyThread()
+                self.gui = self
             self.key_delayed = None
             
             self.timeout = timeout
@@ -138,6 +140,9 @@ class serial:
             
             self.accel_table = [0]*512
 
+        def set_action(self, action):
+            pass
+        
         def set_gui(self, gui):
             self.gui = gui
             self.keys = gui
@@ -183,9 +188,11 @@ class serial:
                 
         def set_LED(self, num):
             self.LEDs[num-1] = "#"
+            self.gui.set_gui("LED", num, True)
         
         def clear_LED(self, num):
             self.LEDs[num-1] = "."
+            self.gui.set_gui("LED", num, False)
 
         def do_background_processes(self):
             self.do_timers()

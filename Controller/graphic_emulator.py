@@ -231,6 +231,9 @@ class GUI_App(object):
             self.root.mainloop()
             #mainloop()
 
+        def set_action(self, action):
+            self.gui_q.put(action)
+        
         def get_key(self):
             try:
                 key = self.key_q.get_nowait()

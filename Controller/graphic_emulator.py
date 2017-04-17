@@ -226,11 +226,18 @@ class GUI_App(object):
 
             #mm()
             
-            t = Thread(target=mm)
-            t.daemon = True # thread dies with the program
-            t.start()
-            
+            self.thread = Thread(target=mm)
+            # we ideally want to terminate the mouse gracefully, but this work around will have to suffice
+            self.thread.daemon = True # thread dies with the program
+            self.thread.start()
+
             def task():
+                if not self.thread.is_alive():
+                    print(">>> MOUSE THREAD IS NOT ALIVE - terminating <<< ")
+                    sys.exit(1)
+                    
+                self.do_received_actions()
+                
                 self.state = not self.state
                 if self.state:
                     self.canvas.itemconfig(self.flash_id, text="#")
@@ -241,6 +248,13 @@ class GUI_App(object):
                 self.root.after(50, task)  # reschedule event in 50 milliseconds
             
             self.root.after(50, task)
+            
+            def close_window():
+                # signal to mouse or low level emulator...
+                self.root.destroy()
+                
+            # make sure we quit mouse properly
+            self.root.protocol("WM_DELETE_WINDOW", close_window)
             
             self.root.mainloop()
             #mainloop()

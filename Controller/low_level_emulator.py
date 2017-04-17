@@ -274,6 +274,9 @@ class serial:
                     lleprint("*** %s (%d, %d)" % (str(_direction), self.row, self.column))    # ●○
                 elif key == '\x13' or '\x10':
                     pass
+                #elif key == "Quit":
+                #    print(">>> Quit requested <<<")
+                #    pass
                 else:
                     lleprint("***??? Didn't understand", key)
     

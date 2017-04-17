@@ -188,11 +188,11 @@ class serial:
                 
         def set_LED(self, num):
             self.LEDs[num-1] = "#"
-            self.gui.set_gui("LED", num, True)
-        
+            self.gui.set_action(("LED", num, True))
+
         def clear_LED(self, num):
             self.LEDs[num-1] = "."
-            self.gui.set_gui("LED", num, False)
+            self.gui.set_action(("LED", num, False))
 
         def do_background_processes(self):
             self.do_timers()

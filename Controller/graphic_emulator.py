@@ -29,6 +29,8 @@
 #  * It would be nice if the mouse used asyncio for the serial, and tkinter run loop handled with this. But it doesn't at the moment.
 #  * To avoid the problem that mouse.py has it's own control loop and tkinter also requires it's own control loop, we use a second thread.
 #   - Co-routines would solve this extra thread problem, but currently Python generators are not flexible enbough.
+#  * We use Queue as the thread safe container between threads. We could potentially use collections.deque with fast atomic 
+#    append() and popleft() but we don't to avoid weird threading corner cases - and we are not performance bound here.
 #
 #from __future__ import print_function
 import sys
@@ -202,6 +204,18 @@ class GUI_App(object):
             label2.pack(side=TOP)
             label3 = Label(self.root, text="Battery = 0.0v")
             label3.pack(side=TOP)
+
+        def do_received_actions(self):
+            while not self.gui_q.empty():
+                try:
+                    action = self.gui_q.get_nowait()
+                except self.gui_q.Empty:
+                    break
+                if action[0] == "LED":
+                    pass
+                else:
+                    print("Unknown action")
+                    sys.exit(1)
                     
         def run(self):
             self.key_q = Queue()
@@ -220,11 +234,11 @@ class GUI_App(object):
                 self.state = not self.state
                 if self.state:
                     self.canvas.itemconfig(self.flash_id, text="#")
-                    self.front_led.on()
+                    #self.front_led.on()
                 else:
                     self.canvas.itemconfig(self.flash_id, text="o")
-                    self.front_led.off()
-                self.root.after(50, task)  # reschedule event in 2 seconds
+                    #self.front_led.off()
+                self.root.after(50, task)  # reschedule event in 50 milliseconds
             
             self.root.after(50, task)
             
@@ -232,8 +246,8 @@ class GUI_App(object):
             #mainloop()
 
         def set_action(self, action):
-            self.gui_q.put(action)
-        
+            self.gui_q.put(action)                    
+                
         def get_key(self):
             try:
                 key = self.key_q.get_nowait()

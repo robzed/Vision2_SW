@@ -104,6 +104,12 @@ class LED(Label):
     
     def off(self):
         self.config(text="○", foreground="grey")
+        
+    def set(self, state):
+        if state:
+            self.on()
+        else:
+            self.off()
 
 class GUI_App(object):
         def __init__(self, width=256, height=256):
@@ -212,7 +218,21 @@ class GUI_App(object):
                 except self.gui_q.Empty:
                     break
                 if action[0] == "LED":
-                    pass
+                    led_num = action[1]
+                    led_state = action[2]
+                    if led_num < 1 or led_num > 9:
+                        print("Unexpected LED number", led_num)
+                        sys.exit(1)
+                    
+                    if led_num <= 6:
+                        self.leds[6-led_num].set(led_state)
+                    elif led_num == 7:
+                        self.left_led.set(led_state)
+                    elif led_num == 8:
+                        self.front_led.set(led_state)
+                    else:
+                        self.right_led.set(led_state)
+                        
                 else:
                     print("Unknown action")
                     sys.exit(1)

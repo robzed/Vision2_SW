@@ -36,7 +36,9 @@ except ImportError:
     sys.exit(1)
     #from test_stubs import GPIO_stub as GPIO
 
-_Backlight_IO_BCM = 26
+
+# hardware definitions
+_camera_light_IO_BCM = 26
 
 class DizzyHardware(object):
     '''
@@ -48,15 +50,32 @@ class DizzyHardware(object):
         Constructor
         '''
         GPIO.setmode(GPIO.BCM)
-        GPIO.setup(_Backlight_IO_BCM, GPIO.OUT)
+        GPIO.setup(_camera_light_IO_BCM, GPIO.OUT)
     
     def read_time(self):
         pass
     
     def camera_light_on(self):
-        GPIO.output(_Backlight_IO_BCM, GPIO.HIGH)
+        GPIO.output(_camera_light_IO_BCM, GPIO.HIGH)
     
     def camera_light_off(self):
-        GPIO.output(_Backlight_IO_BCM, GPIO.LOW)
+        GPIO.output(_camera_light_IO_BCM, GPIO.LOW)
 
 
+# allow running as a standalone file for testing
+if __name__ == "__main__":
+    if len(sys.argv) != 2:
+        print("Expected parameter:")
+        print("Light")
+        print("-Light")
+    elif sys.argv[1] == "Light":
+        hw = DizzyHardware()
+        hw.camera_light_on()
+    elif sys.argv[2] == "-Light":
+        hw = DizzyHardware()
+        hw.camera_light_off()
+    else:
+        print("Unrecognised")
+
+        
+        

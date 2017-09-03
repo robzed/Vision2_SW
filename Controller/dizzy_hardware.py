@@ -45,7 +45,7 @@ class DizzyHardware(object):
     classdocs
     '''
     
-    def __init__(self, params):
+    def __init__(self):
         '''
         Constructor
         '''
@@ -60,6 +60,10 @@ class DizzyHardware(object):
     
     def camera_light_off(self):
         GPIO.output(_camera_light_IO_BCM, GPIO.LOW)
+    
+    # use __del__ rather than __entry__ and __exit__
+    def __del__(self):
+        GPIO.cleanup()
 
 
 # allow running as a standalone file for testing
@@ -71,7 +75,7 @@ if __name__ == "__main__":
     elif sys.argv[1] == "Light":
         hw = DizzyHardware()
         hw.camera_light_on()
-    elif sys.argv[2] == "-Light":
+    elif sys.argv[1] == "-Light":
         hw = DizzyHardware()
         hw.camera_light_off()
     else:

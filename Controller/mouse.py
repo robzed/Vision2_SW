@@ -66,6 +66,9 @@
 # LED3/LED4 = mode (0=straight, 3=right, 4=left)
 #
 
+#serial_port = "/dev/ttyAMA0"    # for Raspberry Pi's without built on Bluetooth
+serial_port = "/dev/ttyS0"      # for PiZeroW and Pi3
+
 import sys
 if len(sys.argv) >= 2:
     if sys.argv[1] == "TEXT_SIMULATOR":
@@ -2196,7 +2199,7 @@ class serial_snooper:
 
 
 def main(gui_bridge=None):
-    port = serial.Serial("/dev/ttyAMA0", baudrate = 57600, timeout = 0.1)
+    port = serial.Serial(serial_port, baudrate = 57600, timeout = 0.1)
     if gui_bridge is not None:
         port.set_gui(gui_bridge)
     if snoop_serial_data:

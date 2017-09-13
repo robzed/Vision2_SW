@@ -38,6 +38,8 @@
 #         Fast flash if battery problem (going to shutdown soon)
 #
 # Button A - select between 5, 16 and calibration
+# Hold Button A - shutdown
+# Button B (not hold) - nothing
 # Hold Button B - select/start
 #
 ################################################################

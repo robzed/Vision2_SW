@@ -145,6 +145,7 @@ class serial:
         
         def set_gui(self, gui):
             self.gui = gui
+            self.gui.push_maze(self.maze)
             self.keys = gui
 
         def shift_left(self):

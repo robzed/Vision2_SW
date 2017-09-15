@@ -110,6 +110,18 @@ class LED(Label):
             self.on()
         else:
             self.off()
+            
+def create_map(canvas, posx, posy, width, height):
+    cw = width / 16
+    ch = height / 16
+    
+    for row in range(16):
+        for column in range(16):
+            canvas.create_rectangle(posx + cw*column, posy + ch*row, cw, ch, fill="", outline="grey", dash=(4, 4))
+            
+
+    
+
 
 class GUI_App(object):
         def __init__(self, width=256, height=256):
@@ -147,19 +159,19 @@ class GUI_App(object):
             self.canvas.pack(side=LEFT)
             self.canvas.create_rectangle(3, 3, self.width, self.height, fill="", outline="grey", dash=(4, 4))
 
-            self.canvas.create_line(0, 0, 200, 100)
-            self.canvas.create_line(0, 100, 200, 0, fill="red", dash=(4, 4))
+            #self.canvas.create_line(0, 0, 200, 100)
+            #self.canvas.create_line(0, 100, 200, 0, fill="red", dash=(4, 4))
 
-            self.canvas.create_rectangle(50, 25, 150, 75, fill="blue")
+            #self.canvas.create_rectangle(50, 25, 150, 75, fill="blue")
             
-            canvas_id = self.canvas.create_text(10, 10, anchor="nw", text="hello\nbye")
-            self.canvas.itemconfig(canvas_id, text="this is the \n text")
-            self.canvas.insert(canvas_id, 14, "new ")
+            #canvas_id = self.canvas.create_text(10, 10, anchor="nw", text="hello\nbye")
+            #self.canvas.itemconfig(canvas_id, text="this is the \n text")
+            #self.canvas.insert(canvas_id, 14, "new ")
 
-            self.flash_id = self.canvas.create_text(3, 3, anchor="nw", text="o")
+            #self.flash_id = self.canvas.create_text(3, 3, anchor="nw", text="o")
             #self.canvas.itemconfig(flash_id, text="#")
             #self.canvas.insert(flash_id, 14, "new ")
-            self.state = False
+            #self.state = False
             
             self.right_led = LED(self.root, "blue")
             self.right_led.pack(side=RIGHT)
@@ -211,6 +223,9 @@ class GUI_App(object):
             label3 = Label(self.root, text="Battery = 0.0v")
             label3.pack(side=TOP)
 
+        def push_maze(self, current_maze):
+            pass
+        
         def do_received_actions(self):
             while not self.gui_q.empty():
                 try:
@@ -258,13 +273,13 @@ class GUI_App(object):
                     
                 self.do_received_actions()
                 
-                self.state = not self.state
-                if self.state:
-                    self.canvas.itemconfig(self.flash_id, text="#")
-                    #self.front_led.on()
-                else:
-                    self.canvas.itemconfig(self.flash_id, text="o")
-                    #self.front_led.off()
+                #self.state = not self.state
+                #if self.state:
+                #    self.canvas.itemconfig(self.flash_id, text="#")
+                #    #self.front_led.on()
+                #else:
+                #    self.canvas.itemconfig(self.flash_id, text="o")
+                #    #self.front_led.off()
                 self.root.after(50, task)  # reschedule event in 50 milliseconds
             
             self.root.after(50, task)

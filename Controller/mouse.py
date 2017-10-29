@@ -37,7 +37,7 @@
 # LED 6 = Slow flash if running
 #         Fast flash if battery problem (going to shutdown soon)
 #
-# Button A - select between 5, 16, calibration and test mode.
+# Button A - select between 5, 16, calibration and test mode
 # Hold Button A - shutdown
 # Button B (not hold) - nothing
 # Hold Button B - select/start
@@ -67,6 +67,9 @@
 # LED1/LED2 = Flashing
 # LED3/LED4 = mode (0=straight, 3=right, 4=left)
 #
+# Button a = go
+# b = set mode
+# hold B = exit
 
 #serial_port = "/dev/ttyAMA0"    # for Raspberry Pi's without built on Bluetooth
 serial_port = "/dev/ttyS0"      # for PiZeroW and Pi3

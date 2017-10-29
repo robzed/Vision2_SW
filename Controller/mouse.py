@@ -37,7 +37,7 @@
 # LED 6 = Slow flash if running
 #         Fast flash if battery problem (going to shutdown soon)
 #
-# Button A - select between 5, 16 and calibration
+# Button A - select between 5, 16, calibration and test mode.
 # Hold Button A - shutdown
 # Button B (not hold) - nothing
 # Hold Button B - select/start

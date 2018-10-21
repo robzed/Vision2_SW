@@ -2202,8 +2202,7 @@ class serial_snooper:
                     mode = 0
             self.data = []
 
-
-def main(gui_bridge=None):
+def set_up_port(gui_bridge=None):
     port = serial.Serial(serial_port, baudrate = 57600, timeout = 0.1)
     if gui_bridge is not None:
         port.set_gui(gui_bridge)
@@ -2215,7 +2214,11 @@ def main(gui_bridge=None):
         print("Bytes Waiting = ", bytes_waiting)
         port.read(bytes_waiting)
         print("Flushed bytes")
-
+    return port
+    
+def main(gui_bridge=None):
+    port = set_up_port(gui_bridge)
+    
     while True:
         try:
             run_program(port)
@@ -2246,7 +2249,35 @@ def main(gui_bridge=None):
                 os.system("sudo poweroff")
             print("sudo poweroff")
             sys.exit(1)
-            
+
+def cmd_control():
+    print("Command Processor")
+    port = set_up_port()
+    if sys.argv[1] == "motors":
+        while True:
+            send_unlock_command(port)
+            if wait_for_unlock_to_complete(port):
+                break
+            print("Unlock failed - Retrying")
+        
+                # let's process some events anyway
+        for _ in range(1,10):
+            event_processor(port)
+        
+        send_poll_command(port)
+        wait_for_poll_reply(port)
+        
+        set_speed(port, search_speed/10)    # normal search speed
+        move_forward(port, distance_cell/10)
+        wait_for_move_to_finish(port)
+        turn_off_motors(port)
+
+    else:
+        print("Unknown command")
+    
 if __name__ == "__main__":
-    main()
+    if len(sys.argv) < 2:
+        main()
+    else:
+        cmd_control()
 
